@@ -234,40 +234,85 @@ def get_ads_data(start_date: Optional[str] = None, end_date: Optional[str] = Non
 
 @app.get("/api/dashboard/traffic")
 def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] = None):
-    """Returns website traffic statistics and funnel metrics."""
-    metrics = get_daily_metrics_range(start_date, end_date)
+    """Returns website traffic statistics, funnel metrics, and period-over-period comparisons."""
+    # Ensure dates are provided
+    if not start_date or not end_date:
+        from datetime import date as py_date, timedelta
+        today = py_date.today()
+        start_date = (today - timedelta(days=29)).strftime("%Y-%m-%d")
+        end_date = today.strftime("%Y-%m-%d")
+        
+    try:
+        from datetime import datetime, timedelta
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+        
+        # Calculate length of the selected range in days
+        period_days = (end_dt - start_dt).days + 1
+        
+        # Calculate dates for previous period
+        prev_start_dt = start_dt - timedelta(days=period_days)
+        prev_end_dt = start_dt - timedelta(days=1)
+        
+        prev_start_date = prev_start_dt.strftime("%Y-%m-%d")
+        prev_end_date = prev_end_dt.strftime("%Y-%m-%d")
+    except Exception:
+        # Fallback if parsing fails
+        prev_start_date = start_date
+        prev_end_date = end_date
+        
+    metrics_current = get_daily_metrics_range(start_date, end_date)
+    metrics_previous = get_daily_metrics_range(prev_start_date, prev_end_date)
     bookings = get_all_bookings()
     
     # Filter bookings inside dates
-    if start_date or end_date:
-        filtered_bookings = []
-        for b in bookings:
-            b_date = b['booking_date']
-            if start_date and b_date < start_date:
-                continue
-            if end_date and b_date > end_date:
-                continue
+    filtered_bookings = []
+    for b in bookings:
+        b_date = b['booking_date']
+        if start_date <= b_date <= end_date:
             filtered_bookings.append(b)
-        bookings = filtered_bookings
-        
-    total_sessions = sum(m['sessions'] for m in metrics)
-    total_pageviews = sum(m['pageviews'] for m in metrics)
-    total_checkouts = sum(m['checkouts_initiated'] for m in metrics)
+            
+    # Calculate current aggregates
+    total_sessions = sum(m.get('sessions', 0) for m in metrics_current)
+    total_pageviews = sum(m.get('pageviews', 0) for m in metrics_current)
+    total_checkouts = sum(m.get('checkouts_initiated', 0) for m in metrics_current)
+    total_new_users = sum(m.get('new_users', 0) for m in metrics_current)
+    total_active_users = sum(m.get('active_users', 0) for m in metrics_current)
+    total_returning_users = max(0, total_active_users - total_new_users)
+    
+    # Calculate previous aggregates for comparison
+    prev_sessions = sum(m.get('sessions', 0) for m in metrics_previous)
+    prev_pageviews = sum(m.get('pageviews', 0) for m in metrics_previous)
+    prev_checkouts = sum(m.get('checkouts_initiated', 0) for m in metrics_previous)
+    prev_new_users = sum(m.get('new_users', 0) for m in metrics_previous)
+    prev_active_users = sum(m.get('active_users', 0) for m in metrics_previous)
+    prev_returning_users = max(0, prev_active_users - prev_new_users)
     
     # Count direct purchases in our system as a proxy for GA4 funnel
-    direct_purchases = len([b for b in bookings if b['channel'].lower() == 'direct'])
-    total_purchases = len(bookings)  # All bookings
+    direct_purchases = len([b for b in filtered_bookings if b['channel'].lower() == 'direct'])
+    total_purchases = len(filtered_bookings)
     
     return {
         "summary": {
             "sessions": total_sessions,
             "pageviews": total_pageviews,
-            "checkouts_initiated": total_checkouts
+            "checkouts_initiated": total_checkouts,
+            "new_users": total_new_users,
+            "returning_users": total_returning_users,
+            "active_users": total_active_users
+        },
+        "previous_summary": {
+            "sessions": prev_sessions,
+            "pageviews": prev_pageviews,
+            "checkouts_initiated": prev_checkouts,
+            "new_users": prev_new_users,
+            "returning_users": prev_returning_users,
+            "active_users": prev_active_users
         },
         "funnel": {
             "sessions": total_sessions,
             "checkouts": total_checkouts,
-            "purchases": total_purchases,  # Total bookings
+            "purchases": total_purchases,
             "direct_purchases": direct_purchases,
             "checkout_conv_rate": round((total_checkouts / total_sessions * 100.0), 2) if total_sessions > 0 else 0.0,
             "booking_conv_rate": round((total_purchases / total_sessions * 100.0), 2) if total_sessions > 0 else 0.0
@@ -275,10 +320,24 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
         "daily_traffic": [
             {
                 "date": m['date'],
-                "sessions": m['sessions'],
-                "pageviews": m['pageviews'],
-                "checkouts": m['checkouts_initiated']
-            } for m in metrics
+                "sessions": m.get('sessions', 0),
+                "pageviews": m.get('pageviews', 0),
+                "checkouts": m.get('checkouts_initiated', 0),
+                "new_users": m.get('new_users', 0),
+                "active_users": m.get('active_users', 0),
+                "returning_users": max(0, m.get('active_users', 0) - m.get('new_users', 0))
+            } for m in metrics_current
+        ],
+        "previous_daily_traffic": [
+            {
+                "date": m['date'],
+                "sessions": m.get('sessions', 0),
+                "pageviews": m.get('pageviews', 0),
+                "checkouts": m.get('checkouts_initiated', 0),
+                "new_users": m.get('new_users', 0),
+                "active_users": m.get('active_users', 0),
+                "returning_users": max(0, m.get('active_users', 0) - m.get('new_users', 0))
+            } for m in metrics_previous
         ]
     }
 

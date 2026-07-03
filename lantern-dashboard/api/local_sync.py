@@ -17,10 +17,21 @@ except ImportError:
 def main():
     logger.info("================ STARTING MASTER LOCAL SYNC ================")
     
-    # 1. Sync Marketing APIs (Google Ads, Meta Ads, GA4)
-    logger.info("Step 1: Syncing Marketing Spend & Traffic (GA4, Google Ads, Meta Ads) for the last 30 days...")
+    # Run database initialization & migration to ensure new columns exist
     try:
-        sync_data(days=30)
+        from database import init_db
+    except ImportError:
+        from api.database import init_db
+    try:
+        init_db()
+        logger.info("Database initialized/migrated successfully.")
+    except Exception as e:
+        logger.warning(f"Database migration warning: {e}")
+        
+    # 1. Sync Marketing APIs (Google Ads, Meta Ads, GA4)
+    logger.info("Step 1: Syncing Marketing Spend & Traffic (GA4, Google Ads, Meta Ads) for the last 60 days...")
+    try:
+        sync_data(days=60)
         logger.info("Step 1 Complete! Marketing spend & traffic updated successfully.")
     except Exception as e:
         logger.error(f"Step 1 Failed: {e}")

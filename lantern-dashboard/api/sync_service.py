@@ -55,12 +55,17 @@ def fetch_ga4_metrics(start_date_str, end_date_str):
     try:
         client = BetaAnalyticsDataClient.from_service_account_json(GA4_CREDS_PATH)
         
-        # 1. Query sessions and pageviews (screenPageViews)
+        # 1. Query sessions, pageviews (screenPageViews), newUsers, and activeUsers
         traffic_request = RunReportRequest(
             property=f"properties/{GA4_PROPERTY_ID}",
             date_ranges=[DateRange(start_date=start_date_str, end_date=end_date_str)],
             dimensions=[Dimension(name="date")],
-            metrics=[Metric(name="sessions"), Metric(name="screenPageViews")]
+            metrics=[
+                Metric(name="sessions"),
+                Metric(name="screenPageViews"),
+                Metric(name="newUsers"),
+                Metric(name="activeUsers")
+            ]
         )
         
         traffic_response = client.run_report(traffic_request)
@@ -69,11 +74,15 @@ def fetch_ga4_metrics(start_date_str, end_date_str):
             date_formatted = f"{date_raw[0:4]}-{date_raw[4:6]}-{date_raw[6:8]}"
             sessions = int(row.metric_values[0].value)
             pageviews = int(row.metric_values[1].value)
+            new_users = int(row.metric_values[2].value)
+            active_users = int(row.metric_values[3].value)
             
             if date_formatted not in results:
                 results[date_formatted] = {}
             results[date_formatted]["sessions"] = sessions
             results[date_formatted]["pageviews"] = pageviews
+            results[date_formatted]["new_users"] = new_users
+            results[date_formatted]["active_users"] = active_users
             
         # 2. Query begin_checkout events
         checkout_request = RunReportRequest(
@@ -238,6 +247,8 @@ def sync_data(days=30):
             "sessions": ga4_data.get(date_str, {}).get("sessions", 0),
             "pageviews": ga4_data.get(date_str, {}).get("pageviews", 0),
             "checkouts_initiated": ga4_data.get(date_str, {}).get("checkouts_initiated", 0),
+            "new_users": ga4_data.get(date_str, {}).get("new_users", 0),
+            "active_users": ga4_data.get(date_str, {}).get("active_users", 0),
             "google_spend": google_data.get(date_str, {}).get("google_spend", 0.0),
             "google_impressions": google_data.get(date_str, {}).get("google_impressions", 0),
             "google_clicks": google_data.get(date_str, {}).get("google_clicks", 0),

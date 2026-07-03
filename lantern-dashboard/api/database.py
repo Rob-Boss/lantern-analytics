@@ -56,6 +56,8 @@ def init_db():
             sessions INTEGER DEFAULT 0,
             pageviews INTEGER DEFAULT 0,
             checkouts_initiated INTEGER DEFAULT 0,
+            new_users INTEGER DEFAULT 0,
+            active_users INTEGER DEFAULT 0,
             google_spend REAL DEFAULT 0.0,
             google_impressions INTEGER DEFAULT 0,
             google_clicks INTEGER DEFAULT 0,
@@ -65,6 +67,14 @@ def init_db():
             meta_clicks INTEGER DEFAULT 0
         )
     """)
+    
+    # Migration: Ensure daily_metrics has new_users and active_users
+    for col in ("new_users", "active_users"):
+        try:
+            _exec(cursor, f"ALTER TABLE daily_metrics ADD COLUMN {col} INTEGER DEFAULT 0")
+        except Exception:
+            pass
+    conn.commit()
     
     # 3. Create settings table
     _exec(cursor, """
@@ -130,6 +140,8 @@ def save_daily_metric_row(date_str, metrics_dict):
     sessions = metrics_dict.get('sessions', 0)
     pageviews = metrics_dict.get('pageviews', 0)
     checkouts_initiated = metrics_dict.get('checkouts_initiated', 0)
+    new_users = metrics_dict.get('new_users', 0)
+    active_users = metrics_dict.get('active_users', 0)
     google_spend = metrics_dict.get('google_spend', 0.0)
     google_impressions = metrics_dict.get('google_impressions', 0)
     google_clicks = metrics_dict.get('google_clicks', 0)
@@ -141,14 +153,17 @@ def save_daily_metric_row(date_str, metrics_dict):
     _exec(cursor, """
         INSERT INTO daily_metrics (
             date, sessions, pageviews, checkouts_initiated,
+            new_users, active_users,
             google_spend, google_impressions, google_clicks,
             meta_spend, meta_impressions, meta_views, meta_clicks
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(date) DO UPDATE SET
             sessions=excluded.sessions,
             pageviews=excluded.pageviews,
             checkouts_initiated=excluded.checkouts_initiated,
+            new_users=excluded.new_users,
+            active_users=excluded.active_users,
             google_spend=excluded.google_spend,
             google_impressions=excluded.google_impressions,
             google_clicks=excluded.google_clicks,
@@ -157,6 +172,7 @@ def save_daily_metric_row(date_str, metrics_dict):
             meta_views=excluded.meta_views,
             meta_clicks=excluded.meta_clicks
     """, (date_str, sessions, pageviews, checkouts_initiated,
+          new_users, active_users,
           google_spend, google_impressions, google_clicks,
           meta_spend, meta_impressions, meta_views, meta_clicks))
     

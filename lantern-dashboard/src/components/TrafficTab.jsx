@@ -1,38 +1,78 @@
-import React from "react";
+import React, { useState } from "react";
 
 export default function TrafficTab({ trafficData, loading }) {
+  const [activeMetric, setActiveMetric] = useState("new_users");
+
   if (loading) {
-    return <div style={{ padding: "40px", textAlign: "center" }}>Loading traffic data...</div>;
+    return (
+      <div style={{ padding: "80px", textAlign: "center", color: "#606862" }}>
+        <div className="spinner" style={{ margin: "0 auto 16px auto", width: "40px", height: "40px", border: "4px solid #e2e8e4", borderTopColor: "#8eb29d", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        Loading web traffic metrics...
+      </div>
+    );
   }
 
   const formatNumber = (val) => {
     return new Intl.NumberFormat("en-US").format(val || 0);
   };
 
-  const summary = trafficData.summary || { sessions: 0, pageviews: 0, checkouts_initiated: 0 };
+  const summary = trafficData.summary || { sessions: 0, pageviews: 0, checkouts_initiated: 0, new_users: 0, returning_users: 0 };
+  const previousSummary = trafficData.previous_summary || { sessions: 0, pageviews: 0, checkouts_initiated: 0, new_users: 0, returning_users: 0 };
   const funnel = trafficData.funnel || { sessions: 0, checkouts: 0, purchases: 0, checkout_conv_rate: 0, booking_conv_rate: 0 };
+  
   const dailyTraffic = trafficData.daily_traffic || [];
+  const previousDailyTraffic = trafficData.previous_daily_traffic || [];
 
   // Funnel details
   const sessions = funnel.sessions || 0;
   const checkouts = funnel.checkouts || 0;
   const purchases = funnel.purchases || 0;
-
-  const checkoutPercentage = sessions > 0 ? (checkouts / sessions) * 100 : 0;
-  const purchasePercentage = sessions > 0 ? (purchases / sessions) * 100 : 0;
   const checkoutToPurchase = checkouts > 0 ? (purchases / checkouts) * 100 : 0;
+
+  // Percentage change helper
+  const getChange = (current, previous) => {
+    if (!previous || previous === 0) {
+      return current > 0 ? { text: "↑ 100.0%", isPositive: true } : { text: "-", isNeutral: true };
+    }
+    const diff = ((current - previous) / previous) * 100;
+    const formatted = Math.abs(diff).toFixed(1);
+    if (diff > 0) return { text: `↑ ${formatted}%`, isPositive: true };
+    if (diff < 0) return { text: `↓ ${formatted}%`, isNegative: true };
+    return { text: "-", isNeutral: true };
+  };
+
+  const renderGrowthPercent = (current, previous) => {
+    const change = getChange(current, previous);
+    if (change.isNeutral) {
+      return <span style={{ color: "#8a928c", fontSize: "11px", fontWeight: "600" }}>-</span>;
+    }
+    return (
+      <span style={{ 
+        color: change.isPositive ? "#137333" : "#c5221f", 
+        fontSize: "12px", 
+        fontWeight: "600",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "2px"
+      }}>
+        {change.text}
+      </span>
+    );
+  };
 
   const renderTrafficChart = () => {
     if (!dailyTraffic || dailyTraffic.length === 0) {
-      return <div style={{ padding: "40px", textAlign: "center" }}>No traffic metrics cached in this range.</div>;
+      return <div style={{ padding: "60px", textAlign: "center", color: "#606862" }}>No traffic metrics cached in this range.</div>;
     }
 
     const width = 800;
     const height = 240;
     const padding = { top: 20, right: 30, bottom: 40, left: 50 };
 
-    const sessionsList = dailyTraffic.map((d) => d.sessions || 0);
-    const maxVal = Math.max(...sessionsList, 10);
+    const currentValues = dailyTraffic.map((d) => d[activeMetric] || 0);
+    const previousValues = previousDailyTraffic.map((d) => d[activeMetric] || 0);
+    const maxVal = Math.max(...currentValues, ...previousValues, 10);
     const pointsCount = dailyTraffic.length;
 
     const getX = (index) => {
@@ -44,23 +84,25 @@ export default function TrafficTab({ trafficData, loading }) {
       return height - padding.bottom - (val / maxVal) * chartHeight;
     };
 
-    let sessionsPoints = [];
-    let checkoutsPoints = [];
+    let currentPoints = [];
+    let previousPoints = [];
 
     dailyTraffic.forEach((d, index) => {
       const x = getX(index);
-      const ySess = getY(d.sessions || 0);
-      const yChk = getY(d.checkouts || 0);
+      const yCurr = getY(d[activeMetric] || 0);
+      currentPoints.push(`${x},${yCurr}`);
 
-      sessionsPoints.push(`${x},${ySess}`);
-      checkoutsPoints.push(`${x},${yChk}`);
+      if (previousDailyTraffic && previousDailyTraffic.length > index) {
+        const yPrev = getY(previousDailyTraffic[index][activeMetric] || 0);
+        previousPoints.push(`${x},${yPrev}`);
+      }
     });
 
-    const sessionsPath = pointsCount > 0 ? `M ${sessionsPoints.join(" L ")}` : "";
-    const checkoutsPath = pointsCount > 0 ? `M ${checkoutsPoints.join(" L ")}` : "";
+    const currentPath = pointsCount > 0 ? `M ${currentPoints.join(" L ")}` : "";
+    const previousPath = previousPoints.length > 0 ? `M ${previousPoints.join(" L ")}` : "";
 
-    const areaPath = pointsCount > 0
-      ? `${sessionsPath} L ${getX(pointsCount - 1)},${height - padding.bottom} L ${getX(0)},${height - padding.bottom} Z`
+    const currentAreaPath = pointsCount > 0
+      ? `${currentPath} L ${getX(pointsCount - 1)},${height - padding.bottom} L ${getX(0)},${height - padding.bottom} Z`
       : "";
 
     // Grid lines
@@ -133,17 +175,18 @@ export default function TrafficTab({ trafficData, loading }) {
         <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#8eb29d" }}></span>
-            <span style={{ color: "#606862" }}>Sessions</span>
+            <span style={{ color: "#606862" }}>Selected Period</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "2px", backgroundColor: "#d67a47" }}></span>
-            <span style={{ color: "#606862" }}>Checkouts Initiated</span>
+            <span style={{ display: "inline-block", width: "12px", height: "0px", borderTop: "2px dashed #b2c2b9" }}></span>
+            <span style={{ color: "#8a928c" }}>Previous Period</span>
           </div>
         </div>
+        
         <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="auto">
           <defs>
             <linearGradient id="sessionsGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#8eb29d" stopOpacity="0.4" />
+              <stop offset="0%" stopColor="#8eb29d" stopOpacity="0.3" />
               <stop offset="100%" stopColor="#8eb29d" stopOpacity="0.0" />
             </linearGradient>
           </defs>
@@ -151,30 +194,32 @@ export default function TrafficTab({ trafficData, loading }) {
           {/* Grid lines */}
           {gridLines}
           
-          {/* Area fill under sessions */}
-          {areaPath && (
-            <path d={areaPath} fill="url(#sessionsGrad)" />
-          )}
-          
-          {/* Sessions line */}
-          {sessionsPath && (
-            <path
-              d={sessionsPath}
-              fill="none"
-              stroke="#8eb29d"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          {/* Area fill under selected period */}
+          {currentAreaPath && (
+            <path d={currentAreaPath} fill="url(#sessionsGrad)" />
           )}
 
-          {/* Checkouts line */}
-          {checkoutsPath && (
+          {/* Dotted Previous Period line */}
+          {previousPath && (
             <path
-              d={checkoutsPath}
+              d={previousPath}
               fill="none"
-              stroke="#d67a47"
+              stroke="#b2c2b9"
               strokeWidth="2"
+              strokeDasharray="4 4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.75"
+            />
+          )}
+          
+          {/* Solid Selected Period line */}
+          {currentPath && (
+            <path
+              d={currentPath}
+              fill="none"
+              stroke="#8eb29d"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -197,58 +242,140 @@ export default function TrafficTab({ trafficData, loading }) {
     );
   };
 
+  const getMetricLabel = (key) => {
+    switch (key) {
+      case "new_users": return "New Users";
+      case "returning_users": return "Returning Users";
+      case "sessions": return "Web Sessions";
+      default: return "";
+    }
+  };
+
   return (
     <div>
-      {/* Overview Cards & Funnel */}
-      <div className="panel-grid" style={{ gridTemplateColumns: "1fr 1.2fr", marginBottom: "24px" }}>
+      {/* Upper Panel Layout */}
+      <div className="panel-grid" style={{ gridTemplateColumns: "1fr 1.5fr", gap: "24px", marginBottom: "24px" }}>
         
-        {/* KPI Summaries */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        {/* KPI Summaries & Funnel Statistics */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          
           <div className="panel">
-            <div className="panel-header" style={{ marginBottom: "12px" }}>
-              <div className="panel-title">Traffic Volume</div>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>TOTAL SESSIONS</div>
-                <div style={{ fontSize: "32px", fontWeight: "700", color: "#2d4a3e" }}>{formatNumber(summary.sessions)}</div>
-              </div>
-              <div style={{ borderLeft: "1px solid #e2e8e4", paddingLeft: "24px" }}>
-                <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>TOTAL PAGEVIEWS</div>
-                <div style={{ fontSize: "32px", fontWeight: "700", color: "#606862" }}>{formatNumber(summary.pageviews)}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="panel-header" style={{ marginBottom: "12px" }}>
+            <div className="panel-header" style={{ marginBottom: "16px" }}>
               <div className="panel-title">Conversion Ratios</div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <div>
-                <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>SESSIONS TO CHECKOUT</div>
-                <div style={{ fontSize: "22px", fontWeight: "700", color: "#2d312e" }}>{(funnel.checkout_conv_rate || 0).toFixed(2)}%</div>
+              <div style={{ backgroundColor: "#fcfdfe", border: "1px solid #e2e8e4", padding: "16px", borderRadius: "8px" }}>
+                <div style={{ fontSize: "11px", color: "#606862", fontWeight: 600, letterSpacing: "0.05em", marginBottom: "4px" }}>SESSIONS TO CHECKOUT</div>
+                <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d312e" }}>{(funnel.checkout_conv_rate || 0).toFixed(2)}%</div>
               </div>
-              <div>
-                <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>CHECKOUT TO BOOKING</div>
-                <div style={{ fontSize: "22px", fontWeight: "700", color: "#2d4a3e" }}>{(checkoutToPurchase || 0).toFixed(1)}%</div>
+              <div style={{ backgroundColor: "#fcfdfe", border: "1px solid #e2e8e4", padding: "16px", borderRadius: "8px" }}>
+                <div style={{ fontSize: "11px", color: "#606862", fontWeight: 600, letterSpacing: "0.05em", marginBottom: "4px" }}>CHECKOUT TO BOOKING</div>
+                <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d4a3e" }}>{(checkoutToPurchase || 0).toFixed(1)}%</div>
               </div>
             </div>
           </div>
+
+          <div className="panel">
+            <div className="panel-header" style={{ marginBottom: "12px" }}>
+              <div className="panel-title">Traffic & Checkout Totals</div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f0f3f1", paddingBottom: "10px" }}>
+                <span style={{ fontSize: "12px", color: "#606862", fontWeight: 500 }}>Total Pageviews</span>
+                <span style={{ fontSize: "16px", fontWeight: "700", color: "#2d312e" }}>{formatNumber(summary.pageviews)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f0f3f1", paddingBottom: "10px" }}>
+                <span style={{ fontSize: "12px", color: "#606862", fontWeight: 500 }}>Checkouts Initiated</span>
+                <span style={{ fontSize: "16px", fontWeight: "700", color: "#d67a47" }}>{formatNumber(summary.checkouts_initiated)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "12px", color: "#606862", fontWeight: 500 }}>Total Sessions</span>
+                <span style={{ fontSize: "16px", fontWeight: "700", color: "#8eb29d" }}>{formatNumber(summary.sessions)}</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        {/* Traffic Trend Chart */}
-        <div className="panel">
-          <div className="panel-header">
-            <div className="panel-title">Daily Web Traffic Trend</div>
+        {/* Dynamic GA4 Chart Panel */}
+        <div className="panel" style={{ display: "flex", flexDirection: "column" }}>
+          
+          <div className="panel-header" style={{ marginBottom: "16px" }}>
+            <div className="panel-title">Daily Web Traffic</div>
           </div>
-          <div style={{ marginTop: "16px" }}>
+
+          {/* Interactive GA4 Tab Cards */}
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "1fr 1fr 1fr", 
+            border: "1px solid #e2e8e4", 
+            borderRadius: "10px", 
+            overflow: "hidden", 
+            marginBottom: "20px" 
+          }}>
+            {[
+              { key: "new_users", label: "New Users" },
+              { key: "returning_users", label: "Returning Users" },
+              { key: "sessions", label: "Sessions" }
+            ].map((item) => {
+              const isActive = activeMetric === item.key;
+              const currentVal = summary[item.key] || 0;
+              const prevVal = previousSummary[item.key] || 0;
+
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setActiveMetric(item.key)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: "4px",
+                    padding: "16px",
+                    background: isActive ? "#f4f8f6" : "#ffffff",
+                    border: "none",
+                    borderBottom: isActive ? "3px solid #8eb29d" : "3px solid transparent",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.2s ease-in-out",
+                    outline: "none"
+                  }}
+                  onMouseOver={(e) => { if (!isActive) e.currentTarget.style.background = "#fafdff"; }}
+                  onMouseOut={(e) => { if (!isActive) e.currentTarget.style.background = "#ffffff"; }}
+                >
+                  <span style={{ 
+                    fontSize: "11px", 
+                    fontWeight: "600", 
+                    color: isActive ? "#2d4a3e" : "#8a928c",
+                    letterSpacing: "0.02em"
+                  }}>
+                    {item.label}
+                  </span>
+                  <span style={{ 
+                    fontSize: "26px", 
+                    fontWeight: "700", 
+                    color: "#2d312e",
+                    lineHeight: "1.1"
+                  }}>
+                    {formatNumber(currentVal)}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                    {renderGrowthPercent(currentVal, prevVal)}
+                    <span style={{ fontSize: "10px", color: "#8a928c", fontWeight: "500" }}>vs prev period</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Render Multi-Line SVG Chart */}
+          <div style={{ flex: 1 }}>
             {renderTrafficChart()}
           </div>
+          
         </div>
+
       </div>
-
-
     </div>
   );
 }
