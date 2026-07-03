@@ -22,15 +22,31 @@ export default function AdsTab({ adsData, loading }) {
   const channels = adsData.channels || [];
   const dailyBreakdown = adsData.daily_breakdown || [];
 
+  // Helper to trim trailing empty days where there is no spend or click activity
+  const trimTrailingEmptyDays = (arr, checkIsEmpty) => {
+    let endIdx = arr.length - 1;
+    while (endIdx >= 0 && checkIsEmpty(arr[endIdx])) {
+      endIdx--;
+    }
+    return arr.slice(0, endIdx + 1);
+  };
+
+  const dailyBreakdownClean = trimTrailingEmptyDays(dailyBreakdown, d => 
+    (d.google_spend || 0) === 0 && 
+    (d.meta_spend || 0) === 0 && 
+    (d.google_clicks || 0) === 0 && 
+    (d.meta_clicks || 0) === 0
+  );
+
   const renderAdsChart = () => {
-    if (!dailyBreakdown || dailyBreakdown.length === 0) {
+    if (!dailyBreakdownClean || dailyBreakdownClean.length === 0) {
       return <div style={{ padding: "40px", textAlign: "center", color: "#606862" }}>No ad activity cached in this range.</div>;
     }
 
     const width = 800;
     const height = 240;
     const padding = { top: 20, right: 70, bottom: 40, left: 50 };
-    const pointsCount = dailyBreakdown.length;
+    const pointsCount = dailyBreakdownClean.length;
 
     const getX = (index) => {
       return padding.left + (index * (width - padding.left - padding.right)) / (pointsCount - 1 || 1);
@@ -40,7 +56,7 @@ export default function AdsTab({ adsData, loading }) {
     let maxValLeft = 10;
     let maxValRight = 10;
 
-    const dailyMetrics = dailyBreakdown.map((d) => {
+    const dailyMetrics = dailyBreakdownClean.map((d) => {
       const gSpend = d.google_spend || 0;
       const mSpend = d.meta_spend || 0;
       const gClicks = d.google_clicks || 0;

@@ -45,9 +45,20 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
   const bookingsCount = kpis.total_bookings || 0;
   const convRate = kpis.conversion_rate || 0.0;
 
+  // Helper to trim trailing empty days where there is no traffic or transaction activity
+  const trimTrailingEmptyDays = (arr, checkIsEmpty) => {
+    let endIdx = arr.length - 1;
+    while (endIdx >= 0 && checkIsEmpty(arr[endIdx])) {
+      endIdx--;
+    }
+    return arr.slice(0, endIdx + 1);
+  };
+
+  const trendChartClean = trimTrailingEmptyDays(trendChart || [], d => (d.sessions || 0) === 0 && (d.revenue || 0) === 0 && (d.spend || 0) === 0);
+
   // Render Premium SVG Chart
   const renderSvgChart = () => {
-    if (!trendChart || trendChart.length === 0) {
+    if (!trendChartClean || trendChartClean.length === 0) {
       return <div style={{ padding: "40px", textAlign: "center" }}>No historical data for this range.</div>;
     }
 
@@ -57,7 +68,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
 
     let runningRevenue = 0;
     let runningSpend = 0;
-    const cumulativeTrend = trendChart.map((d) => {
+    const cumulativeTrend = trendChartClean.map((d) => {
       runningRevenue += d.revenue || 0;
       runningSpend += d.spend || 0;
       return {
@@ -136,7 +147,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
     // X-axis date labels (show every few points to avoid crowding)
     const labelStep = Math.max(1, Math.floor(pointsCount / 6));
     const xLabels = [];
-    trendChart.forEach((d, idx) => {
+    trendChartClean.forEach((d, idx) => {
       if (idx % labelStep === 0 || idx === pointsCount - 1) {
         const x = getX(idx);
         // Format date string (e.g. "2026-06-15" -> "Jun 15")
@@ -224,7 +235,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
           {xLabels}
 
           {/* Interactive hover overlays */}
-          {trendChart.map((d, index) => {
+          {trendChartClean.map((d, index) => {
             const x = getX(index);
             const yRev = getY(d.revenue);
             const ySpend = getY(d.spend);

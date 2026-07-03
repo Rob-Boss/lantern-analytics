@@ -26,8 +26,20 @@ export default function TrafficTab({ trafficData, loading }) {
   const previousDailyTraffic = trafficData.previous_daily_traffic || [];
   const checkoutToPurchase = funnel.checkout_to_booking_rate || 0;
 
+  // Helper to trim trailing empty days where there is no traffic activity
+  const trimTrailingEmptyDays = (arr, checkIsEmpty) => {
+    let endIdx = arr.length - 1;
+    while (endIdx >= 0 && checkIsEmpty(arr[endIdx])) {
+      endIdx--;
+    }
+    return arr.slice(0, endIdx + 1);
+  };
+
+  const dailyTrafficClean = trimTrailingEmptyDays(dailyTraffic, d => (d.sessions || 0) === 0 && (d.new_users || 0) === 0);
+  const previousDailyTrafficClean = previousDailyTraffic.slice(0, dailyTrafficClean.length);
+
   // Insight visibility flags based on date range contents
-  const dailyTrafficDates = dailyTraffic.map(d => d.date);
+  const dailyTrafficDates = dailyTrafficClean.map(d => d.date);
   const showMetaCapInsight = dailyTrafficDates.includes("2026-06-27");
   const showAlgeriaSpikeInsight = dailyTrafficDates.includes("2026-06-29");
 
@@ -63,7 +75,10 @@ export default function TrafficTab({ trafficData, loading }) {
   };
 
   const renderTrafficChart = () => {
-    if (!dailyTraffic || dailyTraffic.length === 0) {
+    const currentTraffic = dailyTrafficClean;
+    const previousTraffic = previousDailyTrafficClean;
+
+    if (!currentTraffic || currentTraffic.length === 0) {
       return <div style={{ padding: "60px", textAlign: "center", color: "#606862" }}>No traffic metrics cached in this range.</div>;
     }
 
@@ -71,10 +86,10 @@ export default function TrafficTab({ trafficData, loading }) {
     const height = 240;
     const padding = { top: 20, right: 30, bottom: 40, left: 50 };
 
-    const currentValues = dailyTraffic.map((d) => d[activeMetric] || 0);
-    const previousValues = previousDailyTraffic.map((d) => d[activeMetric] || 0);
+    const currentValues = currentTraffic.map((d) => d[activeMetric] || 0);
+    const previousValues = previousTraffic.map((d) => d[activeMetric] || 0);
     const maxVal = Math.max(...currentValues, ...previousValues, 10);
-    const pointsCount = dailyTraffic.length;
+    const pointsCount = currentTraffic.length;
 
     const getX = (index) => {
       return padding.left + (index * (width - padding.left - padding.right)) / (pointsCount - 1 || 1);
@@ -88,13 +103,13 @@ export default function TrafficTab({ trafficData, loading }) {
     let currentPoints = [];
     let previousPoints = [];
 
-    dailyTraffic.forEach((d, index) => {
+    currentTraffic.forEach((d, index) => {
       const x = getX(index);
       const yCurr = getY(d[activeMetric] || 0);
       currentPoints.push(`${x},${yCurr}`);
 
-      if (previousDailyTraffic && previousDailyTraffic.length > index) {
-        const yPrev = getY(previousDailyTraffic[index][activeMetric] || 0);
+      if (previousTraffic && previousTraffic.length > index) {
+        const yPrev = getY(previousTraffic[index][activeMetric] || 0);
         previousPoints.push(`${x},${yPrev}`);
       }
     });
@@ -178,7 +193,7 @@ export default function TrafficTab({ trafficData, loading }) {
     
     if (hoveredIdx !== null && hoveredIdx < pointsCount) {
       const hX = getX(hoveredIdx);
-      const hVal = dailyTraffic[hoveredIdx][activeMetric] || 0;
+      const hVal = currentTraffic[hoveredIdx][activeMetric] || 0;
       const hY = getY(hVal);
       
       hoverGuide = (
@@ -204,8 +219,8 @@ export default function TrafficTab({ trafficData, loading }) {
         />
       );
       
-      if (previousDailyTraffic && previousDailyTraffic.length > hoveredIdx) {
-        const hPrevVal = previousDailyTraffic[hoveredIdx][activeMetric] || 0;
+      if (previousTraffic && previousTraffic.length > hoveredIdx) {
+        const hPrevVal = previousTraffic[hoveredIdx][activeMetric] || 0;
         const hPrevY = getY(hPrevVal);
         previousCircle = (
           <circle
@@ -222,7 +237,7 @@ export default function TrafficTab({ trafficData, loading }) {
 
     // Transparent columns for capturing mouse hover events smoothly
     const columnWidth = (width - padding.left - padding.right) / (pointsCount - 1 || 1);
-    const hoverColumns = dailyTraffic.map((d, idx) => {
+    const hoverColumns = currentTraffic.map((d, idx) => {
       const x = getX(idx);
       return (
         <rect
@@ -242,9 +257,9 @@ export default function TrafficTab({ trafficData, loading }) {
 
     // Tooltip elements
     let tooltipElement = null;
-    if (hoveredIdx !== null && dailyTraffic.length > hoveredIdx) {
-      const d = dailyTraffic[hoveredIdx];
-      const prevD = previousDailyTraffic.length > hoveredIdx ? previousDailyTraffic[hoveredIdx] : null;
+    if (hoveredIdx !== null && currentTraffic.length > hoveredIdx) {
+      const d = currentTraffic[hoveredIdx];
+      const prevD = previousTraffic.length > hoveredIdx ? previousTraffic[hoveredIdx] : null;
       
       const currVal = d[activeMetric] || 0;
       const prevVal = prevD ? (prevD[activeMetric] || 0) : 0;
@@ -423,7 +438,7 @@ export default function TrafficTab({ trafficData, loading }) {
                 <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d4a3e" }}>{(checkoutToPurchase || 0).toFixed(1)}%</div>
               </div>
             </div>
-            {dailyTraffic.some(d => d.date < "2026-07-02") && (
+            {dailyTrafficClean.some(d => d.date < "2026-07-02") && (
               <div style={{ 
                 marginTop: "16px", 
                 fontSize: "11px", 
