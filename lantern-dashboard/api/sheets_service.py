@@ -5,10 +5,10 @@ from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 
 try:
-    from .database import save_booking
+    from .database import save_booking, get_setting
     from .credentials_loader import get_ga4_creds_path
 except ImportError:
-    from database import save_booking
+    from database import save_booking, get_setting
     from credentials_loader import get_ga4_creds_path
 
 logging.basicConfig(level=logging.INFO)
@@ -144,3 +144,35 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
             
     logger.info(f"Sheet Sync Complete! Imported {count} bookings. Warnings: {len(errors)}")
     return count, errors
+
+if __name__ == "__main__":
+    import sys
+    
+    # Resolve the spreadsheet ID from settings, env or argument
+    sheet_id = os.environ.get("MEWS_SHEET_ID")
+    if not sheet_id:
+        try:
+            sheet_id = get_setting("mews_sheet_id")
+        except Exception:
+            pass
+            
+    if len(sys.argv) > 1:
+        sheet_id = sys.argv[1]
+        
+    if not sheet_id:
+        print("\n[Error] Google Sheet ID not found!")
+        print("Please configure the Mews Sheet ID in your dashboard settings first, or pass it as an argument:")
+        print("Usage: .venv/bin/python lantern-dashboard/api/sheets_service.py <spreadsheet_id>\n")
+        sys.exit(1)
+        
+    print(f"\nStarting Google Sheets bookings import for ID: {sheet_id}")
+    try:
+        count, errors = sync_bookings_from_sheet(sheet_id)
+        print(f"Success! Imported {count} bookings to Neon database.")
+        if errors:
+            print(f"Warnings/errors encountered: {len(errors)}")
+            for err in errors[:10]:
+                print(f" - {err}")
+    except Exception as exc:
+        print(f"Failed to sync bookings: {exc}")
+        sys.exit(1)
