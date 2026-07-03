@@ -295,6 +295,10 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
     checkout_conv_rate = round((total_checkouts / checkout_active_sessions * 100.0), 2) if checkout_active_sessions > 0 else 0.0
     checkout_to_booking_rate = round((checkout_active_bookings / total_checkouts * 100.0), 2) if total_checkouts > 0 else 0.0
     
+    # Count direct purchases in our system as a proxy for GA4 funnel
+    direct_purchases = len([b for b in filtered_bookings if b['channel'].lower() == 'direct'])
+    total_purchases = len(filtered_bookings)
+    
     return {
         "summary": {
             "sessions": total_sessions,
