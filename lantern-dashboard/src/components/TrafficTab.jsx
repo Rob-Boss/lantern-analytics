@@ -35,7 +35,13 @@ export default function TrafficTab({ trafficData, loading }) {
     return arr.slice(0, endIdx + 1);
   };
 
-  const dailyTrafficClean = trimTrailingEmptyDays(dailyTraffic, d => (d.sessions || 0) === 0 && (d.new_users || 0) === 0);
+  // Get local today's date in YYYY-MM-DD format
+  const todayStr = new Date().toLocaleDateString("en-CA");
+
+  const dailyTrafficClean = trimTrailingEmptyDays(
+    dailyTraffic.filter(d => d.date < todayStr), 
+    d => (d.sessions || 0) === 0 && (d.new_users || 0) === 0
+  );
   const previousDailyTrafficClean = previousDailyTraffic.slice(0, dailyTrafficClean.length);
 
   // Insight visibility flags based on date range contents
