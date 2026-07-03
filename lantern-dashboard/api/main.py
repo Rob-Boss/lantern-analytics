@@ -166,6 +166,8 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
             "total_net_revenue": round(total_net_rev, 2),
             "total_bookings": total_bookings,
             "total_spend": round(total_spend, 2),
+            "google_spend": round(total_google_spend, 2),
+            "meta_spend": round(total_meta_spend, 2),
             "roas": round(roas, 2),
             "newsletter_subscribers": newsletter_subs,
             "total_sessions": total_sessions,
@@ -299,6 +301,44 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
     direct_purchases = len([b for b in filtered_bookings if b['channel'].lower() == 'direct'])
     total_purchases = len(filtered_bookings)
     
+    # Pre-align current and previous daily traffic arrays by exact day offset
+    # This guarantees they both have the same length and align by index perfectly,
+    # mapping date C_date to P_date = C_date - period_days, defaulting missing days to 0.
+    metrics_map = {m['date']: m for m in get_daily_metrics_range(prev_start_date, end_date)}
+    
+    daily_traffic = []
+    previous_daily_traffic = []
+    
+    for m in metrics_current:
+        c_date = m['date']
+        try:
+            c_dt = datetime.strptime(c_date, "%Y-%m-%d").date()
+            p_dt = c_dt - timedelta(days=period_days)
+            p_date = p_dt.strftime("%Y-%m-%d")
+        except Exception:
+            p_date = c_date
+            
+        daily_traffic.append({
+            "date": c_date,
+            "sessions": m.get('sessions', 0),
+            "pageviews": m.get('pageviews', 0),
+            "checkouts": m.get('checkouts_initiated', 0),
+            "new_users": m.get('new_users', 0),
+            "active_users": m.get('active_users', 0),
+            "returning_users": max(0, m.get('active_users', 0) - m.get('new_users', 0))
+        })
+        
+        pm = metrics_map.get(p_date, {})
+        previous_daily_traffic.append({
+            "date": p_date,
+            "sessions": pm.get('sessions', 0),
+            "pageviews": pm.get('pageviews', 0),
+            "checkouts": pm.get('checkouts_initiated', 0),
+            "new_users": pm.get('new_users', 0),
+            "active_users": pm.get('active_users', 0),
+            "returning_users": max(0, pm.get('active_users', 0) - pm.get('new_users', 0))
+        })
+        
     return {
         "summary": {
             "sessions": total_sessions,
@@ -325,28 +365,8 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
             "checkout_to_booking_rate": checkout_to_booking_rate,
             "booking_conv_rate": round((total_purchases / total_sessions * 100.0), 2) if total_sessions > 0 else 0.0
         },
-        "daily_traffic": [
-            {
-                "date": m['date'],
-                "sessions": m.get('sessions', 0),
-                "pageviews": m.get('pageviews', 0),
-                "checkouts": m.get('checkouts_initiated', 0),
-                "new_users": m.get('new_users', 0),
-                "active_users": m.get('active_users', 0),
-                "returning_users": max(0, m.get('active_users', 0) - m.get('new_users', 0))
-            } for m in metrics_current
-        ],
-        "previous_daily_traffic": [
-            {
-                "date": m['date'],
-                "sessions": m.get('sessions', 0),
-                "pageviews": m.get('pageviews', 0),
-                "checkouts": m.get('checkouts_initiated', 0),
-                "new_users": m.get('new_users', 0),
-                "active_users": m.get('active_users', 0),
-                "returning_users": max(0, m.get('active_users', 0) - m.get('new_users', 0))
-            } for m in metrics_previous
-        ]
+        "daily_traffic": daily_traffic,
+        "previous_daily_traffic": previous_daily_traffic
     }
 
 @app.get("/api/dashboard/bookings")

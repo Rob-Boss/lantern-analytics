@@ -285,13 +285,25 @@ export default function TrafficTab({ trafficData, loading }) {
             <span>{getMetricLabel(activeMetric)}:</span>
             <span style={{ fontWeight: "700" }}>{formatNumber(currVal)}</span>
           </div>
+          {activeMetric !== "sessions" && (
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac" }}>
+              <span>Daily Visits:</span>
+              <span style={{ fontWeight: "500" }}>{formatNumber(d.sessions)}</span>
+            </div>
+          )}
           {prevD && (
             <>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac" }}>
-                <span>Prev Period:</span>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px" }}>
+                <span>Prev {getMetricLabel(activeMetric)}:</span>
                 <span style={{ fontWeight: "700" }}>{formatNumber(prevVal)}</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px" }}>
+              {activeMetric !== "sessions" && (
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#8a928c" }}>
+                  <span>Prev Visits:</span>
+                  <span style={{ fontWeight: "500" }}>{formatNumber(prevD.sessions)}</span>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: "4px" }}>
                 <span>Growth:</span>
                 <span style={{ 
                   fontWeight: "700", 
