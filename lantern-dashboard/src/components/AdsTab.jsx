@@ -63,7 +63,7 @@ export default function AdsTab({ adsData, loading }) {
     let runningSpendSum = 0;
     let runningClicksSum = 0;
 
-    const dailyMetrics = dailyBreakdownClean.map((d) => {
+    const dailyMetrics = dailyBreakdownClean.map((d, idx) => {
       const gSpend = d.google_spend || 0;
       const mSpend = d.meta_spend || 0;
       const gClicks = d.google_clicks || 0;
@@ -78,12 +78,16 @@ export default function AdsTab({ adsData, loading }) {
       const dailyCpc = totalClicks > 0 ? (totalSpend / totalClicks) : 0.0;
       const runningCpc = runningClicksSum > 0 ? (runningSpendSum / runningClicksSum) : 0.0;
 
+      const daysElapsed = idx + 1;
+      const runningAvgClicks = runningClicksSum / daysElapsed;
+
       return {
         date: d.date,
         totalSpend,
         totalClicks,
         cpc: runningCpc, // Renders the running average CPC on the chart
         dailyCpc, // Retained for display in tooltips
+        runningAvgClicks, // Renders the running average clicks / day on the chart
         gSpend,
         mSpend,
         gClicks,
@@ -105,7 +109,7 @@ export default function AdsTab({ adsData, loading }) {
       const peakSpend = Math.max(...dailyMetrics.map((d) => d.totalSpend), 10.0);
       maxVal = peakSpend * 1.15;
     } else if (activeTab === "total_clicks") {
-      const peakClicks = Math.max(...dailyMetrics.map((d) => d.totalClicks), 10);
+      const peakClicks = Math.max(...dailyMetrics.map((d) => d.runningAvgClicks), 10);
       maxVal = peakClicks * 1.15;
     } else {
       const peakChanSpend = Math.max(...dailyMetrics.map((d) => Math.max(d.gSpend, d.mSpend)), 10.0);
@@ -128,7 +132,7 @@ export default function AdsTab({ adsData, loading }) {
       } else if (activeTab === "daily_spend") {
         pathPoints1.push(`${x},${getY(d.totalSpend)}`);
       } else if (activeTab === "total_clicks") {
-        pathPoints1.push(`${x},${getY(d.totalClicks)}`);
+        pathPoints1.push(`${x},${getY(d.runningAvgClicks)}`);
       } else {
         pathPoints1.push(`${x},${getY(d.gSpend)}`);
         pathPoints2.push(`${x},${getY(d.mSpend)}`);
@@ -234,7 +238,7 @@ export default function AdsTab({ adsData, loading }) {
       } else if (activeTab === "daily_spend") {
         circle1 = <circle cx={hX} cy={getY(hData.totalSpend)} r="5" fill="#8eb29d" stroke="#ffffff" strokeWidth="2" />;
       } else if (activeTab === "total_clicks") {
-        circle1 = <circle cx={hX} cy={getY(hData.totalClicks)} r="5" fill="#d67a47" stroke="#ffffff" strokeWidth="2" />;
+        circle1 = <circle cx={hX} cy={getY(hData.runningAvgClicks)} r="5" fill="#d67a47" stroke="#ffffff" strokeWidth="2" />;
       } else {
         circle1 = <circle cx={hX} cy={getY(hData.gSpend)} r="5" fill="#4f46e5" stroke="#ffffff" strokeWidth="2" />;
         circle2 = <circle cx={hX} cy={getY(hData.mSpend)} r="5" fill="#ea580c" stroke="#ffffff" strokeWidth="2" />;
@@ -355,14 +359,18 @@ export default function AdsTab({ adsData, loading }) {
               {dateStr}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Total Clicks:</span>
-              <span style={{ fontWeight: "700", color: "#f7b28d" }}>{formatNumber(d.totalClicks)}</span>
+              <span>Running Avg Clicks:</span>
+              <span style={{ fontWeight: "700", color: "#f7b28d" }}>{d.runningAvgClicks.toFixed(1)}/day</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+              <span>Daily Clicks:</span>
+              <span>{formatNumber(d.totalClicks)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac", paddingLeft: "8px" }}>
               <span>Google Clicks:</span>
               <span>{formatNumber(d.gClicks)}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac", paddingLeft: "8px" }}>
               <span>Meta Clicks:</span>
               <span>{formatNumber(d.mClicks)}</span>
             </div>
@@ -428,7 +436,7 @@ export default function AdsTab({ adsData, loading }) {
         <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#d67a47" }}></span>
-            <span style={{ color: "#d67a47" }}>Total Link Clicks (Results)</span>
+            <span style={{ color: "#d67a47" }}>Running Average Clicks / Day</span>
           </div>
         </div>
       );
