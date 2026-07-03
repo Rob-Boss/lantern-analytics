@@ -360,7 +360,7 @@ export default function AdsTab({ adsData, loading }) {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span>Running Avg Clicks:</span>
-              <span style={{ fontWeight: "700", color: "#f7b28d" }}>{d.runningAvgClicks.toFixed(1)}/day</span>
+              <span style={{ fontWeight: "700", color: "#f7b28d" }}>{Math.round(d.runningAvgClicks)}/day</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
               <span>Daily Clicks:</span>
