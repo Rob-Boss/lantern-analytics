@@ -31,11 +31,17 @@ export default function AdsTab({ adsData, loading }) {
     return arr.slice(0, endIdx + 1);
   };
 
-  const dailyBreakdownClean = trimTrailingEmptyDays(dailyBreakdown, d => 
-    (d.google_spend || 0) === 0 && 
-    (d.meta_spend || 0) === 0 && 
-    (d.google_clicks || 0) === 0 && 
-    (d.meta_clicks || 0) === 0
+  // Get local today's date in YYYY-MM-DD format
+  const todayStr = new Date().toLocaleDateString("en-CA");
+
+  // Exclude today and trim any trailing empty days (e.g. if yesterday is also empty)
+  const dailyBreakdownClean = trimTrailingEmptyDays(
+    dailyBreakdown.filter(d => d.date < todayStr), 
+    d => 
+      (d.google_spend || 0) === 0 && 
+      (d.meta_spend || 0) === 0 && 
+      (d.google_clicks || 0) === 0 && 
+      (d.meta_clicks || 0) === 0
   );
 
   const renderAdsChart = () => {
