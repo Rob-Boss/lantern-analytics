@@ -422,13 +422,21 @@ def get_bookings_ledger():
 def webhook_booking(booking: BookingWebhook):
     """Zapier webhook endpoint. Real-time insertion from Mews."""
     try:
+        ota_fee = booking.ota_fee_percent or 0.0
+        if ota_fee == 0.0 and booking.channel:
+            ch_lower = booking.channel.lower()
+            if "airbnb" in ch_lower or "abb" in ch_lower:
+                ota_fee = 15.0
+            elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
+                ota_fee = 17.0
+                
         net = save_booking(
             booking_id=booking.id,
             channel=booking.channel,
             booking_date=booking.booking_date,
             nights=booking.nights,
             gross_revenue=booking.gross_revenue,
-            ota_fee_percent=booking.ota_fee_percent or 0.0,
+            ota_fee_percent=ota_fee,
             guest_email=booking.guest_email
         )
         logger.info(f"Webhook insertion success: {booking.id} ({booking.channel}) - Net: ${net}")
@@ -523,9 +531,9 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
             # Auto-default fees based on channel name if fee is 0.0 or not provided
             if ota_fee == 0.0:
                 ch_lower = channel.lower()
-                if "airbnb" in ch_lower:
+                if "airbnb" in ch_lower or "abb" in ch_lower:
                     ota_fee = 15.0
-                elif "booking" in ch_lower:
+                elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                     ota_fee = 17.0
                 
             # Guest Email
