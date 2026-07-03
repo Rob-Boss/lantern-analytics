@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+.npm
+.eslintcache
+
+# Python environment & cache
+.venv/
+env/
+venv/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Private API Credentials / Keys
+ga4-credentials.json
+meta-credentials.json
+google-ads.yaml
+.env
+.env.*
+
+# Local Database Cache
+lantern-dashboard/backend/lantern_dashboard.db
+*.db
+*.sqlite3
+
+# Operating System Files
+.DS_Store
+Thumbs.db

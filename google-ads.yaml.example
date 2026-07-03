@@ -1,0 +1,16 @@
+# Google Ads API Credentials YAML Configuration Template
+# Copy this file to 'google-ads.yaml' and fill in your details.
+
+# Developer token: obtained from the Google Ads API Center (inside your Manager/MCC Account)
+developer_token: YOUR_DEVELOPER_TOKEN_HERE
+
+# Client ID and Client Secret: created in the Google Cloud Console under OAuth 2.0 Credentials
+client_id: YOUR_CLIENT_ID_HERE.apps.googleusercontent.com
+client_secret: GOCSPX-YOUR_CLIENT_SECRET_HERE
+
+# Refresh token: generated using the 'generate_credentials.py' helper script in this directory
+refresh_token: 1//YOUR_REFRESH_TOKEN_HERE
+
+# Login Customer ID: The 10-digit ID of the Google Ads Account you are authenticating as (remove hyphens)
+login_customer_id: YOUR_LOGIN_CUSTOMER_ID_HERE
+use_proto_plus: true

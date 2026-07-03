@@ -1,0 +1,50 @@
+{
+  "date_range_label": "Last 30 Days (Including Today)",
+  "campaigns": [
+    {
+      "name": "Campaign 1b: HOMEPAGE traffic - static single image - [Drive Market]",
+      "status": "ACTIVE",
+      "spend": 269.41,
+      "impressions": 35355,
+      "clicks": 1925,
+      "conversions": 0
+    },
+    {
+      "name": "Campaign 2: Michelle Lawrence Partner Conversion (Sales)",
+      "status": "PAUSED",
+      "spend": 38.70,
+      "impressions": 3303,
+      "clicks": 135,
+      "conversions": 0
+    },
+    {
+      "name": "Campaign 1: HOMEPAGE traffic - static single image",
+      "status": "PAUSED",
+      "spend": 179.56,
+      "impressions": 19494,
+      "clicks": 1987,
+      "conversions": 0
+    }
+  ],
+  "age_breakdown": [
+    {"age": "25–34", "impressions": 4172, "views": 138, "spend": 21.53},
+    {"age": "35–44", "impressions": 6627, "views": 283, "spend": 40.16},
+    {"age": "45–54", "impressions": 6992, "views": 334, "spend": 51.50},
+    {"age": "55–64", "impressions": 6570, "views": 447, "spend": 54.31},
+    {"age": "65+", "impressions": 10746, "views": 716, "spend": 100.25},
+    {"age": "18–24", "impressions": 246, "views": 7, "spend": 1.65}
+  ],
+  "geo_breakdown": [
+    {"state": "Maine", "impressions": 6512, "spend": 56.15},
+    {"state": "Massachusetts", "impressions": 6239, "spend": 54.64},
+    {"state": "New York", "impressions": 8434, "spend": 52.69},
+    {"state": "Florida", "impressions": 4973, "spend": 34.33},
+    {"state": "Pennsylvania", "impressions": 2269, "spend": 16.44},
+    {"state": "New Hampshire", "impressions": 1870, "spend": 15.47},
+    {"state": "Connecticut", "impressions": 1608, "spend": 13.49},
+    {"state": "New Jersey", "impressions": 1044, "spend": 7.72},
+    {"state": "Maryland", "impressions": 880, "spend": 6.65},
+    {"state": "Vermont", "impressions": 824, "spend": 6.05},
+    {"state": "Rhode Island", "impressions": 701, "spend": 5.78}
+  ]
+}

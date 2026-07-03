@@ -1,0 +1,641 @@
+/* Eco-Minimalist Global Stylesheet for Lantern Camp Dashboard */
+
+:root {
+  --bg-color: #faf8f5;         /* Soft warm cream */
+  --card-bg: #ffffff;          /* Pure white */
+  --border-color: #e2e8e4;     /* Sage border */
+  --text-primary: #2d312e;     /* Charcoal primary text */
+  --text-secondary: #606862;   /* Slate/sage secondary text */
+  --forest-green: #2d4a3e;     /* Deep forest primary brand */
+  --sage-green: #5f7a61;       /* Muted sage accent */
+  --sage-light: #f0f4f1;       /* Very light sage for hover/inactive states */
+  --campfire-orange: #d67a47;   /* Orange for highlights, cost, conversions */
+  --campfire-light: #fcf1eb;    /* Light orange background */
+  --shadow-sm: 0 2px 4px rgba(45, 74, 62, 0.04);
+  --shadow-md: 0 4px 12px rgba(45, 74, 62, 0.06);
+  --shadow-lg: 0 10px 25px rgba(45, 74, 62, 0.08);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--forest-green);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  width: 260px;
+  background-color: var(--card-bg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--forest-green);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--forest-green);
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-size: 14px;
+}
+
+.menu-item:hover {
+  background-color: var(--sage-light);
+  color: var(--forest-green);
+}
+
+.menu-item.active {
+  background-color: var(--forest-green);
+  color: #ffffff;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+}
+
+/* Main Workspace */
+.main-content {
+  flex-grow: 1;
+  margin-left: 260px;
+  padding: 40px;
+  max-width: 1300px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.page-title h1 {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.page-title p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Date Filters & Inputs */
+.date-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.date-selector input {
+  border: none;
+  font-family: inherit;
+  color: var(--text-primary);
+  font-weight: 500;
+  outline: none;
+  font-size: 13px;
+  background: transparent;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background-color: var(--forest-green);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: #20352c;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--sage-light);
+  color: var(--forest-green);
+}
+
+/* KPI Scorecard Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.kpi-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.kpi-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--forest-green);
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.kpi-value.orange {
+  color: var(--campfire-orange);
+}
+
+.kpi-subtext {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Chart and Tables Panel Grid */
+.panel-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.panel-single {
+  grid-template-columns: 1fr;
+}
+
+.panel {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Custom Table Design */
+.table-container {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th {
+  background-color: var(--bg-color);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13.5px;
+  color: var(--text-primary);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background-color: var(--bg-color);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.badge-direct {
+  background-color: #e3f2fd;
+  color: #0d47a1;
+}
+
+.badge-airbnb {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.badge-booking {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+}
+
+.badge-other {
+  background-color: #f5f5f5;
+  color: #616161;
+}
+
+/* Funnel Representation */
+.funnel-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.funnel-stage {
+  position: relative;
+}
+
+.funnel-bar-wrapper {
+  background-color: var(--bg-color);
+  border-radius: var(--radius-sm);
+  height: 48px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-color);
+}
+
+.funnel-bar {
+  background-color: var(--sage-green);
+  height: 100%;
+  transition: width 0.8s cubic-bezier(0.1, 0.8, 0.2, 1);
+}
+
+.funnel-bar.checkout {
+  background-color: #9cb2a0;
+}
+
+.funnel-bar.purchase {
+  background-color: var(--forest-green);
+}
+
+.funnel-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  pointer-events: none;
+}
+
+.funnel-percentage {
+  font-size: 11px;
+  background-color: var(--card-bg);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+/* Upload Interface */
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+  background-color: var(--bg-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.upload-zone:hover {
+  border-color: var(--sage-green);
+  background-color: var(--sage-light);
+}
+
+.upload-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  color: var(--sage-green);
+}
+
+.upload-text {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.upload-subtext {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Form Settings Input */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 480px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--forest-green);
+  font-size: 13px;
+}
+
+.form-group input {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  border-color: var(--sage-green);
+}
+
+/* Notification banner */
+.alert-banner {
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.alert-success {
+  background-color: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  color: #2e7d32;
+}
+
+.alert-error {
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  color: #c62828;
+}
+
+/* Simple Flex items */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-gap {
+  display: flex;
+  gap: 16px;
+}
+
+/* Trend charts representation using CSS Bars (Pure fallback if Charts are tricky, but we can do SVG/HTML charts) */
+.chart-bar-container {
+  display: flex;
+  align-items: flex-end;
+  height: 200px;
+  gap: 6px;
+  padding-top: 20px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.chart-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.chart-bar-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+}
+
+.chart-bar-spend {
+  background-color: var(--campfire-orange);
+  width: 12px;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.5s ease;
+}
+
+.chart-bar-revenue {
+  background-color: var(--forest-green);
+  width: 12px;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.5s ease;
+}
+
+.chart-column-label {
+  font-size: 9px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  white-space: nowrap;
+  transform: rotate(-45deg) translate(-8px, 0);
+  transform-origin: left top;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: 100%;
+  background: var(--text-primary);
+  color: #fff;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.chart-column:hover .tooltip {
+  opacity: 1;
+}
+
+.channel-spend-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 16px;
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-dot.spend {
+  background-color: var(--campfire-orange);
+}
+
+.legend-dot.revenue {
+  background-color: var(--forest-green);
+}
