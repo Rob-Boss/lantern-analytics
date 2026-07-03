@@ -16,15 +16,32 @@ try:
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
         save_setting, get_setting, clear_bookings, get_first_booking_date
     )
-    from .sync_service import sync_data
-    from .sheets_service import sync_bookings_from_sheet
 except ImportError:
     from database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
         save_setting, get_setting, clear_bookings, get_first_booking_date
     )
-    from sync_service import sync_data
-    from sheets_service import sync_bookings_from_sheet
+
+sync_data = None
+sync_bookings_from_sheet = None
+
+# Attempt to load marketing sync dependencies (which will fail in serverless environment)
+try:
+    try:
+        from .sync_service import sync_data
+    except ImportError:
+        from sync_service import sync_data
+except Exception as e:
+    logger.warning(f"Sync service dependencies could not be loaded: {e}. API sync endpoints will be disabled.")
+
+# Attempt to load Google Sheets sync dependencies (which will fail in serverless environment)
+try:
+    try:
+        from .sheets_service import sync_bookings_from_sheet
+    except ImportError:
+        from sheets_service import sync_bookings_from_sheet
+except Exception as e:
+    logger.warning(f"Sheets service dependencies could not be loaded: {e}. Sheets sync endpoints will be disabled.")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -420,6 +437,11 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
 @app.post("/api/data/sync")
 def trigger_sync(background_tasks: BackgroundTasks, days: int = 30):
     """Triggers dynamic marketing API sync in a background thread."""
+    if sync_data is None:
+        raise HTTPException(
+            status_code=501,
+            detail="Marketing API sync is not supported in the serverless environment. Please run the sync script locally."
+        )
     background_tasks.add_task(sync_data, days=days)
     return {"status": "sync_started", "message": f"Sync task scheduled in background for the last {days} days."}
 
@@ -449,6 +471,11 @@ def get_settings():
 @app.post("/api/data/sync-sheets")
 def trigger_sheets_sync(payload: SheetsSyncPayload):
     """Triggers synchronizing bookings from the specified Google Sheet."""
+    if sync_bookings_from_sheet is None:
+        raise HTTPException(
+            status_code=501,
+            detail="Google Sheets sync is not supported in the serverless environment. Please run the sync script locally."
+        )
     try:
         count, errors = sync_bookings_from_sheet(payload.spreadsheet_id, payload.range_name)
         return {"status": "success", "imported_rows": count, "errors": errors}
