@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 export default function AdsTab({ adsData, loading }) {
-  const [activeTab, setActiveTab] = useState("spend_vs_clicks"); // spend_vs_clicks, cpc, channel_spend
+  const [activeTab, setActiveTab] = useState("cpc"); // cpc, total_spend, total_clicks, channel_spend
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
   if (loading) {
@@ -51,7 +51,7 @@ export default function AdsTab({ adsData, loading }) {
 
     const width = 800;
     const height = 240;
-    const padding = { top: 20, right: 70, bottom: 40, left: 50 };
+    const padding = { top: 20, right: 30, bottom: 40, left: 50 };
     const pointsCount = dailyBreakdownClean.length;
 
     const getX = (index) => {
@@ -59,8 +59,7 @@ export default function AdsTab({ adsData, loading }) {
     };
 
     // Calculate metric lists and limits based on selected tab mode
-    let maxValLeft = 10;
-    let maxValRight = 10;
+    let maxVal = 10;
 
     const dailyMetrics = dailyBreakdownClean.map((d) => {
       const gSpend = d.google_spend || 0;
@@ -84,23 +83,19 @@ export default function AdsTab({ adsData, loading }) {
       };
     });
 
-    if (activeTab === "spend_vs_clicks") {
-      maxValLeft = Math.max(...dailyMetrics.map((d) => d.totalSpend), 10);
-      maxValRight = Math.max(...dailyMetrics.map((d) => d.totalClicks), 10);
-    } else if (activeTab === "cpc") {
-      maxValLeft = Math.max(...dailyMetrics.map((d) => d.cpc), 1.0);
+    if (activeTab === "cpc") {
+      maxVal = Math.max(...dailyMetrics.map((d) => d.cpc), 1.0);
+    } else if (activeTab === "total_spend") {
+      maxVal = Math.max(...dailyMetrics.map((d) => d.totalSpend), 10.0);
+    } else if (activeTab === "total_clicks") {
+      maxVal = Math.max(...dailyMetrics.map((d) => d.totalClicks), 10);
     } else {
-      maxValLeft = Math.max(...dailyMetrics.map((d) => Math.max(d.gSpend, d.mSpend)), 10);
+      maxVal = Math.max(...dailyMetrics.map((d) => Math.max(d.gSpend, d.mSpend)), 10.0);
     }
 
-    const getYLeft = (val) => {
+    const getY = (val) => {
       const chartHeight = height - padding.top - padding.bottom;
-      return height - padding.bottom - (val / maxValLeft) * chartHeight;
-    };
-
-    const getYRight = (val) => {
-      const chartHeight = height - padding.top - padding.bottom;
-      return height - padding.bottom - (val / maxValRight) * chartHeight;
+      return height - padding.bottom - (val / maxVal) * chartHeight;
     };
 
     // Generate path points
@@ -109,33 +104,34 @@ export default function AdsTab({ adsData, loading }) {
 
     dailyMetrics.forEach((d, idx) => {
       const x = getX(idx);
-      if (activeTab === "spend_vs_clicks") {
-        pathPoints1.push(`${x},${getYLeft(d.totalSpend)}`);
-        pathPoints2.push(`${x},${getYRight(d.totalClicks)}`);
-      } else if (activeTab === "cpc") {
-        pathPoints1.push(`${x},${getYLeft(d.cpc)}`);
+      if (activeTab === "cpc") {
+        pathPoints1.push(`${x},${getY(d.cpc)}`);
+      } else if (activeTab === "total_spend") {
+        pathPoints1.push(`${x},${getY(d.totalSpend)}`);
+      } else if (activeTab === "total_clicks") {
+        pathPoints1.push(`${x},${getY(d.totalClicks)}`);
       } else {
-        pathPoints1.push(`${x},${getYLeft(d.gSpend)}`);
-        pathPoints2.push(`${x},${getYLeft(d.mSpend)}`);
+        pathPoints1.push(`${x},${getY(d.gSpend)}`);
+        pathPoints2.push(`${x},${getY(d.mSpend)}`);
       }
     });
 
     const path1 = pointsCount > 0 ? `M ${pathPoints1.join(" L ")}` : "";
     const path2 = pointsCount > 0 && pathPoints2.length > 0 ? `M ${pathPoints2.join(" L ")}` : "";
 
-    const areaPath1 = pointsCount > 0 && (activeTab === "spend_vs_clicks" || activeTab === "cpc")
+    const areaPath1 = pointsCount > 0 && activeTab !== "channel_spend"
       ? `${path1} L ${getX(pointsCount - 1)},${height - padding.bottom} L ${getX(0)},${height - padding.bottom} Z`
       : "";
 
-    // Grid lines (y-axis left steps)
+    // Grid lines (y-axis steps)
     const gridSteps = 4;
     const gridLines = [];
     for (let i = 0; i <= gridSteps; i++) {
-      const valLeft = (maxValLeft / gridSteps) * i;
-      const y = getYLeft(valLeft);
+      const val = (maxVal / gridSteps) * i;
+      const y = getY(val);
       
       gridLines.push(
-        <g key={`grid-left-${i}`}>
+        <g key={`grid-line-${i}`}>
           <line
             x1={padding.left}
             y1={y}
@@ -151,21 +147,8 @@ export default function AdsTab({ adsData, loading }) {
             fontSize="10"
             fill="#606862"
           >
-            {formatCurrency(valLeft)}
+            {activeTab === "total_clicks" ? formatNumber(val) : formatCurrency(val)}
           </text>
-          
-          {/* Dual Axis: Right labels for Clicks if in spend_vs_clicks mode */}
-          {activeTab === "spend_vs_clicks" && (
-            <text
-              x={width - padding.right + 10}
-              y={y + 4}
-              textAnchor="start"
-              fontSize="10"
-              fill="#606862"
-            >
-              {Math.round((maxValRight / gridSteps) * i)} Clicks
-            </text>
-          )}
         </g>
       );
     }
@@ -227,14 +210,15 @@ export default function AdsTab({ adsData, loading }) {
         />
       );
 
-      if (activeTab === "spend_vs_clicks") {
-        circle1 = <circle cx={hX} cy={getYLeft(hData.totalSpend)} r="5" fill="#8eb29d" stroke="#ffffff" strokeWidth="2" />;
-        circle2 = <circle cx={hX} cy={getYRight(hData.totalClicks)} r="5" fill="#d67a47" stroke="#ffffff" strokeWidth="2" />;
-      } else if (activeTab === "cpc") {
-        circle1 = <circle cx={hX} cy={getYLeft(hData.cpc)} r="5" fill="#2d4a3e" stroke="#ffffff" strokeWidth="2" />;
+      if (activeTab === "cpc") {
+        circle1 = <circle cx={hX} cy={getY(hData.cpc)} r="5" fill="#2d4a3e" stroke="#ffffff" strokeWidth="2" />;
+      } else if (activeTab === "total_spend") {
+        circle1 = <circle cx={hX} cy={getY(hData.totalSpend)} r="5" fill="#8eb29d" stroke="#ffffff" strokeWidth="2" />;
+      } else if (activeTab === "total_clicks") {
+        circle1 = <circle cx={hX} cy={getY(hData.totalClicks)} r="5" fill="#d67a47" stroke="#ffffff" strokeWidth="2" />;
       } else {
-        circle1 = <circle cx={hX} cy={getYLeft(hData.gSpend)} r="5" fill="#4f46e5" stroke="#ffffff" strokeWidth="2" />;
-        circle2 = <circle cx={hX} cy={getYLeft(hData.mSpend)} r="5" fill="#ea580c" stroke="#ffffff" strokeWidth="2" />;
+        circle1 = <circle cx={hX} cy={getY(hData.gSpend)} r="5" fill="#4f46e5" stroke="#ffffff" strokeWidth="2" />;
+        circle2 = <circle cx={hX} cy={getY(hData.mSpend)} r="5" fill="#ea580c" stroke="#ffffff" strokeWidth="2" />;
       }
     }
 
@@ -293,27 +277,7 @@ export default function AdsTab({ adsData, loading }) {
         transition: "left 0.1s ease-out, right 0.1s ease-out"
       };
 
-      if (activeTab === "spend_vs_clicks") {
-        tooltipElement = (
-          <div style={tooltipStyle}>
-            <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
-              {dateStr}
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Total Spend:</span>
-              <span style={{ fontWeight: "700", color: "#81c995" }}>{formatCurrency(d.totalSpend)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Clicks (Results):</span>
-              <span style={{ fontWeight: "700", color: "#f7b28d" }}>{formatNumber(d.totalClicks)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", color: "#a8b2ac" }}>
-              <span>Combined CPC:</span>
-              <span>{formatCurrency(d.cpc)}</span>
-            </div>
-          </div>
-        );
-      } else if (activeTab === "cpc") {
+      if (activeTab === "cpc") {
         tooltipElement = (
           <div style={tooltipStyle}>
             <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
@@ -326,6 +290,46 @@ export default function AdsTab({ adsData, loading }) {
             <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", color: "#a8b2ac", fontSize: "10.5px" }}>
               <span>Spend / Clicks:</span>
               <span>{formatCurrency(d.totalSpend)} / {d.totalClicks}</span>
+            </div>
+          </div>
+        );
+      } else if (activeTab === "total_spend") {
+        tooltipElement = (
+          <div style={tooltipStyle}>
+            <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
+              {dateStr}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Total Spend:</span>
+              <span style={{ fontWeight: "700", color: "#81c995" }}>{formatCurrency(d.totalSpend)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+              <span>Google Spend:</span>
+              <span>{formatCurrency(d.gSpend)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+              <span>Meta Spend:</span>
+              <span>{formatCurrency(d.mSpend)}</span>
+            </div>
+          </div>
+        );
+      } else if (activeTab === "total_clicks") {
+        tooltipElement = (
+          <div style={tooltipStyle}>
+            <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
+              {dateStr}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Total Clicks:</span>
+              <span style={{ fontWeight: "700", color: "#f7b28d" }}>{formatNumber(d.totalClicks)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+              <span>Google Clicks:</span>
+              <span>{formatNumber(d.gClicks)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+              <span>Meta Clicks:</span>
+              <span>{formatNumber(d.mClicks)}</span>
             </div>
           </div>
         );
@@ -354,25 +358,30 @@ export default function AdsTab({ adsData, loading }) {
 
     // Legend styles based on activeTab
     let legend = null;
-    if (activeTab === "spend_vs_clicks") {
-      legend = (
-        <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#8eb29d" }}></span>
-            <span style={{ color: "#606862" }}>Total Spend ($)</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#d67a47" }}></span>
-            <span style={{ color: "#d67a47" }}>Clicks (Results)</span>
-          </div>
-        </div>
-      );
-    } else if (activeTab === "cpc") {
+    if (activeTab === "cpc") {
       legend = (
         <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#2d4a3e" }}></span>
             <span style={{ color: "#2d4a3e" }}>Combined Cost Per Click (CPC)</span>
+          </div>
+        </div>
+      );
+    } else if (activeTab === "total_spend") {
+      legend = (
+        <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#8eb29d" }}></span>
+            <span style={{ color: "#606862" }}>Total Daily Spend ($)</span>
+          </div>
+        </div>
+      );
+    } else if (activeTab === "total_clicks") {
+      legend = (
+        <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#d67a47" }}></span>
+            <span style={{ color: "#d67a47" }}>Total Link Clicks (Results)</span>
           </div>
         </div>
       );
@@ -391,19 +400,34 @@ export default function AdsTab({ adsData, loading }) {
       );
     }
 
+    // Determine gradients to load based on activeTab
+    let strokeColor = "#2d4a3e";
+    let gradId = "cpcGrad";
+    if (activeTab === "total_spend") {
+      strokeColor = "#8eb29d";
+      gradId = "spendGrad";
+    } else if (activeTab === "total_clicks") {
+      strokeColor = "#d67a47";
+      gradId = "clicksGrad";
+    }
+
     return (
       <div style={{ position: "relative" }}>
         {legend}
         {tooltipElement}
         <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="auto">
           <defs>
+            <linearGradient id="cpcGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#2d4a3e" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#2d4a3e" stopOpacity="0.0" />
+            </linearGradient>
             <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#8eb29d" stopOpacity="0.25" />
               <stop offset="100%" stopColor="#8eb29d" stopOpacity="0.0" />
             </linearGradient>
-            <linearGradient id="cpcGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2d4a3e" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#2d4a3e" stopOpacity="0.0" />
+            <linearGradient id="clicksGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#d67a47" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#d67a47" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -411,31 +435,28 @@ export default function AdsTab({ adsData, loading }) {
           {gridLines}
 
           {/* Area gradients */}
-          {activeTab === "spend_vs_clicks" && areaPath1 && (
-            <path d={areaPath1} fill="url(#spendGrad)" />
-          )}
-          {activeTab === "cpc" && areaPath1 && (
-            <path d={areaPath1} fill="url(#cpcGrad)" />
+          {activeTab !== "channel_spend" && areaPath1 && (
+            <path d={areaPath1} fill={`url(#${gradId})`} />
           )}
 
-          {/* Line 2 (Second line in dual-line plots) */}
+          {/* Line 2 (For Google vs Meta spend in channel_spend mode) */}
           {path2 && (
             <path
               d={path2}
               fill="none"
-              stroke={activeTab === "spend_vs_clicks" ? "#d67a47" : "#ea580c"}
+              stroke="#ea580c"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           )}
 
-          {/* Line 1 (Primary line in all plots) */}
+          {/* Line 1 */}
           {path1 && (
             <path
               d={path1}
               fill="none"
-              stroke={activeTab === "spend_vs_clicks" ? "#8eb29d" : (activeTab === "cpc" ? "#2d4a3e" : "#4f46e5")}
+              stroke={activeTab === "channel_spend" ? "#4f46e5" : strokeColor}
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -539,8 +560,9 @@ export default function AdsTab({ adsData, loading }) {
           {/* Chart Metric Selector Tabs */}
           <div style={{ display: "flex", border: "1px solid #e2e8e4", borderRadius: "8px", overflow: "hidden" }}>
             {[
-              { key: "spend_vs_clicks", label: "Spend vs. Clicks (Results)" },
               { key: "cpc", label: "Cost Per Click (CPC)" },
+              { key: "total_spend", label: "Total Ad Spend" },
+              { key: "total_clicks", label: "Link Clicks (Results)" },
               { key: "channel_spend", label: "Channel Budgets" }
             ].map((tab) => {
               const isSelected = activeTab === tab.key;
