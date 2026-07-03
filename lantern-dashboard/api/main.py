@@ -290,7 +290,7 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
     
     # Calculate conversion rates, adjusting for the checkout tracking start date (2026-07-02)
     checkout_active_sessions = sum(m.get('sessions', 0) for m in metrics_current if m['date'] >= '2026-07-02')
-    checkout_active_bookings = len([b for b in filtered_bookings if b['booking_date'] >= '2026-07-02'])
+    checkout_active_bookings = len([b for b in filtered_bookings if b['booking_date'] >= '2026-07-02' and b['channel'].lower() == 'direct'])
     
     checkout_conv_rate = round((total_checkouts / checkout_active_sessions * 100.0), 2) if checkout_active_sessions > 0 else 0.0
     checkout_to_booking_rate = round((checkout_active_bookings / total_checkouts * 100.0), 2) if total_checkouts > 0 else 0.0
