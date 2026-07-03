@@ -38,8 +38,6 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
 
   // KPI Calculations
   const totalRevenue = kpis.total_net_revenue || 0;
-  const airbnbRevenue = kpis.airbnb_net_revenue || 0;
-  const mewsRevenue = kpis.mews_net_revenue || 0;
   const totalSpend = kpis.total_spend || 0;
   const roas = kpis.roas || 0.0;
   const newsletterSubs = kpis.newsletter_subscribers || 0;
@@ -327,18 +325,6 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-label">Mews Direct Revenue</div>
-          <div className="kpi-value" style={{ color: "#2d4a3e" }}>{formatCurrency(mewsRevenue)}</div>
-          <div className="kpi-subtext">From direct booking engine</div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label">Airbnb Revenue</div>
-          <div className="kpi-value" style={{ color: "#ea580c" }}>{formatCurrency(airbnbRevenue)}</div>
-          <div className="kpi-subtext">From Airbnb listings</div>
-        </div>
-
-        <div className="kpi-card">
           <div className="kpi-label">Total Ad Spend</div>
           <div className="kpi-value orange">{formatCurrency(totalSpend)}</div>
           <div className="kpi-subtext">Google: {formatCurrency(kpis.google_spend || 0)} | Meta: {formatCurrency(kpis.meta_spend || 0)}</div>
@@ -375,26 +361,8 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
         </div>
       </div>
 
-      {/* Main Charts & Key Metrics */}
-      <div className="panel panel-single">
-        <div className="panel-header">
-          <div className="panel-title">Cumulative Net Revenue vs. Advertising Spend</div>
-          <div className="channel-spend-legend" style={{ margin: 0 }}>
-            <div className="legend-item">
-              <span className="legend-dot revenue"></span>
-              <span style={{ fontWeight: 500 }}>Net Booking Revenue</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-dot spend"></span>
-              <span style={{ fontWeight: 500 }}>Total Ad Spend</span>
-            </div>
-          </div>
-        </div>
-        {renderSvgChart()}
-      </div>
-
       {/* Channel Revenue Share Breakdown */}
-      <div className="panel" style={{ marginTop: "24px" }}>
+      <div className="panel" style={{ marginBottom: "24px" }}>
         <div className="panel-header">
           <div className="panel-title">Net Revenue Share by Booking Channel</div>
         </div>
@@ -476,6 +444,24 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
             </div>
           </div>
         )}
+      </div>
+
+      {/* Main Charts & Key Metrics */}
+      <div className="panel panel-single">
+        <div className="panel-header">
+          <div className="panel-title">Cumulative Net Revenue vs. Advertising Spend</div>
+          <div className="channel-spend-legend" style={{ margin: 0 }}>
+            <div className="legend-item">
+              <span className="legend-dot revenue"></span>
+              <span style={{ fontWeight: 500 }}>Net Booking Revenue</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-dot spend"></span>
+              <span style={{ fontWeight: 500 }}>Total Ad Spend</span>
+            </div>
+          </div>
+        </div>
+        {renderSvgChart()}
       </div>
     </div>
   );
