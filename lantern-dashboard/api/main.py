@@ -10,6 +10,9 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from datetime import datetime
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Import database & sync helpers
 try:
     from .database import (
@@ -42,9 +45,6 @@ try:
         from sheets_service import sync_bookings_from_sheet
 except Exception as e:
     logger.warning(f"Sheets service dependencies could not be loaded: {e}. Sheets sync endpoints will be disabled.")
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Lantern Camp Analytics Dashboard API")
 
