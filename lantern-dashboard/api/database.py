@@ -282,6 +282,36 @@ def get_geo_metrics(start_date, end_date, metric_type, limit=15):
             results.append({"city": name_val, "users": users_val})
     return results
 
+def save_geo_metrics_batch(rows):
+    """Saves a list of (date_str, metric_type, name, users) tuples in bulk."""
+    if not rows:
+        return
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if IS_POSTGRES:
+        from psycopg2.extras import execute_values
+        query = """
+            INSERT INTO geo_metrics (date, type, name, users)
+            VALUES %s
+            ON CONFLICT (date, type, name)
+            DO UPDATE SET users = EXCLUDED.users
+        """
+        execute_values(cursor, query, rows)
+    else:
+        cursor.execute("BEGIN TRANSACTION")
+        for r in rows:
+            cursor.execute("""
+                INSERT INTO geo_metrics (date, type, name, users)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT (date, type, name)
+                DO UPDATE SET users = excluded.users
+            """, r)
+        cursor.execute("COMMIT")
+        
+    conn.commit()
+    conn.close()
+
 # Initial run to ensure tables exist
 if __name__ == "__main__":
     init_db()

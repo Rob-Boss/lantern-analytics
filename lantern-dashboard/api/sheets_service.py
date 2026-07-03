@@ -119,9 +119,9 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
             # Auto-default fees based on channel name if fee is 0.0 or not provided
             if ota_fee == 0.0:
                 ch_lower = channel.lower()
-                if "airbnb" in ch_lower:
+                if "airbnb" in ch_lower or "abb" in ch_lower:
                     ota_fee = 15.0
-                elif "booking" in ch_lower:
+                elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                     ota_fee = 17.0
                 
             # Guest Email

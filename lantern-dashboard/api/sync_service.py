@@ -17,10 +17,10 @@ import requests
 
 # Import database helpers (ensuring parent directory/module path works)
 try:
-    from .database import save_daily_metric_row, save_setting, save_geo_metric
+    from .database import save_daily_metric_row, save_setting, save_geo_metric, save_geo_metrics_batch
     from .credentials_loader import get_ga4_creds_path, get_meta_creds_path, get_google_ads_yaml_path
 except ImportError:
-    from database import save_daily_metric_row, save_setting, save_geo_metric
+    from database import save_daily_metric_row, save_setting, save_geo_metric, save_geo_metrics_batch
     from credentials_loader import get_ga4_creds_path, get_meta_creds_path, get_google_ads_yaml_path
 
 logging.basicConfig(level=logging.INFO)
@@ -231,6 +231,7 @@ def sync_ga4_geo_metrics(start_str, end_str):
         
     try:
         client = BetaAnalyticsDataClient.from_service_account_json(GA4_CREDS_PATH)
+        rows_to_save = []
         
         # 1. Sync daily regions (States)
         region_request = RunReportRequest(
@@ -245,7 +246,7 @@ def sync_ga4_geo_metrics(start_str, end_str):
             date_val = datetime.strptime(row.dimension_values[0].value, "%Y%m%d").strftime("%Y-%m-%d")
             region_val = row.dimension_values[1].value
             users_val = int(row.metric_values[0].value)
-            save_geo_metric(date_val, "region", region_val, users_val)
+            rows_to_save.append((date_val, "region", region_val, users_val))
             
         # 2. Sync daily cities
         city_request = RunReportRequest(
@@ -260,7 +261,11 @@ def sync_ga4_geo_metrics(start_str, end_str):
             date_val = datetime.strptime(row.dimension_values[0].value, "%Y%m%d").strftime("%Y-%m-%d")
             city_val = row.dimension_values[1].value
             users_val = int(row.metric_values[0].value)
-            save_geo_metric(date_val, "city", city_val, users_val)
+            rows_to_save.append((date_val, "city", city_val, users_val))
+            
+        if rows_to_save:
+            logger.info(f"Saving {len(rows_to_save)} geographic data points to database in bulk...")
+            save_geo_metrics_batch(rows_to_save)
             
         logger.info("GA4 geo metrics synced successfully.")
     except Exception as e:
