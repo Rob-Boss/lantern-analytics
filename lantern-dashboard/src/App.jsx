@@ -5,6 +5,7 @@ import TrafficTab from "./components/TrafficTab";
 import BookingsTab from "./components/BookingsTab";
 import SettingsTab from "./components/SettingsTab";
 
+// Cache buster comment to force Vite bundle hash refresh
 const API_BASE = import.meta.env.DEV
   ? `http://${window.location.hostname}:8000/api`
   : (import.meta.env.VITE_API_URL || "/api");
