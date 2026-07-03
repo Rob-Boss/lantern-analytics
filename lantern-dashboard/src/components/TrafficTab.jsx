@@ -421,7 +421,10 @@ export default function TrafficTab({ trafficData, loading }) {
   };
 
   const maxStateUsers = Math.max(...geoRegions.map(r => r.users), 1);
-  const maxCityUsers = Math.max(...geoCities.map(c => c.users), 1);
+  
+  // Filter out '(not set)' from cities list before calculating peak or slicing
+  const filteredGeoCities = geoCities.filter(c => c.city && c.city !== "(not set)" && c.city !== "not set");
+  const maxCityUsers = Math.max(...filteredGeoCities.map(c => c.users), 1);
 
   return (
     <div>
@@ -608,14 +611,14 @@ export default function TrafficTab({ trafficData, loading }) {
             <div className="panel-title">Top 10 Cities</div>
           </div>
 
-          {geoCities.length === 0 ? (
+          {filteredGeoCities.length === 0 ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px", color: "#8a928c", fontSize: "13px" }}>
               <span>No cached city metrics found.</span>
               <span style={{ fontSize: "11px", marginTop: "4px", color: "#a2a8a4" }}>Run the data sync in settings to sync geographic data from GA4!</span>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {geoCities.slice(0, 10).map((row, idx) => {
+              {filteredGeoCities.slice(0, 10).map((row, idx) => {
                 const pct = maxCityUsers > 0 ? (row.users / maxCityUsers) * 100 : 0;
                 return (
                   <div key={`city-${idx}`} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
