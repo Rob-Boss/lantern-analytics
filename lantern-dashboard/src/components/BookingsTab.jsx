@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 
 export default function BookingsTab({ bookingsData, loading }) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const bookingsPerPage = 15;
 
   if (loading) {
-    return <div style={{ padding: "40px", textAlign: "center" }}>Loading Bookings ledger...</div>;
+    return <div style={{ padding: "80px", textAlign: "center", color: "#606862" }}>Loading Bookings ledger...</div>;
   }
 
   const formatCurrency = (val) => {
@@ -19,116 +22,249 @@ export default function BookingsTab({ bookingsData, loading }) {
   };
 
   const bookings = bookingsData.bookings || [];
-  const channelSummary = bookingsData.channel_summary || [];
 
-  // Filter bookings by channel
-  const filteredBookings = channelFilter === "all" 
-    ? bookings 
-    : bookings.filter((b) => b.channel.toLowerCase() === channelFilter.toLowerCase());
+  // Filter bookings by search and channel
+  const filteredBookings = bookings.filter((b) => {
+    const guestEmail = b.guest_email || "";
+    const bookingId = b.id || "";
+    const normChannel = b.normalized_channel || "Other";
 
-  // Get unique channels for the filter dropdown
-  const channelsList = Array.from(new Set(bookings.map((b) => b.channel)));
+    const matchesSearch = 
+      bookingId.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      guestEmail.toLowerCase().includes(searchQuery.toLowerCase());
+      
+    const matchesChannel = 
+      channelFilter === "all" || 
+      normChannel.toLowerCase() === channelFilter.toLowerCase();
+      
+    return matchesSearch && matchesChannel;
+  });
+
+  // Calculate filtered totals
+  const totalGross = filteredBookings.reduce((acc, b) => acc + (b.gross_revenue || 0), 0);
+  const totalNet = filteredBookings.reduce((acc, b) => acc + (b.net_revenue || 0), 0);
+  const avgFee = totalGross > 0 ? ((totalGross - totalNet) / totalGross * 100) : 0;
+
+  // Pagination Math
+  const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
+  const indexOfLastBooking = currentPage * bookingsPerPage;
+  const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
+  const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking);
 
   const getChannelBadgeClass = (channel) => {
-    const ch = channel.toLowerCase();
-    if (ch.includes("direct")) return "badge badge-direct";
+    const ch = (channel || "").toLowerCase();
+    if (ch.includes("direct") || ch.includes("mews")) return "badge badge-direct";
     if (ch.includes("airbnb")) return "badge badge-airbnb";
     if (ch.includes("booking")) return "badge badge-booking";
     return "badge badge-other";
   };
 
-  const totalNet = channelSummary.reduce((acc, curr) => acc + curr.net, 0);
-
-  const getChannelColor = (name) => {
-    const ch = name.toLowerCase();
-    if (ch.includes("direct")) return "#2d4a3e"; // Forest green
-    if (ch.includes("airbnb")) return "#ea580c"; // Airbnb orange
-    if (ch.includes("booking")) return "#4f46e5"; // Booking blue
-    return "#8eb29d"; // Sage green
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const dateObj = new Date(dateStr + "T00:00:00");
+    return dateObj.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC"
+    });
   };
 
   return (
-    <div>
-      {/* Channel Aggregate Summary */}
-      <div className="panel" style={{ marginBottom: "24px" }}>
-        <div className="panel-header">
-          <div className="panel-title">Net Revenue Share by Booking Channel</div>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Ledger Stats Row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+        <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>LEDGER BOOKINGS COUNT</div>
+          <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d312e" }}>{formatNumber(filteredBookings.length)}</div>
+          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Matching filters</div>
         </div>
-        
-        {channelSummary.length === 0 ? (
-          <div style={{ padding: "20px", textAlign: "center" }}>No booking records found. Upload a Mews export to get started!</div>
+
+        <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>TOTAL NET REVENUE</div>
+          <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d4a3e" }}>{formatCurrency(totalNet)}</div>
+          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Excluding channel fees</div>
+        </div>
+
+        <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>TOTAL GROSS REVENUE</div>
+          <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d312e" }}>{formatCurrency(totalGross)}</div>
+          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Before channel commission</div>
+        </div>
+
+        <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>AVERAGE COMMISSION FEE</div>
+          <div style={{ fontSize: "24px", fontWeight: "700", color: "#d67a47" }}>{avgFee.toFixed(1)}%</div>
+          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Weighted average rate</div>
+        </div>
+      </div>
+
+      {/* Ledger Table Panel */}
+      <div className="panel">
+        <div className="panel-header" style={{ flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
+          <div className="panel-title">Mews Bookings Ledger</div>
+          
+          {/* Controls */}
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+            <input 
+              type="text" 
+              placeholder="Search guest email or reservation ID..." 
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8e4",
+                fontSize: "12.5px",
+                minWidth: "260px",
+                outline: "none"
+              }}
+            />
+            
+            <select
+              value={channelFilter}
+              onChange={(e) => { setChannelFilter(e.target.value); setCurrentPage(1); }}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8e4",
+                fontSize: "12.5px",
+                backgroundColor: "#ffffff",
+                outline: "none"
+              }}
+            >
+              <option value="all">All Channels</option>
+              <option value="mews booking engine">Mews Booking Engine</option>
+              <option value="airbnb">Airbnb</option>
+              <option value="booking.com">Booking.com</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        {filteredBookings.length === 0 ? (
+          <div style={{ padding: "60px", textAlign: "center", color: "#606862" }}>
+            No booking records match the selected filters.
+          </div>
         ) : (
           <div>
-            {/* Horizontal Stacked Percentage Bar Graph */}
-            <div style={{ 
-              display: "flex", 
-              height: "28px", 
-              width: "100%", 
-              borderRadius: "14px", 
-              overflow: "hidden", 
-              backgroundColor: "#f4f6f5", 
-              marginBottom: "24px" 
-            }}>
-              {channelSummary.map((sum) => {
-                const share = totalNet > 0 ? (sum.net / totalNet) * 100 : 0;
-                if (share <= 0) return null;
-                return (
-                  <div 
-                    key={sum.name}
-                    style={{ 
-                      width: `${share}%`, 
-                      backgroundColor: getChannelColor(sum.name),
-                      height: "100%",
-                      transition: "width 0.3s ease"
-                    }}
-                    title={`${sum.name}: ${share.toFixed(1)}%`}
-                  />
-                );
-              })}
+            {/* Table wrapper */}
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #e2e8e4", color: "#606862", fontWeight: "600" }}>
+                    <th style={{ padding: "12px 8px" }}>Date</th>
+                    <th style={{ padding: "12px 8px" }}>Reservation ID</th>
+                    <th style={{ padding: "12px 8px" }}>Guest Contact</th>
+                    <th style={{ padding: "12px 8px", textAlign: "center" }}>Nights</th>
+                    <th style={{ padding: "12px 8px" }}>Channel Source</th>
+                    <th style={{ padding: "12px 8px", textAlign: "right" }}>Gross</th>
+                    <th style={{ padding: "12px 8px", textAlign: "right" }}>Fee %</th>
+                    <th style={{ padding: "12px 8px", textAlign: "right" }}>Net Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentBookings.map((b) => {
+                    return (
+                      <tr 
+                        key={b.id} 
+                        style={{ 
+                          borderBottom: "1px solid #f0f3f1", 
+                          height: "48px",
+                          backgroundColor: "#ffffff"
+                        }}
+                        className="ledger-row"
+                      >
+                        <td style={{ padding: "10px 8px", whiteSpace: "nowrap", fontWeight: "500", color: "#2d312e" }}>
+                          {formatDate(b.booking_date)}
+                        </td>
+                        <td style={{ padding: "10px 8px", fontFamily: "monospace", color: "#606862", fontSize: "12px" }}>
+                          {b.id}
+                        </td>
+                        <td style={{ padding: "10px 8px", color: "#2d312e" }}>
+                          {b.guest_email || "-"}
+                        </td>
+                        <td style={{ padding: "10px 8px", textAlign: "center", fontWeight: "500" }}>
+                          {b.nights}
+                        </td>
+                        <td style={{ padding: "10px 8px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <span className={getChannelBadgeClass(b.normalized_channel)} style={{ alignSelf: "flex-start" }}>
+                              {b.normalized_channel}
+                            </span>
+                            {b.channel && b.channel.toLowerCase() !== b.normalized_channel.toLowerCase() && (
+                              <span style={{ fontSize: "10px", color: "#8a928c", wordBreak: "break-all" }}>
+                                {b.channel}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 8px", textAlign: "right", color: "#606862" }}>
+                          {formatCurrency(b.gross_revenue)}
+                        </td>
+                        <td style={{ padding: "10px 8px", textAlign: "right", color: "#d67a47", fontWeight: "500" }}>
+                          {b.ota_fee_percent > 0 ? `${b.ota_fee_percent.toFixed(1)}%` : "0.0%"}
+                        </td>
+                        <td style={{ padding: "10px 8px", textAlign: "right", fontWeight: "600", color: "#2d4a3e" }}>
+                          {formatCurrency(b.net_revenue)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
-            {/* Channel Cards Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
-              {channelSummary.map((sum) => {
-                const share = totalNet > 0 ? (sum.net / totalNet) * 100 : 0;
-                const avgFee = sum.gross > 0 ? ((sum.gross - sum.net) / sum.gross * 100) : 0;
-                const color = getChannelColor(sum.name);
-
-                return (
-                  <div 
-                    key={sum.name} 
-                    style={{ 
-                      padding: "16px", 
-                      border: `1px solid #e2e8e4`, 
-                      borderLeft: `4px solid ${color}`,
-                      borderRadius: "8px",
-                      backgroundColor: "#fafbfa"
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "20px", borderTop: "1px solid #e2e8e4", paddingTop: "16px" }}>
+                <span style={{ fontSize: "12px", color: "#606862" }}>
+                  Showing page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> (<strong>{filteredBookings.length}</strong> bookings matching)
+                </span>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #e2e8e4",
+                      backgroundColor: currentPage === 1 ? "#fafbfa" : "#ffffff",
+                      cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                      fontSize: "12.5px",
+                      color: currentPage === 1 ? "#c2c8c4" : "#2d312e"
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                      <span className={getChannelBadgeClass(sum.name)}>{sum.name}</span>
-                      <span style={{ fontSize: "12px", fontWeight: "600", color: "#606862" }}>
-                        {share.toFixed(1)}% share
-                      </span>
-                    </div>
-                    <div style={{ fontSize: "22px", fontWeight: "700", color: "#2d312e", marginBottom: "4px" }}>
-                      {formatCurrency(sum.net)}
-                    </div>
-                    <div style={{ fontSize: "12.5px", color: "#606862" }}>
-                      <strong>{formatNumber(sum.count)}</strong> bookings • {formatCurrency(sum.gross)} gross
-                    </div>
-                    {avgFee > 0 && (
-                      <div style={{ fontSize: "11.5px", color: "#d67a47", marginTop: "6px", fontWeight: 500 }}>
-                        Avg. Fee: {avgFee.toFixed(1)}%
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    Previous
+                  </button>
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #e2e8e4",
+                      backgroundColor: currentPage === totalPages ? "#fafbfa" : "#ffffff",
+                      cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                      fontSize: "12.5px",
+                      color: currentPage === totalPages ? "#c2c8c4" : "#2d312e"
+                    }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
+      
+      {/* Dynamic styling for table row highlights on hover */}
+      <style>{`
+        .ledger-row:hover {
+          background-color: #f7faf8 !important;
+        }
+      `}</style>
     </div>
   );
 }

@@ -48,6 +48,18 @@ except Exception as e:
 
 app = FastAPI(title="Lantern Camp Analytics Dashboard API")
 
+def normalize_channel(ch: str) -> str:
+    if not ch:
+        return "Mews Booking Engine"
+    ch_lower = ch.lower()
+    if "airbnb" in ch_lower or "abb" in ch_lower:
+        return "Airbnb"
+    if "booking.com" in ch_lower or "bcom" in ch_lower or "bdc" in ch_lower:
+        return "Booking.com"
+    if "booking engine" in ch_lower or "mews" in ch_lower or "direct" in ch_lower:
+        return "Mews Booking Engine"
+    return "Other"
+
 # Configurable CORS origins for production cross-domain fetching
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
 if allowed_origins_env:
@@ -161,6 +173,18 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     # Format trend to sorted list
     trend_data = [trend_dict[k] for k in sorted(trend_dict.keys())]
     
+    # Calculate channel summary (normalized)
+    channels_dict = {}
+    for b in bookings:
+        ch = normalize_channel(b['channel'])
+        if ch not in channels_dict:
+            channels_dict[ch] = {"name": ch, "count": 0, "gross": 0.0, "net": 0.0}
+        channels_dict[ch]["count"] += 1
+        channels_dict[ch]["gross"] += b['gross_revenue']
+        channels_dict[ch]["net"] += b['net_revenue']
+        
+    channel_summary = list(channels_dict.values())
+    
     return {
         "kpis": {
             "total_net_revenue": round(total_net_rev, 2),
@@ -174,6 +198,7 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
             "conversion_rate": round(conv_rate, 2)
         },
         "trend_chart": trend_data,
+        "channel_summary": channel_summary,
         "last_synced": get_setting("last_synced_at", "Never")
     }
 
@@ -374,10 +399,12 @@ def get_bookings_ledger():
     """Returns booking records and channels aggregate statistics."""
     bookings = get_all_bookings()
     
-    # Group by channel
+    # Group by normalized channel and attach to bookings
     channels_dict = {}
     for b in bookings:
-        ch = b['channel']
+        ch_raw = b['channel']
+        ch = normalize_channel(ch_raw)
+        b['normalized_channel'] = ch
         if ch not in channels_dict:
             channels_dict[ch] = {"name": ch, "count": 0, "gross": 0.0, "net": 0.0}
         channels_dict[ch]["count"] += 1
