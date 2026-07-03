@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 export default function TrafficTab({ trafficData, loading }) {
-  const [activeMetric, setActiveMetric] = useState("new_users");
+  const [activeMetric, setActiveMetric] = useState("active_users"); // active_users, checkouts
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
   if (loading) {
@@ -18,17 +18,23 @@ export default function TrafficTab({ trafficData, loading }) {
     return new Intl.NumberFormat("en-US").format(val || 0);
   };
 
-  const summary = trafficData.summary || { sessions: 0, pageviews: 0, checkouts_initiated: 0, new_users: 0, returning_users: 0 };
-  const previousSummary = trafficData.previous_summary || { sessions: 0, pageviews: 0, checkouts_initiated: 0, new_users: 0, returning_users: 0 };
+  const cleanGeoName = (val) => {
+    if (!val || val === "(not set)" || val === "not set") {
+      return "Unknown";
+    }
+    return val;
+  };
+
+  const summary = trafficData.summary || { sessions: 0, pageviews: 0, checkouts_initiated: 0, new_users: 0, returning_users: 0, active_users: 0 };
   const funnel = trafficData.funnel || { sessions: 0, checkouts: 0, purchases: 0, checkout_conv_rate: 0, booking_conv_rate: 0 };
   
   const dailyTraffic = trafficData.daily_traffic || [];
-  const previousDailyTraffic = trafficData.previous_daily_traffic || [];
   const geoRegions = trafficData.geo_regions || [];
   const geoCities = trafficData.geo_cities || [];
-  const checkoutToPurchase = funnel.checkout_to_booking_rate || 0;
 
-  // Helper to trim trailing empty days
+  const todayStr = new Date().toLocaleDateString("en-CA");
+
+  // Trim trailing empty days to keep chart aligned with latest data
   const trimTrailingEmptyDays = (arr, checkIsEmpty) => {
     let endIdx = arr.length - 1;
     while (endIdx >= 0 && checkIsEmpty(arr[endIdx])) {
@@ -37,60 +43,18 @@ export default function TrafficTab({ trafficData, loading }) {
     return arr.slice(0, endIdx + 1);
   };
 
-  const todayStr = new Date().toLocaleDateString("en-CA");
-
   const dailyTrafficClean = trimTrailingEmptyDays(
     dailyTraffic.filter(d => d.date < todayStr), 
     d => (d.sessions || 0) === 0 && (d.new_users || 0) === 0
   );
-  const previousDailyTrafficClean = previousDailyTraffic.slice(0, dailyTrafficClean.length);
 
-  const cleanGeoName = (val) => {
-    if (!val || val === "(not set)" || val === "not set") {
-      return "Unknown";
-    }
-    return val;
-  };
-
-  // Insights flags
+  // Insights flags based on dataset dates
   const dailyTrafficDates = dailyTrafficClean.map(d => d.date);
   const showMetaCapInsight = dailyTrafficDates.includes("2026-06-27");
   const showAlgeriaSpikeInsight = dailyTrafficDates.includes("2026-06-29");
 
-  // Percentage change helper
-  const getChange = (current, previous) => {
-    if (!previous || previous === 0) {
-      return current > 0 ? { text: "↑ 100.0%", isPositive: true } : { text: "-", isNeutral: true };
-    }
-    const diff = ((current - previous) / previous) * 100;
-    const formatted = Math.abs(diff).toFixed(1);
-    if (diff > 0) return { text: `↑ ${formatted}%`, isPositive: true };
-    if (diff < 0) return { text: `↓ ${formatted}%`, isNegative: true };
-    return { text: "-", isNeutral: true };
-  };
-
-  const renderGrowthPercent = (current, previous) => {
-    const change = getChange(current, previous);
-    if (change.isNeutral) {
-      return <span style={{ color: "#8a928c", fontSize: "11px", fontWeight: "600" }}>-</span>;
-    }
-    return (
-      <span style={{ 
-        color: change.isPositive ? "#137333" : "#c5221f", 
-        fontSize: "12px", 
-        fontWeight: "600",
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "2px"
-      }}>
-        {change.text}
-      </span>
-    );
-  };
-
   const renderTrafficChart = () => {
     const currentTraffic = dailyTrafficClean;
-    const previousTraffic = previousDailyTrafficClean;
 
     if (!currentTraffic || currentTraffic.length === 0) {
       return <div style={{ padding: "60px", textAlign: "center", color: "#606862" }}>No traffic metrics cached in this range.</div>;
@@ -99,47 +63,48 @@ export default function TrafficTab({ trafficData, loading }) {
     const width = 800;
     const height = 240;
     const padding = { top: 20, right: 30, bottom: 40, left: 50 };
-
-    const currentValues = currentTraffic.map((d) => d[activeMetric] || 0);
-    const previousValues = previousTraffic.map((d) => d[activeMetric] || 0);
-    const maxVal = Math.max(...currentValues, ...previousValues, 10);
     const pointsCount = currentTraffic.length;
 
     const getX = (index) => {
       return padding.left + (index * (width - padding.left - padding.right)) / (pointsCount - 1 || 1);
     };
 
+    // Extract values based on selected metric
+    const activeValues = currentTraffic.map((d) => {
+      if (activeMetric === "active_users") {
+        return d.active_users || (d.new_users + d.returning_users) || 0;
+      } else {
+        return d.checkouts || 0;
+      }
+    });
+
+    const peakVal = Math.max(...activeValues, 10);
+    const maxVal = peakVal * 1.15; // 15% safety boundary above peak
+
     const getY = (val) => {
       const chartHeight = height - padding.top - padding.bottom;
       return height - padding.bottom - (val / maxVal) * chartHeight;
     };
 
-    let currentPoints = [];
-    let previousPoints = [];
-
+    let points = [];
     currentTraffic.forEach((d, index) => {
       const x = getX(index);
-      const yCurr = getY(d[activeMetric] || 0);
-      currentPoints.push(`${x},${yCurr}`);
-
-      if (previousTraffic && previousTraffic.length > index) {
-        const yPrev = getY(previousTraffic[index][activeMetric] || 0);
-        previousPoints.push(`${x},${yPrev}`);
-      }
+      const val = activeMetric === "active_users"
+        ? (d.active_users || d.new_users + d.returning_users || 0)
+        : (d.checkouts || 0);
+      points.push(`${x},${getY(val)}`);
     });
 
-    const currentPath = pointsCount > 0 ? `M ${currentPoints.join(" L ")}` : "";
-    const previousPath = previousPoints.length > 0 ? `M ${previousPoints.join(" L ")}` : "";
-
-    const currentAreaPath = pointsCount > 0
-      ? `${currentPath} L ${getX(pointsCount - 1)},${height - padding.bottom} L ${getX(0)},${height - padding.bottom} Z`
+    const linePath = pointsCount > 0 ? `M ${points.join(" L ")}` : "";
+    const areaPath = pointsCount > 0
+      ? `${linePath} L ${getX(pointsCount - 1)},${height - padding.bottom} L ${getX(0)},${height - padding.bottom} Z`
       : "";
 
     // Grid lines
     const gridSteps = 4;
     const gridLines = [];
     for (let i = 0; i <= gridSteps; i++) {
-      const val = Math.round((maxVal / gridSteps) * i);
+      const val = (maxVal / gridSteps) * i;
       const y = getY(val);
       gridLines.push(
         <g key={`grid-${i}`}>
@@ -158,7 +123,7 @@ export default function TrafficTab({ trafficData, loading }) {
             fontSize="10"
             fill="#606862"
           >
-            {formatNumber(val)}
+            {formatNumber(Math.round(val))}
           </text>
         </g>
       );
@@ -167,7 +132,7 @@ export default function TrafficTab({ trafficData, loading }) {
     // X-axis date labels
     const labelStep = Math.max(1, Math.floor(pointsCount / 6));
     const xLabels = [];
-    dailyTraffic.forEach((d, idx) => {
+    currentTraffic.forEach((d, idx) => {
       if (idx % labelStep === 0 || idx === pointsCount - 1) {
         const x = getX(idx);
         const dateObj = new Date(d.date + "T00:00:00");
@@ -202,12 +167,11 @@ export default function TrafficTab({ trafficData, loading }) {
 
     // Dynamic Hover elements
     let hoverGuide = null;
-    let currentCircle = null;
-    let previousCircle = null;
+    let circle = null;
     
     if (hoveredIdx !== null && hoveredIdx < pointsCount) {
       const hX = getX(hoveredIdx);
-      const hVal = currentTraffic[hoveredIdx][activeMetric] || 0;
+      const hVal = activeValues[hoveredIdx];
       const hY = getY(hVal);
       
       hoverGuide = (
@@ -222,31 +186,16 @@ export default function TrafficTab({ trafficData, loading }) {
         />
       );
       
-      currentCircle = (
+      circle = (
         <circle
           cx={hX}
           cy={hY}
           r="5"
-          fill="#8eb29d"
+          fill={activeMetric === "active_users" ? "#8eb29d" : "#d67a47"}
           stroke="#ffffff"
           strokeWidth="2"
         />
       );
-      
-      if (previousTraffic && previousTraffic.length > hoveredIdx) {
-        const hPrevVal = previousTraffic[hoveredIdx][activeMetric] || 0;
-        const hPrevY = getY(hPrevVal);
-        previousCircle = (
-          <circle
-            cx={hX}
-            cy={hPrevY}
-            r="5"
-            fill="#b2c2b9"
-            stroke="#ffffff"
-            strokeWidth="2"
-          />
-        );
-      }
     }
 
     // Transparent columns for capturing mouse hover events smoothly
@@ -273,8 +222,6 @@ export default function TrafficTab({ trafficData, loading }) {
     let tooltip = null;
     if (hoveredIdx !== null && currentTraffic.length > hoveredIdx) {
       const d = currentTraffic[hoveredIdx];
-      const p = previousTraffic && previousTraffic.length > hoveredIdx ? previousTraffic[hoveredIdx] : null;
-      
       const dateObj = new Date(d.date + "T00:00:00");
       const dateLabel = dateObj.toLocaleDateString("en-US", {
         month: "long",
@@ -286,69 +233,86 @@ export default function TrafficTab({ trafficData, loading }) {
       const xPct = (hoveredIdx / (pointsCount - 1 || 1)) * 100;
       const isRightHalf = hoveredIdx > pointsCount / 2;
 
-      tooltip = (
-        <div style={{
-          position: "absolute",
-          top: "16px",
-          [isRightHalf ? "right" : "left"]: `${isRightHalf ? (100 - xPct + 2) : (xPct + 2)}%`,
-          backgroundColor: "rgba(45, 49, 46, 0.95)",
-          color: "#ffffff",
-          padding: "10px 14px",
-          borderRadius: "8px",
-          fontSize: "11px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          pointerEvents: "none",
-          zIndex: 10,
-          minWidth: "180px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "5px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          transition: "left 0.1s ease-out, right 0.1s ease-out"
-        }}>
-          <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
-            {dateLabel}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontWeight: "600" }}>Daily Visits:</span>
-            <span style={{ fontWeight: "700", color: "#8eb29d" }}>{formatNumber(d.sessions)}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
-            <span>New Users:</span>
-            <span>{formatNumber(d.new_users)}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
-            <span>Returning Users:</span>
-            <span>{formatNumber(d.returning_users)}</span>
-          </div>
-          {p && (
-            <div style={{ 
-              display: "flex", 
-              justifyContent: "space-between", 
-              borderTop: "1px dashed rgba(255,255,255,0.1)", 
-              paddingTop: "4px", 
-              marginTop: "4px", 
-              fontSize: "10.5px", 
-              color: "#a8b2ac" 
-            }}>
-              <span>Prev Period:</span>
-              <span>{formatNumber(p[activeMetric])}</span>
+      const tooltipStyle = {
+        position: "absolute",
+        top: "16px",
+        [isRightHalf ? "right" : "left"]: `${isRightHalf ? (100 - xPct + 2) : (xPct + 2)}%`,
+        backgroundColor: "rgba(45, 49, 46, 0.95)",
+        color: "#ffffff",
+        padding: "10px 14px",
+        borderRadius: "8px",
+        fontSize: "11px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        pointerEvents: "none",
+        zIndex: 10,
+        minWidth: "180px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "5px",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        transition: "left 0.1s ease-out, right 0.1s ease-out"
+      };
+
+      if (activeMetric === "active_users") {
+        const totalActive = d.active_users || (d.new_users + d.returning_users);
+        tooltip = (
+          <div style={tooltipStyle}>
+            <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
+              {dateLabel}
             </div>
-          )}
-        </div>
-      );
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontWeight: "600" }}>Active Users:</span>
+              <span style={{ fontWeight: "700", color: "#8eb29d" }}>{formatNumber(totalActive)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+              <span>New Users:</span>
+              <span>{formatNumber(d.new_users)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+              <span>Returning Users:</span>
+              <span>{formatNumber(d.returning_users)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px" }}>
+              <span>Total Sessions:</span>
+              <span>{formatNumber(d.sessions)}</span>
+            </div>
+          </div>
+        );
+      } else {
+        const totalActive = d.active_users || (d.new_users + d.returning_users) || 1;
+        const convRate = ((d.checkouts || 0) / totalActive) * 100;
+        tooltip = (
+          <div style={tooltipStyle}>
+            <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
+              {dateLabel}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontWeight: "600" }}>Checkouts:</span>
+              <span style={{ fontWeight: "700", color: "#d67a47" }}>{formatNumber(d.checkouts)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px" }}>
+              <span>Checkout Conversion:</span>
+              <span style={{ fontWeight: "700", color: "#8eb29d" }}>{convRate.toFixed(2)}%</span>
+            </div>
+            <div style={{ fontSize: "9px", color: "#a8b2ac", fontStyle: "italic", marginTop: "2px" }}>
+              (Clicks ÷ Active Users)
+            </div>
+          </div>
+        );
+      }
     }
+
+    const gradId = activeMetric === "active_users" ? "activeUsersGrad" : "checkoutsGrad";
+    const strokeColor = activeMetric === "active_users" ? "#2d4a3e" : "#d67a47";
 
     return (
       <div style={{ position: "relative" }}>
         <div style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#8eb29d" }}></span>
-            <span style={{ color: "#606862" }}>Current Period</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "1px", borderTop: "2px dashed #b2c2b9" }}></span>
-            <span style={{ color: "#606862" }}>Previous Period</span>
+            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: strokeColor }}></span>
+            <span style={{ color: "#606862" }}>
+              {activeMetric === "active_users" ? "Total Active Users" : "Checkouts Initiated"}
+            </span>
           </div>
         </div>
 
@@ -356,9 +320,13 @@ export default function TrafficTab({ trafficData, loading }) {
 
         <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="auto">
           <defs>
-            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="activeUsersGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#8eb29d" stopOpacity="0.25" />
               <stop offset="100%" stopColor="#8eb29d" stopOpacity="0.0" />
+            </linearGradient>
+            <linearGradient id="checkoutsGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#d67a47" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#d67a47" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -366,39 +334,25 @@ export default function TrafficTab({ trafficData, loading }) {
           {gridLines}
 
           {/* Area under curve */}
-          {currentAreaPath && (
-            <path d={currentAreaPath} fill="url(#areaGrad)" />
+          {areaPath && (
+            <path d={areaPath} fill={`url(#${gradId})`} />
           )}
 
-          {/* Previous period line */}
-          {previousPath && (
+          {/* Plotted line */}
+          {linePath && (
             <path
-              d={previousPath}
+              d={linePath}
               fill="none"
-              stroke="#b2c2b9"
-              strokeWidth="1.5"
-              strokeDasharray="4 4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )}
-
-          {/* Current period line */}
-          {currentPath && (
-            <path
-              d={currentPath}
-              fill="none"
-              stroke="#2d4a3e"
+              stroke={strokeColor}
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           )}
 
-          {/* Hover effects */}
+          {/* Hover indicator dot */}
           {hoverGuide}
-          {previousCircle}
-          {currentCircle}
+          {circle}
 
           {/* X axis base */}
           <line
@@ -433,7 +387,7 @@ export default function TrafficTab({ trafficData, loading }) {
         <div className="panel-header" style={{ marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
           <div className="panel-title">Daily Web Traffic Trend</div>
           
-          {/* Interactive GA4 Tab Cards */}
+          {/* Streamlined Metric Toggles */}
           <div style={{ 
             display: "flex", 
             border: "1px solid #e2e8e4", 
@@ -441,21 +395,26 @@ export default function TrafficTab({ trafficData, loading }) {
             overflow: "hidden"
           }}>
             {[
-              { key: "new_users", label: "New Users" },
-              { key: "returning_users", label: "Returning Users" },
-              { key: "sessions", label: "Sessions" }
+              { 
+                key: "active_users", 
+                label: "Total Active Users", 
+                value: summary.active_users || (summary.new_users + summary.returning_users) 
+              },
+              { 
+                key: "checkouts", 
+                label: "Checkouts", 
+                value: summary.checkouts_initiated 
+              }
             ].map((item) => {
               const isActive = activeMetric === item.key;
-              const currentVal = summary[item.key] || 0;
-              const prevVal = previousSummary[item.key] || 0;
 
               return (
                 <button
                   key={item.key}
-                  onClick={() => setActiveMetric(item.key)}
+                  onClick={() => { setActiveMetric(item.key); setHoveredIdx(null); }}
                   style={{
-                    padding: "10px 16px",
-                    background: isActive ? "#2d4a3e" : "#ffffff",
+                    padding: "10px 18px",
+                    background: isActive ? (item.key === "active_users" ? "#2d4a3e" : "#d67a47") : "#ffffff",
                     color: isActive ? "#ffffff" : "#606862",
                     border: "none",
                     cursor: "pointer",
@@ -467,7 +426,7 @@ export default function TrafficTab({ trafficData, loading }) {
                   onMouseOver={(e) => { if (!isActive) e.currentTarget.style.background = "#f4f6f5"; }}
                   onMouseOut={(e) => { if (!isActive) e.currentTarget.style.background = "#ffffff"; }}
                 >
-                  {item.label}: <strong style={{ color: isActive ? "#ffffff" : "#2d312e", marginLeft: "4px" }}>{formatNumber(currentVal)}</strong>
+                  {item.label}: <strong style={{ color: isActive ? "#ffffff" : "#2d312e", marginLeft: "4px" }}>{formatNumber(item.value)}</strong>
                 </button>
               );
             })}
