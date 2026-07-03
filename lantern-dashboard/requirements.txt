@@ -4,3 +4,4 @@ pydantic
 requests
 aiofiles
 psycopg2-binary
+python-multipart
