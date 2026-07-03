@@ -179,7 +179,7 @@ export default function AdsTab({ adsData, loading }) {
             fontSize="10"
             fill="#606862"
           >
-            {activeTab === "total_clicks" ? formatNumber(val) : formatCurrency(val)}
+            {activeTab === "total_clicks" ? formatNumber(Math.round(val)) : formatCurrency(val)}
           </text>
         </g>
       );
