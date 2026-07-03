@@ -288,9 +288,12 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
     prev_active_users = sum(m.get('active_users', 0) for m in metrics_previous)
     prev_returning_users = max(0, prev_active_users - prev_new_users)
     
-    # Count direct purchases in our system as a proxy for GA4 funnel
-    direct_purchases = len([b for b in filtered_bookings if b['channel'].lower() == 'direct'])
-    total_purchases = len(filtered_bookings)
+    # Calculate conversion rates, adjusting for the checkout tracking start date (2026-07-02)
+    checkout_active_sessions = sum(m.get('sessions', 0) for m in metrics_current if m['date'] >= '2026-07-02')
+    checkout_active_bookings = len([b for b in filtered_bookings if b['booking_date'] >= '2026-07-02'])
+    
+    checkout_conv_rate = round((total_checkouts / checkout_active_sessions * 100.0), 2) if checkout_active_sessions > 0 else 0.0
+    checkout_to_booking_rate = round((checkout_active_bookings / total_checkouts * 100.0), 2) if total_checkouts > 0 else 0.0
     
     return {
         "summary": {
@@ -314,7 +317,8 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
             "checkouts": total_checkouts,
             "purchases": total_purchases,
             "direct_purchases": direct_purchases,
-            "checkout_conv_rate": round((total_checkouts / total_sessions * 100.0), 2) if total_sessions > 0 else 0.0,
+            "checkout_conv_rate": checkout_conv_rate,
+            "checkout_to_booking_rate": checkout_to_booking_rate,
             "booking_conv_rate": round((total_purchases / total_sessions * 100.0), 2) if total_sessions > 0 else 0.0
         },
         "daily_traffic": [

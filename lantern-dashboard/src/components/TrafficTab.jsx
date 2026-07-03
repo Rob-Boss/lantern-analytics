@@ -28,7 +28,7 @@ export default function TrafficTab({ trafficData, loading }) {
   const sessions = funnel.sessions || 0;
   const checkouts = funnel.checkouts || 0;
   const purchases = funnel.purchases || 0;
-  const checkoutToPurchase = checkouts > 0 ? (purchases / checkouts) * 100 : 0;
+  const checkoutToPurchase = funnel.checkout_to_booking_rate || 0;
 
   // Percentage change helper
   const getChange = (current, previous) => {
