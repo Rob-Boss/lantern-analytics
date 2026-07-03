@@ -17,10 +17,10 @@ import requests
 
 # Import database helpers (ensuring parent directory/module path works)
 try:
-    from .database import save_daily_metric_row, save_setting
+    from .database import save_daily_metric_row, save_setting, save_geo_metric
     from .credentials_loader import get_ga4_creds_path, get_meta_creds_path, get_google_ads_yaml_path
 except ImportError:
-    from database import save_daily_metric_row, save_setting
+    from database import save_daily_metric_row, save_setting, save_geo_metric
     from credentials_loader import get_ga4_creds_path, get_meta_creds_path, get_google_ads_yaml_path
 
 logging.basicConfig(level=logging.INFO)
@@ -221,6 +221,51 @@ def fetch_meta_ads_metrics(start_date_str, end_date_str):
         
     return results
 
+def sync_ga4_geo_metrics(start_str, end_str):
+    """Fetches geographical metrics from GA4 split by date and saves to DB."""
+    logger.info(f"Syncing GA4 geo metrics (regions/cities) from {start_str} to {end_str}...")
+    
+    if not os.path.exists(GA4_CREDS_PATH):
+        logger.warning(f"GA4 credentials file not found at {GA4_CREDS_PATH}. Skipping geo metrics sync.")
+        return
+        
+    try:
+        client = BetaAnalyticsDataClient.from_service_account_json(GA4_CREDS_PATH)
+        
+        # 1. Sync daily regions (States)
+        region_request = RunReportRequest(
+            property=f"properties/{GA4_PROPERTY_ID}",
+            dimensions=[Dimension(name="date"), Dimension(name="region")],
+            metrics=[Metric(name="activeUsers")],
+            date_ranges=[DateRange(start_date=start_str, end_date=end_str)],
+            limit=10000
+        )
+        region_response = client.run_report(region_request)
+        for row in region_response.rows:
+            date_val = datetime.strptime(row.dimension_values[0].value, "%Y%m%d").strftime("%Y-%m-%d")
+            region_val = row.dimension_values[1].value
+            users_val = int(row.metric_values[0].value)
+            save_geo_metric(date_val, "region", region_val, users_val)
+            
+        # 2. Sync daily cities
+        city_request = RunReportRequest(
+            property=f"properties/{GA4_PROPERTY_ID}",
+            dimensions=[Dimension(name="date"), Dimension(name="city")],
+            metrics=[Metric(name="activeUsers")],
+            date_ranges=[DateRange(start_date=start_str, end_date=end_str)],
+            limit=10000
+        )
+        city_response = client.run_report(city_request)
+        for row in city_response.rows:
+            date_val = datetime.strptime(row.dimension_values[0].value, "%Y%m%d").strftime("%Y-%m-%d")
+            city_val = row.dimension_values[1].value
+            users_val = int(row.metric_values[0].value)
+            save_geo_metric(date_val, "city", city_val, users_val)
+            
+        logger.info("GA4 geo metrics synced successfully.")
+    except Exception as e:
+        logger.error(f"Error syncing GA4 geo metrics: {e}")
+
 def sync_data(days=30):
     """Orchestrates syncing all daily metrics for the past N days and updates DB."""
     end_date = date.today()
@@ -235,6 +280,12 @@ def sync_data(days=30):
     ga4_data = fetch_ga4_metrics(start_str, end_str)
     google_data = fetch_google_ads_metrics(start_str, end_str)
     meta_data = fetch_meta_ads_metrics(start_str, end_str)
+    
+    # Sync geographic metrics to database
+    try:
+        sync_ga4_geo_metrics(start_str, end_str)
+    except Exception as e:
+        logger.error(f"Failed to sync geo metrics: {e}")
     
     # 2. Merge all data points by date
     all_dates = set(ga4_data.keys()) | set(google_data.keys()) | set(meta_data.keys())

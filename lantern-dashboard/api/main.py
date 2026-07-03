@@ -17,12 +17,14 @@ logger = logging.getLogger(__name__)
 try:
     from .database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
-        save_setting, get_setting, clear_bookings, get_first_booking_date
+        save_setting, get_setting, clear_bookings, get_first_booking_date,
+        get_geo_metrics
     )
 except ImportError:
     from database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
-        save_setting, get_setting, clear_bookings, get_first_booking_date
+        save_setting, get_setting, clear_bookings, get_first_booking_date,
+        get_geo_metrics
     )
 
 sync_data = None
@@ -368,59 +370,14 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
             "returning_users": max(0, pm.get('active_users', 0) - pm.get('new_users', 0))
         })
         
-    # Query Geographic Distribution from GA4 live
+    # Fetch cached Geographic metrics from the database
     geo_regions = []
     geo_cities = []
-    
     try:
-        import os
-        from google.analytics.data_v1beta import BetaAnalyticsDataClient
-        from google.analytics.data_v1beta.types import (
-            RunReportRequest,
-            DateRange,
-            Metric,
-            Dimension,
-        )
-        try:
-            from sync_service import GA4_CREDS_PATH, GA4_PROPERTY_ID
-        except ImportError:
-            from api.sync_service import GA4_CREDS_PATH, GA4_PROPERTY_ID
-
-        if os.path.exists(GA4_CREDS_PATH):
-            client = BetaAnalyticsDataClient.from_service_account_json(GA4_CREDS_PATH)
-            
-            # Query Regions (States)
-            region_request = RunReportRequest(
-                property=f"properties/{GA4_PROPERTY_ID}",
-                dimensions=[Dimension(name="region")],
-                metrics=[Metric(name="activeUsers")],
-                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-                limit=15
-            )
-            region_response = client.run_report(region_request)
-            for row in region_response.rows:
-                geo_regions.append({
-                    "region": row.dimension_values[0].value,
-                    "users": int(row.metric_values[0].value)
-                })
-                
-            # Query Cities
-            city_request = RunReportRequest(
-                property=f"properties/{GA4_PROPERTY_ID}",
-                dimensions=[Dimension(name="city")],
-                metrics=[Metric(name="activeUsers")],
-                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-                limit=15
-            )
-            city_response = client.run_report(city_request)
-            for row in city_response.rows:
-                geo_cities.append({
-                    "city": row.dimension_values[0].value,
-                    "users": int(row.metric_values[0].value)
-                })
+        geo_regions = get_geo_metrics(start_date, end_date, "region", limit=10)
+        geo_cities = get_geo_metrics(start_date, end_date, "city", limit=10)
     except Exception as e:
-        import sys
-        print(f"Failed to query GA4 geo metrics inside traffic route: {e}", file=sys.stderr)
+        logger.error(f"Failed to fetch cached geo metrics: {e}")
 
     return {
         "summary": {

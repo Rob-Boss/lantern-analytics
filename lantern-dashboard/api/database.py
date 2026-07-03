@@ -88,6 +88,17 @@ def init_db():
     _exec(cursor, "INSERT INTO settings (key, value) VALUES ('newsletter_subscribers', '0') ON CONFLICT (key) DO NOTHING")
     _exec(cursor, "INSERT INTO settings (key, value) VALUES ('last_synced_at', '') ON CONFLICT (key) DO NOTHING")
     
+    # 4. Create geo_metrics table
+    _exec(cursor, """
+        CREATE TABLE IF NOT EXISTS geo_metrics (
+            date TEXT NOT NULL,
+            type TEXT NOT NULL,
+            name TEXT NOT NULL,
+            users INTEGER DEFAULT 0,
+            PRIMARY KEY (date, type, name)
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -221,6 +232,55 @@ def get_first_booking_date():
     row = cursor.fetchone()
     conn.close()
     return row['min_date'] if row and row['min_date'] else None
+
+def save_geo_metric(date_str, metric_type, name, users):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if IS_POSTGRES:
+        _exec(cursor, """
+            INSERT INTO geo_metrics (date, type, name, users)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (date, type, name)
+            DO UPDATE SET users = EXCLUDED.users
+        """, (date_str, metric_type, name, users))
+    else:
+        _exec(cursor, """
+            INSERT INTO geo_metrics (date, type, name, users)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (date, type, name)
+            DO UPDATE SET users = excluded.users
+        """, (date_str, metric_type, name, users))
+    conn.commit()
+    conn.close()
+
+def get_geo_metrics(start_date, end_date, metric_type, limit=15):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    _exec(cursor, """
+        SELECT name, SUM(users) as total_users
+        FROM geo_metrics
+        WHERE type = ? AND date >= ? AND date <= ?
+        GROUP BY name
+        ORDER BY total_users DESC
+        LIMIT ?
+    """, (metric_type, start_date, end_date, limit))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    results = []
+    for r in rows:
+        if IS_POSTGRES:
+            name_val = r['name']
+            users_val = int(r['total_users'] or 0)
+        else:
+            name_val = r[0]
+            users_val = int(r[1] or 0)
+            
+        if metric_type == "region":
+            results.append({"region": name_val, "users": users_val})
+        else:
+            results.append({"city": name_val, "users": users_val})
+    return results
 
 # Initial run to ensure tables exist
 if __name__ == "__main__":

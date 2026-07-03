@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 export default function AdsTab({ adsData, loading }) {
-  const [activeTab, setActiveTab] = useState("cpc"); // cpc, total_spend, total_clicks, channel_spend
+  const [activeTab, setActiveTab] = useState("cpc"); // cpc, daily_spend, total_clicks, channel_spend
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
   if (loading) {
@@ -22,7 +22,7 @@ export default function AdsTab({ adsData, loading }) {
   const channels = adsData.channels || [];
   const dailyBreakdown = adsData.daily_breakdown || [];
 
-  // Helper to trim trailing empty days where there is no spend or click activity
+  // Helper to trim trailing empty days
   const trimTrailingEmptyDays = (arr, checkIsEmpty) => {
     let endIdx = arr.length - 1;
     while (endIdx >= 0 && checkIsEmpty(arr[endIdx])) {
@@ -34,7 +34,6 @@ export default function AdsTab({ adsData, loading }) {
   // Get local today's date in YYYY-MM-DD format
   const todayStr = new Date().toLocaleDateString("en-CA");
 
-  // Exclude today and trim any trailing empty days (e.g. if yesterday is also empty)
   const dailyBreakdownClean = trimTrailingEmptyDays(
     dailyBreakdown.filter(d => d.date < todayStr), 
     d => 
@@ -83,7 +82,7 @@ export default function AdsTab({ adsData, loading }) {
       };
     });
 
-    // Calculate overall period averages for the tooltip comparisons
+    // Calculate overall period averages for reference lines and tooltips
     const totalGoogleSpend = dailyMetrics.reduce((acc, curr) => acc + curr.gSpend, 0);
     const totalMetaSpend = dailyMetrics.reduce((acc, curr) => acc + curr.mSpend, 0);
     const avgGoogleSpend = pointsCount > 0 ? (totalGoogleSpend / pointsCount) : 0;
@@ -93,7 +92,7 @@ export default function AdsTab({ adsData, loading }) {
     if (activeTab === "cpc") {
       const peakCpc = Math.max(...dailyMetrics.map((d) => d.cpc), 0.05);
       maxVal = peakCpc * 1.15; // 15% safety margin above peak
-    } else if (activeTab === "total_spend") {
+    } else if (activeTab === "daily_spend") {
       const peakSpend = Math.max(...dailyMetrics.map((d) => d.totalSpend), 10.0);
       maxVal = peakSpend * 1.15;
     } else if (activeTab === "total_clicks") {
@@ -117,7 +116,7 @@ export default function AdsTab({ adsData, loading }) {
       const x = getX(idx);
       if (activeTab === "cpc") {
         pathPoints1.push(`${x},${getY(d.cpc)}`);
-      } else if (activeTab === "total_spend") {
+      } else if (activeTab === "daily_spend") {
         pathPoints1.push(`${x},${getY(d.totalSpend)}`);
       } else if (activeTab === "total_clicks") {
         pathPoints1.push(`${x},${getY(d.totalClicks)}`);
@@ -223,7 +222,7 @@ export default function AdsTab({ adsData, loading }) {
 
       if (activeTab === "cpc") {
         circle1 = <circle cx={hX} cy={getY(hData.cpc)} r="5" fill="#2d4a3e" stroke="#ffffff" strokeWidth="2" />;
-      } else if (activeTab === "total_spend") {
+      } else if (activeTab === "daily_spend") {
         circle1 = <circle cx={hX} cy={getY(hData.totalSpend)} r="5" fill="#8eb29d" stroke="#ffffff" strokeWidth="2" />;
       } else if (activeTab === "total_clicks") {
         circle1 = <circle cx={hX} cy={getY(hData.totalClicks)} r="5" fill="#d67a47" stroke="#ffffff" strokeWidth="2" />;
@@ -304,14 +303,14 @@ export default function AdsTab({ adsData, loading }) {
             </div>
           </div>
         );
-      } else if (activeTab === "total_spend") {
+      } else if (activeTab === "daily_spend") {
         tooltipElement = (
           <div style={tooltipStyle}>
             <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
               {dateStr}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Total Spend:</span>
+              <span>Daily Spend:</span>
               <span style={{ fontWeight: "700", color: "#81c995" }}>{formatCurrency(d.totalSpend)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
@@ -322,9 +321,17 @@ export default function AdsTab({ adsData, loading }) {
               <span>Meta Spend:</span>
               <span>{formatCurrency(d.mSpend)}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px", color: "#b2c2b9", fontSize: "10.5px" }}>
-              <span>Period Avg:</span>
+            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px", fontWeight: "700", color: "#b2c2b9" }}>
+              <span>Average Daily:</span>
               <span>{formatCurrency(avgTotalSpend)}/day</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#a8b2ac", paddingLeft: "8px" }}>
+              <span>Google Avg:</span>
+              <span>{formatCurrency(avgGoogleSpend)}/day</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#a8b2ac", paddingLeft: "8px" }}>
+              <span>Meta Avg:</span>
+              <span>{formatCurrency(avgMetaSpend)}/day</span>
             </div>
           </div>
         );
@@ -390,12 +397,16 @@ export default function AdsTab({ adsData, loading }) {
           </div>
         </div>
       );
-    } else if (activeTab === "total_spend") {
+    } else if (activeTab === "daily_spend") {
       legend = (
         <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#8eb29d" }}></span>
-            <span style={{ color: "#606862" }}>Total Daily Spend ($)</span>
+            <span style={{ color: "#606862" }}>Daily Ad Spend ($)</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ display: "inline-block", width: "12px", height: "1px", borderTop: "2px dashed #8eb29d" }}></span>
+            <span style={{ color: "#8eb29d", opacity: 0.8 }}>Average Daily Spend ({formatCurrency(avgTotalSpend)}/day)</span>
           </div>
         </div>
       );
@@ -426,7 +437,7 @@ export default function AdsTab({ adsData, loading }) {
     // Determine gradients to load based on activeTab
     let strokeColor = "#2d4a3e";
     let gradId = "cpcGrad";
-    if (activeTab === "total_spend") {
+    if (activeTab === "daily_spend") {
       strokeColor = "#8eb29d";
       gradId = "spendGrad";
     } else if (activeTab === "total_clicks") {
@@ -460,6 +471,33 @@ export default function AdsTab({ adsData, loading }) {
           {/* Area gradients */}
           {activeTab !== "channel_spend" && areaPath1 && (
             <path d={areaPath1} fill={`url(#${gradId})`} />
+          )}
+
+          {/* Horizontal Average reference line (Daily spend tab only) */}
+          {activeTab === "daily_spend" && (
+            <g>
+              <line
+                x1={padding.left}
+                y1={getY(avgTotalSpend)}
+                x2={width - padding.right}
+                y2={getY(avgTotalSpend)}
+                stroke="#8eb29d"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+                opacity="0.65"
+              />
+              <text
+                x={width - padding.right - 6}
+                y={getY(avgTotalSpend) - 6}
+                textAnchor="end"
+                fontSize="9.5"
+                fontWeight="600"
+                fill="#8eb29d"
+                opacity="0.85"
+              >
+                Avg: {formatCurrency(avgTotalSpend)}/day
+              </text>
+            </g>
           )}
 
           {/* Line 2 (For Google vs Meta spend in channel_spend mode) */}
@@ -584,7 +622,7 @@ export default function AdsTab({ adsData, loading }) {
           <div style={{ display: "flex", border: "1px solid #e2e8e4", borderRadius: "8px", overflow: "hidden" }}>
             {[
               { key: "cpc", label: "Cost Per Click (CPC)" },
-              { key: "total_spend", label: "Total Ad Spend" },
+              { key: "daily_spend", label: "Daily Ad Spend" },
               { key: "total_clicks", label: "Link Clicks (Results)" },
               { key: "channel_spend", label: "Channel Budgets" }
             ].map((tab) => {
