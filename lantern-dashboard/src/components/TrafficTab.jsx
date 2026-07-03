@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 export default function TrafficTab({ trafficData, loading }) {
   const [activeMetric, setActiveMetric] = useState("new_users");
+  const [hoveredIdx, setHoveredIdx] = useState(null);
 
   if (loading) {
     return (
@@ -23,11 +24,6 @@ export default function TrafficTab({ trafficData, loading }) {
   
   const dailyTraffic = trafficData.daily_traffic || [];
   const previousDailyTraffic = trafficData.previous_daily_traffic || [];
-
-  // Funnel details
-  const sessions = funnel.sessions || 0;
-  const checkouts = funnel.checkouts || 0;
-  const purchases = funnel.purchases || 0;
   const checkoutToPurchase = funnel.checkout_to_booking_rate || 0;
 
   // Percentage change helper
@@ -170,6 +166,146 @@ export default function TrafficTab({ trafficData, loading }) {
       }
     });
 
+    // Dynamic Hover elements
+    let hoverGuide = null;
+    let currentCircle = null;
+    let previousCircle = null;
+    
+    if (hoveredIdx !== null && hoveredIdx < pointsCount) {
+      const hX = getX(hoveredIdx);
+      const hVal = dailyTraffic[hoveredIdx][activeMetric] || 0;
+      const hY = getY(hVal);
+      
+      hoverGuide = (
+        <line
+          x1={hX}
+          y1={padding.top}
+          x2={hX}
+          y2={height - padding.bottom}
+          stroke="#b2c2b9"
+          strokeWidth="1"
+          strokeDasharray="3 3"
+        />
+      );
+      
+      currentCircle = (
+        <circle
+          cx={hX}
+          cy={hY}
+          r="5"
+          fill="#8eb29d"
+          stroke="#ffffff"
+          strokeWidth="2"
+        />
+      );
+      
+      if (previousDailyTraffic && previousDailyTraffic.length > hoveredIdx) {
+        const hPrevVal = previousDailyTraffic[hoveredIdx][activeMetric] || 0;
+        const hPrevY = getY(hPrevVal);
+        previousCircle = (
+          <circle
+            cx={hX}
+            cy={hPrevY}
+            r="5"
+            fill="#b2c2b9"
+            stroke="#ffffff"
+            strokeWidth="2"
+          />
+        );
+      }
+    }
+
+    // Transparent columns for capturing mouse hover events smoothly
+    const columnWidth = (width - padding.left - padding.right) / (pointsCount - 1 || 1);
+    const hoverColumns = dailyTraffic.map((d, idx) => {
+      const x = getX(idx);
+      return (
+        <rect
+          key={`hover-col-${idx}`}
+          x={idx === 0 ? padding.left : x - columnWidth / 2}
+          y={0}
+          width={idx === 0 || idx === pointsCount - 1 ? columnWidth / 2 : columnWidth}
+          height={height}
+          fill="transparent"
+          style={{ cursor: "pointer" }}
+          onMouseEnter={() => setHoveredIdx(idx)}
+          onMouseMove={() => setHoveredIdx(idx)}
+          onMouseLeave={() => setHoveredIdx(null)}
+        />
+      );
+    });
+
+    // Tooltip elements
+    let tooltipElement = null;
+    if (hoveredIdx !== null && dailyTraffic.length > hoveredIdx) {
+      const d = dailyTraffic[hoveredIdx];
+      const prevD = previousDailyTraffic.length > hoveredIdx ? previousDailyTraffic[hoveredIdx] : null;
+      
+      const currVal = d[activeMetric] || 0;
+      const prevVal = prevD ? (prevD[activeMetric] || 0) : 0;
+      const change = getChange(currVal, prevVal);
+      
+      const dateObj = new Date(d.date + "T00:00:00");
+      const dateStr = dateObj.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC"
+      });
+      
+      const xPct = (hoveredIdx / (pointsCount - 1 || 1)) * 100;
+      const isRightHalf = hoveredIdx > pointsCount / 2;
+      
+      const tooltipStyle = {
+        position: "absolute",
+        top: "16px",
+        [isRightHalf ? "right" : "left"]: `${isRightHalf ? (100 - xPct + 2) : (xPct + 2)}%`,
+        backgroundColor: "rgba(45, 49, 46, 0.95)",
+        color: "#ffffff",
+        padding: "10px 14px",
+        borderRadius: "8px",
+        fontSize: "11px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        pointerEvents: "none",
+        zIndex: 10,
+        minWidth: "170px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        transition: "left 0.1s ease-out, right 0.1s ease-out"
+      };
+      
+      tooltipElement = (
+        <div style={tooltipStyle}>
+          <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
+            {dateStr}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
+            <span>{getMetricLabel(activeMetric)}:</span>
+            <span style={{ fontWeight: "700" }}>{formatNumber(currVal)}</span>
+          </div>
+          {prevD && (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac" }}>
+                <span>Prev Period:</span>
+                <span style={{ fontWeight: "700" }}>{formatNumber(prevVal)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px" }}>
+                <span>Growth:</span>
+                <span style={{ 
+                  fontWeight: "700", 
+                  color: change.isPositive ? "#81c995" : (change.isNegative ? "#f28b82" : "#a8b2ac") 
+                }}>
+                  {change.text}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div style={{ position: "relative" }}>
         <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
@@ -182,6 +318,9 @@ export default function TrafficTab({ trafficData, loading }) {
             <span style={{ color: "#8a928c" }}>Previous Period</span>
           </div>
         </div>
+
+        {/* Floating Tooltip Box */}
+        {tooltipElement}
         
         <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="auto">
           <defs>
@@ -225,6 +364,11 @@ export default function TrafficTab({ trafficData, loading }) {
             />
           )}
 
+          {/* Guide guide line and points */}
+          {hoverGuide}
+          {previousCircle}
+          {currentCircle}
+
           {/* X Axis base line */}
           <line
             x1={padding.left}
@@ -237,6 +381,9 @@ export default function TrafficTab({ trafficData, loading }) {
 
           {/* X axis labels */}
           {xLabels}
+
+          {/* Invisible interactive columns for hover */}
+          {hoverColumns}
         </svg>
       </div>
     );
