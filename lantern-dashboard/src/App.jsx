@@ -12,7 +12,11 @@ const API_BASE = import.meta.env.DEV
 
 export default function App() {
   console.log("Lantern Analytics Dashboard Initialized V1.0.1");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace("#", "");
+    const validTabs = ["overview", "ads", "traffic", "bookings", "settings"];
+    return validTabs.includes(hash) ? hash : "overview";
+  });
   
   // Set default date range: June 1, 2026 to today
   const [startDate, setStartDate] = useState("2026-06-01");
@@ -80,6 +84,24 @@ export default function App() {
   useEffect(() => {
     fetchData();
   }, [activeTab, startDate, endDate]);
+
+  // Sync hash with active tab state
+  useEffect(() => {
+    window.location.hash = activeTab;
+  }, [activeTab]);
+
+  // Listen to browser hash changes (for back/forward history support)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "");
+      const validTabs = ["overview", "ads", "traffic", "bookings", "settings"];
+      if (validTabs.includes(hash)) {
+        setActiveTab(hash);
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Operations handlers
   const handleUpdateSettings = async (newsletterCount, mewsSheetId) => {
