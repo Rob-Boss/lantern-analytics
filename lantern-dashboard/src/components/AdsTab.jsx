@@ -60,6 +60,9 @@ export default function AdsTab({ adsData, loading }) {
     // Calculate metric lists and limits based on selected tab mode
     let maxVal = 10;
 
+    let runningSpendSum = 0;
+    let runningClicksSum = 0;
+
     const dailyMetrics = dailyBreakdownClean.map((d) => {
       const gSpend = d.google_spend || 0;
       const mSpend = d.meta_spend || 0;
@@ -68,13 +71,19 @@ export default function AdsTab({ adsData, loading }) {
 
       const totalSpend = gSpend + mSpend;
       const totalClicks = gClicks + mClicks;
-      const cpc = totalClicks > 0 ? (totalSpend / totalClicks) : 0.0;
+      
+      runningSpendSum += totalSpend;
+      runningClicksSum += totalClicks;
+      
+      const dailyCpc = totalClicks > 0 ? (totalSpend / totalClicks) : 0.0;
+      const runningCpc = runningClicksSum > 0 ? (runningSpendSum / runningClicksSum) : 0.0;
 
       return {
         date: d.date,
         totalSpend,
         totalClicks,
-        cpc,
+        cpc: runningCpc, // Renders the running average CPC on the chart
+        dailyCpc, // Retained for display in tooltips
         gSpend,
         mSpend,
         gClicks,
@@ -294,11 +303,15 @@ export default function AdsTab({ adsData, loading }) {
               {dateStr}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Cost Per Click:</span>
+              <span>Running Avg CPC:</span>
               <span style={{ fontWeight: "700", color: "#8eb29d" }}>{formatCurrency(d.cpc)}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", color: "#a8b2ac", fontSize: "10.5px" }}>
-              <span>Spend / Clicks:</span>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+              <span>Daily CPC:</span>
+              <span>{formatCurrency(d.dailyCpc)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px", color: "#a8b2ac", fontSize: "10.5px" }}>
+              <span>Daily Cost / Clicks:</span>
               <span>{formatCurrency(d.totalSpend)} / {d.totalClicks}</span>
             </div>
           </div>
@@ -393,7 +406,7 @@ export default function AdsTab({ adsData, loading }) {
         <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#2d4a3e" }}></span>
-            <span style={{ color: "#2d4a3e" }}>Combined Cost Per Click (CPC)</span>
+            <span style={{ color: "#2d4a3e" }}>Running Average CPC</span>
           </div>
         </div>
       );
