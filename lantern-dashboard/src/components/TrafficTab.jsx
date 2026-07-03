@@ -244,6 +244,7 @@ export default function TrafficTab({ trafficData, loading }) {
       const currVal = d[activeMetric] || 0;
       const prevVal = prevD ? (prevD[activeMetric] || 0) : 0;
       const change = getChange(currVal, prevVal);
+      const sessionChange = getChange(d.sessions, prevD ? prevD.sessions : 0);
       
       const dateObj = new Date(d.date + "T00:00:00");
       const dateStr = dateObj.toLocaleDateString("en-US", {
@@ -268,7 +269,7 @@ export default function TrafficTab({ trafficData, loading }) {
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
         pointerEvents: "none",
         zIndex: 10,
-        minWidth: "170px",
+        minWidth: "185px",
         display: "flex",
         flexDirection: "column",
         gap: "6px",
@@ -281,38 +282,47 @@ export default function TrafficTab({ trafficData, loading }) {
           <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
             {dateStr}
           </div>
+          
+          {/* Daily Visits Section (Primary Highlighted) */}
           <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-            <span>{getMetricLabel(activeMetric)}:</span>
-            <span style={{ fontWeight: "700" }}>{formatNumber(currVal)}</span>
+            <span style={{ fontWeight: "700", color: "#ffffff" }}>Daily Visits:</span>
+            <span style={{ fontWeight: "800", color: "#8eb29d" }}>{formatNumber(d.sessions)}</span>
           </div>
-          {activeMetric !== "sessions" && (
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac" }}>
-              <span>Daily Visits:</span>
-              <span style={{ fontWeight: "500" }}>{formatNumber(d.sessions)}</span>
+          {prevD && (
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#b2c2b9", fontSize: "10.5px" }}>
+              <span>Prev Visits:</span>
+              <span>
+                {formatNumber(prevD.sessions)} 
+                {sessionChange.text !== "-" && (
+                  <span style={{ marginLeft: "4px", color: sessionChange.isPositive ? "#81c995" : (sessionChange.isNegative ? "#f28b82" : "#b2c2b9"), fontWeight: "600" }}>
+                    ({sessionChange.text})
+                  </span>
+                )}
+              </span>
             </div>
           )}
-          {prevD && (
-            <>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px" }}>
-                <span>Prev {getMetricLabel(activeMetric)}:</span>
-                <span style={{ fontWeight: "700" }}>{formatNumber(prevVal)}</span>
+          
+          {/* Selected Metric Section (Secondary) */}
+          {activeMetric !== "sessions" && (
+            <div style={{ borderTop: "1px dashed rgba(255,255,255,0.15)", marginTop: "4px", paddingTop: "4px", display: "flex", flexDirection: "column", gap: "4px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac" }}>
+                <span>{getMetricLabel(activeMetric)}:</span>
+                <span style={{ fontWeight: "600" }}>{formatNumber(currVal)}</span>
               </div>
-              {activeMetric !== "sessions" && (
-                <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#8a928c" }}>
-                  <span>Prev Visits:</span>
-                  <span style={{ fontWeight: "500" }}>{formatNumber(prevD.sessions)}</span>
+              {prevD && (
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#8a928c", fontSize: "10.5px" }}>
+                  <span>Prev {getMetricLabel(activeMetric)}:</span>
+                  <span>
+                    {formatNumber(prevVal)}
+                    {change.text !== "-" && (
+                      <span style={{ marginLeft: "4px", color: change.isPositive ? "#81c995" : (change.isNegative ? "#f28b82" : "#8a928c"), fontWeight: "600" }}>
+                        ({change.text})
+                      </span>
+                    )}
+                  </span>
                 </div>
               )}
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: "4px" }}>
-                <span>Growth:</span>
-                <span style={{ 
-                  fontWeight: "700", 
-                  color: change.isPositive ? "#81c995" : (change.isNegative ? "#f28b82" : "#a8b2ac") 
-                }}>
-                  {change.text}
-                </span>
-              </div>
-            </>
+            </div>
           )}
         </div>
       );
