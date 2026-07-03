@@ -83,6 +83,13 @@ export default function AdsTab({ adsData, loading }) {
       };
     });
 
+    // Calculate overall period averages for the tooltip comparisons
+    const totalGoogleSpend = dailyMetrics.reduce((acc, curr) => acc + curr.gSpend, 0);
+    const totalMetaSpend = dailyMetrics.reduce((acc, curr) => acc + curr.mSpend, 0);
+    const avgGoogleSpend = pointsCount > 0 ? (totalGoogleSpend / pointsCount) : 0;
+    const avgMetaSpend = pointsCount > 0 ? (totalMetaSpend / pointsCount) : 0;
+    const avgTotalSpend = pointsCount > 0 ? ((totalGoogleSpend + totalMetaSpend) / pointsCount) : 0;
+
     if (activeTab === "cpc") {
       const peakCpc = Math.max(...dailyMetrics.map((d) => d.cpc), 0.05);
       maxVal = peakCpc * 1.15; // 15% safety margin above peak
@@ -315,6 +322,10 @@ export default function AdsTab({ adsData, loading }) {
               <span>Meta Spend:</span>
               <span>{formatCurrency(d.mSpend)}</span>
             </div>
+            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px", color: "#b2c2b9", fontSize: "10.5px" }}>
+              <span>Period Avg:</span>
+              <span>{formatCurrency(avgTotalSpend)}/day</span>
+            </div>
           </div>
         );
       } else if (activeTab === "total_clicks") {
@@ -347,11 +358,19 @@ export default function AdsTab({ adsData, loading }) {
               <span>Google Spend:</span>
               <span style={{ fontWeight: "700", color: "#a5b4fc" }}>{formatCurrency(d.gSpend)}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#a8b2ac" }}>
+              <span>Google Avg:</span>
+              <span>{formatCurrency(avgGoogleSpend)}/day</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
               <span>Meta Spend:</span>
               <span style={{ fontWeight: "700", color: "#fdba74" }}>{formatCurrency(d.mSpend)}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", color: "#a8b2ac" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#a8b2ac" }}>
+              <span>Meta Avg:</span>
+              <span>{formatCurrency(avgMetaSpend)}/day</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px" }}>
               <span>Total Spend:</span>
               <span>{formatCurrency(d.totalSpend)}</span>
             </div>
