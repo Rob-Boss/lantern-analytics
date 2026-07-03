@@ -360,12 +360,6 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-label">Conversion Rate</div>
-          <div className="kpi-value">{convRate.toFixed(2)}%</div>
-          <div className="kpi-subtext">Bookings ÷ Web Sessions</div>
-        </div>
-
-        <div className="kpi-card">
           <div className="kpi-label">Newsletter List</div>
           <div className="kpi-value">{formatNumber(newsletterSubs)}</div>
           <div className="kpi-subtext">Subscribers (Squarespace)</div>
