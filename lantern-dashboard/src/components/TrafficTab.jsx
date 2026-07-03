@@ -283,47 +283,23 @@ export default function TrafficTab({ trafficData, loading }) {
             {dateStr}
           </div>
           
-          {/* Daily Visits Section (Primary Highlighted) */}
+          {/* Daily Visits (Primary Highlighted) */}
           <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
             <span style={{ fontWeight: "700", color: "#ffffff" }}>Daily Visits:</span>
             <span style={{ fontWeight: "800", color: "#8eb29d" }}>{formatNumber(d.sessions)}</span>
           </div>
-          {prevD && (
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#b2c2b9", fontSize: "10.5px" }}>
-              <span>Prev Visits:</span>
-              <span>
-                {formatNumber(prevD.sessions)} 
-                {sessionChange.text !== "-" && (
-                  <span style={{ marginLeft: "4px", color: sessionChange.isPositive ? "#81c995" : (sessionChange.isNegative ? "#f28b82" : "#b2c2b9"), fontWeight: "600" }}>
-                    ({sessionChange.text})
-                  </span>
-                )}
-              </span>
-            </div>
-          )}
           
-          {/* Selected Metric Section (Secondary) */}
-          {activeMetric !== "sessions" && (
-            <div style={{ borderTop: "1px dashed rgba(255,255,255,0.15)", marginTop: "4px", paddingTop: "4px", display: "flex", flexDirection: "column", gap: "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac" }}>
-                <span>{getMetricLabel(activeMetric)}:</span>
-                <span style={{ fontWeight: "600" }}>{formatNumber(currVal)}</span>
-              </div>
-              {prevD && (
-                <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#8a928c", fontSize: "10.5px" }}>
-                  <span>Prev {getMetricLabel(activeMetric)}:</span>
-                  <span>
-                    {formatNumber(prevVal)}
-                    {change.text !== "-" && (
-                      <span style={{ marginLeft: "4px", color: change.isPositive ? "#81c995" : (change.isNegative ? "#f28b82" : "#8a928c"), fontWeight: "600" }}>
-                        ({change.text})
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )}
+          {/* Sub-Metrics Section */}
+          <div style={{ borderTop: "1px dashed rgba(255,255,255,0.15)", marginTop: "4px", paddingTop: "4px", display: "flex", flexDirection: "column", gap: "4px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac" }}>
+              <span>New Users:</span>
+              <span style={{ fontWeight: "600" }}>{formatNumber(d.new_users)}</span>
             </div>
-          )}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", color: "#a8b2ac" }}>
+              <span>Returning Users:</span>
+              <span style={{ fontWeight: "600" }}>{formatNumber(d.active_users - d.new_users)}</span>
+            </div>
+          </div>
         </div>
       );
     }
