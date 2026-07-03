@@ -11,6 +11,7 @@ const API_BASE = import.meta.env.DEV
   : (import.meta.env.VITE_API_URL || "/api");
 
 export default function App() {
+  console.log("Lantern Analytics Dashboard Initialized V1.0.1");
   const [activeTab, setActiveTab] = useState("overview");
   
   // Set default date range: June 1, 2026 to today
