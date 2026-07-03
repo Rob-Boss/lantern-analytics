@@ -45,6 +45,13 @@ export default function TrafficTab({ trafficData, loading }) {
   );
   const previousDailyTrafficClean = previousDailyTraffic.slice(0, dailyTrafficClean.length);
 
+  const cleanGeoName = (val) => {
+    if (!val || val === "(not set)" || val === "not set") {
+      return "Unknown";
+    }
+    return val;
+  };
+
   // Insights flags
   const dailyTrafficDates = dailyTrafficClean.map(d => d.date);
   const showMetaCapInsight = dailyTrafficDates.includes("2026-06-27");
@@ -582,7 +589,7 @@ export default function TrafficTab({ trafficData, loading }) {
                 return (
                   <div key={`region-${idx}`} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "600", color: "#2d312e" }}>
-                      <span>{row.region || "(not set)"}</span>
+                      <span>{cleanGeoName(row.region)}</span>
                       <span style={{ color: "#606862" }}>{formatNumber(row.users)}</span>
                     </div>
                     <div style={{ width: "100%", height: "6px", backgroundColor: "#f0f2f1", borderRadius: "3px", overflow: "hidden" }}>
@@ -613,7 +620,7 @@ export default function TrafficTab({ trafficData, loading }) {
                 return (
                   <div key={`city-${idx}`} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "600", color: "#2d312e" }}>
-                      <span>{row.city || "(not set)"}</span>
+                      <span>{cleanGeoName(row.city)}</span>
                       <span style={{ color: "#606862" }}>{formatNumber(row.users)}</span>
                     </div>
                     <div style={{ width: "100%", height: "6px", backgroundColor: "#f0f2f1", borderRadius: "3px", overflow: "hidden" }}>
