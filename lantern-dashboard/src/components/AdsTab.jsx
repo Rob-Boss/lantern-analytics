@@ -62,8 +62,9 @@ export default function AdsTab({ adsData, loading }) {
 
     let runningSpendSum = 0;
     let runningClicksSum = 0;
+    let daysElapsedSinceTracking = 0;
 
-    const dailyMetrics = dailyBreakdownClean.map((d, idx) => {
+    const dailyMetrics = dailyBreakdownClean.map((d) => {
       const gSpend = d.google_spend || 0;
       const mSpend = d.meta_spend || 0;
       const gClicks = d.google_clicks || 0;
@@ -72,14 +73,22 @@ export default function AdsTab({ adsData, loading }) {
       const totalSpend = gSpend + mSpend;
       const totalClicks = gClicks + mClicks;
       
-      runningSpendSum += totalSpend;
-      runningClicksSum += totalClicks;
+      const isTrackingActive = d.date >= "2026-06-18";
+      
+      if (isTrackingActive) {
+        runningSpendSum += totalSpend;
+        runningClicksSum += totalClicks;
+        daysElapsedSinceTracking += 1;
+      }
       
       const dailyCpc = totalClicks > 0 ? (totalSpend / totalClicks) : 0.0;
-      const runningCpc = runningClicksSum > 0 ? (runningSpendSum / runningClicksSum) : 0.0;
-
-      const daysElapsed = idx + 1;
-      const runningAvgClicks = runningClicksSum / daysElapsed;
+      const runningCpc = (isTrackingActive && runningClicksSum > 0) 
+        ? (runningSpendSum / runningClicksSum) 
+        : 0.0;
+        
+      const runningAvgClicks = (isTrackingActive && daysElapsedSinceTracking > 0)
+        ? (runningClicksSum / daysElapsedSinceTracking)
+        : 0.0;
 
       return {
         date: d.date,
@@ -301,23 +310,32 @@ export default function AdsTab({ adsData, loading }) {
       };
 
       if (activeTab === "cpc") {
+        const isTrackingActive = d.date >= "2026-06-18";
         tooltipElement = (
           <div style={tooltipStyle}>
             <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
               {dateStr}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Running Avg CPC:</span>
-              <span style={{ fontWeight: "700", color: "#8eb29d" }}>{formatCurrency(d.cpc)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
-              <span>Daily CPC:</span>
-              <span>{formatCurrency(d.dailyCpc)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px", color: "#a8b2ac", fontSize: "10.5px" }}>
-              <span>Daily Cost / Clicks:</span>
-              <span>{formatCurrency(d.totalSpend)} / {d.totalClicks}</span>
-            </div>
+            {!isTrackingActive ? (
+              <div style={{ color: "#a8b2ac", fontStyle: "italic", fontSize: "11px", textAlign: "center", padding: "4px 0" }}>
+                Ad tracking not active
+              </div>
+            ) : (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Running Avg CPC:</span>
+                  <span style={{ fontWeight: "700", color: "#8eb29d" }}>{formatCurrency(d.cpc)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+                  <span>Daily CPC:</span>
+                  <span>{formatCurrency(d.dailyCpc)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "4px", marginTop: "4px", color: "#a8b2ac", fontSize: "10.5px" }}>
+                  <span>Daily Cost / Clicks:</span>
+                  <span>{formatCurrency(d.totalSpend)} / {d.totalClicks}</span>
+                </div>
+              </>
+            )}
           </div>
         );
       } else if (activeTab === "daily_spend") {
@@ -353,27 +371,36 @@ export default function AdsTab({ adsData, loading }) {
           </div>
         );
       } else if (activeTab === "total_clicks") {
+        const isTrackingActive = d.date >= "2026-06-18";
         tooltipElement = (
           <div style={tooltipStyle}>
             <div style={{ fontWeight: "700", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: "4px", color: "#b2c2b9" }}>
               {dateStr}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Running Avg Clicks:</span>
-              <span style={{ fontWeight: "700", color: "#f7b28d" }}>{Math.round(d.runningAvgClicks)}/day</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
-              <span>Daily Clicks:</span>
-              <span>{formatNumber(d.totalClicks)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac", paddingLeft: "8px" }}>
-              <span>Google Clicks:</span>
-              <span>{formatNumber(d.gClicks)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac", paddingLeft: "8px" }}>
-              <span>Meta Clicks:</span>
-              <span>{formatNumber(d.mClicks)}</span>
-            </div>
+            {!isTrackingActive ? (
+              <div style={{ color: "#a8b2ac", fontStyle: "italic", fontSize: "11px", textAlign: "center", padding: "4px 0" }}>
+                Ad tracking not active
+              </div>
+            ) : (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Running Avg Clicks:</span>
+                  <span style={{ fontWeight: "700", color: "#f7b28d" }}>{Math.round(d.runningAvgClicks)}/day</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac" }}>
+                  <span>Daily Clicks:</span>
+                  <span>{formatNumber(d.totalClicks)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac", paddingLeft: "8px" }}>
+                  <span>Google Clicks:</span>
+                  <span>{formatNumber(d.gClicks)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "#a8b2ac", paddingLeft: "8px" }}>
+                  <span>Meta Clicks:</span>
+                  <span>{formatNumber(d.mClicks)}</span>
+                </div>
+              </>
+            )}
           </div>
         );
       } else {
