@@ -38,6 +38,8 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
 
   // KPI Calculations
   const totalRevenue = kpis.total_net_revenue || 0;
+  const airbnbRevenue = kpis.airbnb_net_revenue || 0;
+  const mewsRevenue = kpis.mews_net_revenue || 0;
   const totalSpend = kpis.total_spend || 0;
   const roas = kpis.roas || 0.0;
   const newsletterSubs = kpis.newsletter_subscribers || 0;
@@ -322,6 +324,18 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
           <div className="kpi-label">Total Net Revenue</div>
           <div className="kpi-value">{formatCurrency(totalRevenue)}</div>
           <div className="kpi-subtext">Across all booking channels</div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-label">Mews Direct Revenue</div>
+          <div className="kpi-value" style={{ color: "#2d4a3e" }}>{formatCurrency(mewsRevenue)}</div>
+          <div className="kpi-subtext">From direct booking engine</div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-label">Airbnb Revenue</div>
+          <div className="kpi-value" style={{ color: "#ea580c" }}>{formatCurrency(airbnbRevenue)}</div>
+          <div className="kpi-subtext">From Airbnb listings</div>
         </div>
 
         <div className="kpi-card">

@@ -133,6 +133,8 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
         
     # Calculate revenue KPIs
     total_net_rev = sum(b['net_revenue'] for b in bookings)
+    airbnb_net_rev = sum(b['net_revenue'] for b in bookings if normalize_channel(b['channel']) == 'Airbnb')
+    mews_net_rev = sum(b['net_revenue'] for b in bookings if normalize_channel(b['channel']) == 'Mews Booking Engine')
     total_bookings = len(bookings)
     
     # Calculate marketing spend KPIs
@@ -188,6 +190,8 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     return {
         "kpis": {
             "total_net_revenue": round(total_net_rev, 2),
+            "airbnb_net_revenue": round(airbnb_net_rev, 2),
+            "mews_net_revenue": round(mews_net_rev, 2),
             "total_bookings": total_bookings,
             "total_spend": round(total_spend, 2),
             "google_spend": round(total_google_spend, 2),
