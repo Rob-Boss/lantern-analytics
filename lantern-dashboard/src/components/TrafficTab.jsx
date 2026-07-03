@@ -48,10 +48,10 @@ export default function TrafficTab({ trafficData, loading }) {
     d => (d.sessions || 0) === 0 && (d.new_users || 0) === 0
   );
 
-  // Insights flags based on dataset dates
-  const dailyTrafficDates = dailyTrafficClean.map(d => d.date);
-  const showMetaCapInsight = dailyTrafficDates.includes("2026-06-27");
-  const showAlgeriaSpikeInsight = dailyTrafficDates.includes("2026-06-29");
+  // Map indexes of interest for interactive hover cards
+  const idxJune27 = dailyTrafficClean.findIndex(d => d.date === "2026-06-27");
+  const idxJune29 = dailyTrafficClean.findIndex(d => d.date === "2026-06-29");
+  const idxJuly2 = dailyTrafficClean.findIndex(d => d.date === "2026-07-02");
 
   const renderTrafficChart = () => {
     const currentTraffic = dailyTrafficClean;
@@ -437,52 +437,90 @@ export default function TrafficTab({ trafficData, loading }) {
           {renderTrafficChart()}
         </div>
 
-        {/* Insights & Warnings */}
-        {(showMetaCapInsight || showAlgeriaSpikeInsight) && (
-          <div style={{ 
-            marginTop: "16px", 
-            borderTop: "1px solid #e2e8e4", 
-            paddingTop: "12px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px"
-          }}>
-            {showMetaCapInsight && (
-              <div style={{ 
-                fontSize: "11px", 
-                color: "#5b7d90", 
-                backgroundColor: "#f4f8fa", 
-                border: "1px dashed #d5e6f0", 
-                padding: "8px 12px", 
-                borderRadius: "6px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "8px",
-                lineHeight: "1.4"
-              }}>
-                <span style={{ fontSize: "12px" }}>ℹ️</span>
-                <span><strong>June 27, 2026:</strong> Meta Ads reached its monthly budget cap, causing ads to temporarily pause and site traffic to briefly drop.</span>
-              </div>
-            )}
-            {showAlgeriaSpikeInsight && (
-              <div style={{ 
+        {/* Dynamic Interactive Insights & Warnings */}
+        <div style={{ 
+          marginTop: "16px", 
+          borderTop: "1px solid #e2e8e4", 
+          paddingTop: "12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px"
+        }}>
+          {activeMetric === "active_users" && (
+            <>
+              {idxJune27 !== -1 && (
+                <div 
+                  onMouseEnter={() => setHoveredIdx(idxJune27)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  style={{ 
+                    fontSize: "11px", 
+                    color: "#5b7d90", 
+                    backgroundColor: hoveredIdx === idxJune27 ? "#ecf3f6" : "#f4f8fa", 
+                    border: "1px dashed #d5e6f0", 
+                    padding: "8px 12px", 
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                    lineHeight: "1.4",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  <span style={{ fontSize: "12px" }}>ℹ️</span>
+                  <span><strong>June 27, 2026:</strong> Meta Ads reached its monthly budget cap, causing ads to temporarily pause and site traffic to briefly drop. (Hover to highlight date on chart)</span>
+                </div>
+              )}
+              {idxJune29 !== -1 && (
+                <div 
+                  onMouseEnter={() => setHoveredIdx(idxJune29)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  style={{ 
+                    fontSize: "11px", 
+                    color: "#c57e5a", 
+                    backgroundColor: hoveredIdx === idxJune29 ? "#fdf3ee" : "#fef8f5", 
+                    border: "1px dashed #fcdcc9", 
+                    padding: "8px 12px", 
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                    lineHeight: "1.4",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  <span style={{ fontSize: "12px" }}>⚠️</span>
+                  <span><strong>June 29, 2026:</strong> Google P-Max campaign activation triggered a temporary bot scrape spike of 1,500+ visits from Algeria before targeting filters were adjusted. (Hover to highlight date on chart)</span>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeMetric === "checkouts" && idxJuly2 !== -1 && (
+            <div 
+              onMouseEnter={() => setHoveredIdx(idxJuly2)}
+              onMouseLeave={() => setHoveredIdx(null)}
+              style={{ 
                 fontSize: "11px", 
                 color: "#c57e5a", 
-                backgroundColor: "#fef8f5", 
+                backgroundColor: hoveredIdx === idxJuly2 ? "#fdf3ee" : "#fef8f5", 
                 border: "1px dashed #fcdcc9", 
                 padding: "8px 12px", 
                 borderRadius: "6px",
                 display: "flex",
                 alignItems: "flex-start",
                 gap: "8px",
-                lineHeight: "1.4"
-              }}>
-                <span style={{ fontSize: "12px" }}>⚠️</span>
-                <span><strong>June 29, 2026:</strong> Google P-Max campaign activation triggered a temporary scrape anomaly of 1,500+ bot visits from Algeria before targeting filters were adjusted. This is visible as a traffic spike on this date.</span>
-              </div>
-            )}
-          </div>
-        )}
+                lineHeight: "1.4",
+                cursor: "pointer",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <span style={{ fontSize: "12px" }}>ℹ️</span>
+              <span><strong>July 2, 2026:</strong> Checkout tracking went live. Dates before this show 0 checkouts as tracking was not yet active. (Hover to highlight launch date on chart)</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 2. Funnel & Checkout Performance summary totals (Full width) */}
@@ -491,7 +529,7 @@ export default function TrafficTab({ trafficData, loading }) {
           <div className="panel-title">Funnel & Checkout Performance</div>
         </div>
         
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px", marginBottom: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px", marginBottom: 0 }}>
           <div style={{ border: "1px solid #e2e8e4", padding: "12px", borderRadius: "8px", backgroundColor: "#fcfdfe" }}>
             <div style={{ fontSize: "10.5px", color: "#606862", fontWeight: 600, letterSpacing: "0.02em" }}>TOTAL SESSIONS</div>
             <div style={{ fontSize: "18px", fontWeight: "700", color: "#2d312e", marginTop: "2px" }}>{formatNumber(summary.sessions)}</div>
@@ -509,29 +547,10 @@ export default function TrafficTab({ trafficData, loading }) {
             <div style={{ fontSize: "18px", fontWeight: "700", color: "#2d4a3e", marginTop: "2px" }}>{(funnel.checkout_conv_rate || 0).toFixed(2)}%</div>
           </div>
         </div>
-
-        {/* Warn on checkout limits */}
-        {dailyTrafficClean.some(d => d.date < "2026-07-02") && (
-          <div style={{ 
-            fontSize: "11px", 
-            color: "#c57e5a", 
-            backgroundColor: "#fef8f5", 
-            border: "1px dashed #fcdcc9", 
-            padding: "8px 12px", 
-            borderRadius: "6px",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "8px",
-            lineHeight: "1.4"
-          }}>
-            <span>⚠️</span>
-            <span>Checkout tracking was initiated on July 2, 2026. Dates before this have incomplete historical conversion ratios.</span>
-          </div>
-        )}
       </div>
 
       {/* 3. Bottom Panel Grid: Side-by-side Top States & Top Cities lists */}
-      <div className="panel-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      <div className="panel-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "24px", marginTop: "24px" }}>
         
         {/* Top States List */}
         <div className="panel" style={{ display: "flex", flexDirection: "column", minHeight: "280px" }}>
