@@ -273,6 +273,24 @@ export default function TrafficTab({ trafficData, loading }) {
                 <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d4a3e" }}>{(checkoutToPurchase || 0).toFixed(1)}%</div>
               </div>
             </div>
+            {dailyTraffic.some(d => d.date < "2026-07-02") && (
+              <div style={{ 
+                marginTop: "16px", 
+                fontSize: "11px", 
+                color: "#c57e5a", 
+                backgroundColor: "#fef8f5", 
+                border: "1px dashed #fcdcc9", 
+                padding: "10px 12px", 
+                borderRadius: "6px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "8px",
+                lineHeight: "1.4"
+              }}>
+                <span style={{ fontSize: "14px" }}>⚠️</span>
+                <span>Checkout tracking was initiated on July 2, 2026. Your range contains dates before this; historical conversion ratios are incomplete.</span>
+              </div>
+            )}
           </div>
 
           <div className="panel">
