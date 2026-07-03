@@ -84,13 +84,17 @@ export default function AdsTab({ adsData, loading }) {
     });
 
     if (activeTab === "cpc") {
-      maxVal = Math.max(...dailyMetrics.map((d) => d.cpc), 1.0);
+      const peakCpc = Math.max(...dailyMetrics.map((d) => d.cpc), 0.05);
+      maxVal = peakCpc * 1.15; // 15% safety margin above peak
     } else if (activeTab === "total_spend") {
-      maxVal = Math.max(...dailyMetrics.map((d) => d.totalSpend), 10.0);
+      const peakSpend = Math.max(...dailyMetrics.map((d) => d.totalSpend), 10.0);
+      maxVal = peakSpend * 1.15;
     } else if (activeTab === "total_clicks") {
-      maxVal = Math.max(...dailyMetrics.map((d) => d.totalClicks), 10);
+      const peakClicks = Math.max(...dailyMetrics.map((d) => d.totalClicks), 10);
+      maxVal = peakClicks * 1.15;
     } else {
-      maxVal = Math.max(...dailyMetrics.map((d) => Math.max(d.gSpend, d.mSpend)), 10.0);
+      const peakChanSpend = Math.max(...dailyMetrics.map((d) => Math.max(d.gSpend, d.mSpend)), 10.0);
+      maxVal = peakChanSpend * 1.15;
     }
 
     const getY = (val) => {
