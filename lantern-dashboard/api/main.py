@@ -368,6 +368,60 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
             "returning_users": max(0, pm.get('active_users', 0) - pm.get('new_users', 0))
         })
         
+    # Query Geographic Distribution from GA4 live
+    geo_regions = []
+    geo_cities = []
+    
+    try:
+        import os
+        from google.analytics.data_v1beta import BetaAnalyticsDataClient
+        from google.analytics.data_v1beta.types import (
+            RunReportRequest,
+            DateRange,
+            Metric,
+            Dimension,
+        )
+        try:
+            from sync_service import GA4_CREDS_PATH, GA4_PROPERTY_ID
+        except ImportError:
+            from api.sync_service import GA4_CREDS_PATH, GA4_PROPERTY_ID
+
+        if os.path.exists(GA4_CREDS_PATH):
+            client = BetaAnalyticsDataClient.from_service_account_json(GA4_CREDS_PATH)
+            
+            # Query Regions (States)
+            region_request = RunReportRequest(
+                property=f"properties/{GA4_PROPERTY_ID}",
+                dimensions=[Dimension(name="region")],
+                metrics=[Metric(name="activeUsers")],
+                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                limit=15
+            )
+            region_response = client.run_report(region_request)
+            for row in region_response.rows:
+                geo_regions.append({
+                    "region": row.dimension_values[0].value,
+                    "users": int(row.metric_values[0].value)
+                })
+                
+            # Query Cities
+            city_request = RunReportRequest(
+                property=f"properties/{GA4_PROPERTY_ID}",
+                dimensions=[Dimension(name="city")],
+                metrics=[Metric(name="activeUsers")],
+                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                limit=15
+            )
+            city_response = client.run_report(city_request)
+            for row in city_response.rows:
+                geo_cities.append({
+                    "city": row.dimension_values[0].value,
+                    "users": int(row.metric_values[0].value)
+                })
+    except Exception as e:
+        import sys
+        print(f"Failed to query GA4 geo metrics inside traffic route: {e}", file=sys.stderr)
+
     return {
         "summary": {
             "sessions": total_sessions,
@@ -395,7 +449,9 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
             "booking_conv_rate": round((total_purchases / total_sessions * 100.0), 2) if total_sessions > 0 else 0.0
         },
         "daily_traffic": daily_traffic,
-        "previous_daily_traffic": previous_daily_traffic
+        "previous_daily_traffic": previous_daily_traffic,
+        "geo_regions": geo_regions,
+        "geo_cities": geo_cities
     }
 
 @app.get("/api/dashboard/bookings")
