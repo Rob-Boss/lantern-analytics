@@ -26,6 +26,11 @@ export default function TrafficTab({ trafficData, loading }) {
   const previousDailyTraffic = trafficData.previous_daily_traffic || [];
   const checkoutToPurchase = funnel.checkout_to_booking_rate || 0;
 
+  // Insight visibility flags based on date range contents
+  const dailyTrafficDates = dailyTraffic.map(d => d.date);
+  const showMetaCapInsight = dailyTrafficDates.includes("2026-06-27");
+  const showAlgeriaSpikeInsight = dailyTrafficDates.includes("2026-06-29");
+
   // Percentage change helper
   const getChange = (current, previous) => {
     if (!previous || previous === 0) {
@@ -535,6 +540,56 @@ export default function TrafficTab({ trafficData, loading }) {
           <div style={{ flex: 1 }}>
             {renderTrafficChart()}
           </div>
+
+          {/* Chart Insights & Warnings */}
+          {(showMetaCapInsight || showAlgeriaSpikeInsight) && (
+            <div style={{ 
+              marginTop: "20px", 
+              borderTop: "1px solid #e2e8e4", 
+              paddingTop: "16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px"
+            }}>
+              <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>CHART INSIGHTS & ANOMALIES</div>
+              
+              {showMetaCapInsight && (
+                <div style={{ 
+                  fontSize: "11.5px", 
+                  color: "#5b7d90", 
+                  backgroundColor: "#f4f8fa", 
+                  border: "1px dashed #d5e6f0", 
+                  padding: "10px 12px", 
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "8px",
+                  lineHeight: "1.4"
+                }}>
+                  <span style={{ fontSize: "14px" }}>ℹ️</span>
+                  <span><strong>June 27, 2026:</strong> Meta Ads reached its monthly budget cap, causing ads to temporarily pause and site traffic to briefly drop.</span>
+                </div>
+              )}
+              
+              {showAlgeriaSpikeInsight && (
+                <div style={{ 
+                  fontSize: "11.5px", 
+                  color: "#c57e5a", 
+                  backgroundColor: "#fef8f5", 
+                  border: "1px dashed #fcdcc9", 
+                  padding: "10px 12px", 
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "8px",
+                  lineHeight: "1.4"
+                }}>
+                  <span style={{ fontSize: "14px" }}>⚠️</span>
+                  <span><strong>June 29, 2026:</strong> Google P-Max campaign activation triggered a temporary scrape anomaly of 1,500+ bot visits from Algeria before targeting filters were adjusted. This is visible as a traffic spike on this date.</span>
+                </div>
+              )}
+            </div>
+          )}
           
         </div>
 
