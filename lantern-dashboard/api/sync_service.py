@@ -18,17 +18,19 @@ import requests
 # Import database helpers (ensuring parent directory/module path works)
 try:
     from .database import save_daily_metric_row, save_setting
+    from .credentials_loader import get_ga4_creds_path, get_meta_creds_path, get_google_ads_yaml_path
 except ImportError:
     from database import save_daily_metric_row, save_setting
+    from credentials_loader import get_ga4_creds_path, get_meta_creds_path, get_google_ads_yaml_path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Paths to credentials (relative to parent directory of this file)
+# Paths to credentials (relative to parent directory of this file, or loaded from env)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GA4_CREDS_PATH = os.path.join(BASE_DIR, "ga4-credentials.json")
-GOOGLE_ADS_YAML_PATH = os.path.join(BASE_DIR, "google-ads.yaml")
-META_CREDS_PATH = os.path.join(BASE_DIR, "meta-credentials.json")
+GA4_CREDS_PATH = get_ga4_creds_path(BASE_DIR)
+GOOGLE_ADS_YAML_PATH = get_google_ads_yaml_path(BASE_DIR)
+META_CREDS_PATH = get_meta_creds_path(BASE_DIR)
 
 GA4_PROPERTY_ID = "534706583"
 META_AD_ACCOUNT_ID = "act_1585226713251054"

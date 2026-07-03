@@ -5,6 +5,8 @@ import logging
 from typing import Optional
 from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -29,11 +31,29 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Lantern Camp Analytics Dashboard API")
 
-# Enable CORS for frontend local development
+# Configurable CORS origins for production cross-domain fetching
+allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
+if allowed_origins_env:
+    allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+else:
+    allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "*"
+    ]
+
+# If allow_origins contains wildcard "*", we must set allow_credentials to False
+# because browsers reject "*" with credentials allowed.
+allow_creds = True
+if "*" in allowed_origins:
+    allow_creds = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify the exact frontend URL
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=allow_creds,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -448,6 +468,22 @@ def api_clear_bookings():
     clear_bookings()
     return {"status": "success", "message": "All bookings deleted."}
 
+# Serve static files from the React frontend build directory if it exists
+frontend_dist = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dist")
+if os.path.exists(frontend_dist):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+    
+    @app.get("/{catchall:path}")
+    async def serve_frontend(catchall: str):
+        if catchall.startswith("api"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        index_path = os.path.join(frontend_dist, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        raise HTTPException(status_code=404, detail="Frontend index.html not found")
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    host = os.environ.get("HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host=host, port=port)

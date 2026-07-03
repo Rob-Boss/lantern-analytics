@@ -1,20 +1,42 @@
 import os
-import sqlite3
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lantern_dashboard.db")
+DATABASE_URL = os.environ.get("DATABASE_URL")
+IS_POSTGRES = DATABASE_URL is not None and DATABASE_URL.startswith("postgres")
+
+if IS_POSTGRES:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    # Support postgresql:// prefix standard if postgres:// is passed
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+else:
+    import sqlite3
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    if IS_POSTGRES:
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        return conn
+    else:
+        DB_PATH = os.environ.get("DATABASE_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "lantern_dashboard.db"))
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+def _exec(cursor, query, params=None):
+    if IS_POSTGRES:
+        query = query.replace("?", "%s")
+    if params is not None:
+        cursor.execute(query, params)
+    else:
+        cursor.execute(query)
 
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
     
     # 1. Create bookings table
-    cursor.execute("""
+    _exec(cursor, """
         CREATE TABLE IF NOT EXISTS bookings (
             id TEXT PRIMARY KEY,
             channel TEXT NOT NULL,
@@ -28,7 +50,7 @@ def init_db():
     """)
     
     # 2. Create daily_metrics table (caches GA4 and Google/Meta ad spend/clicks/impressions)
-    cursor.execute("""
+    _exec(cursor, """
         CREATE TABLE IF NOT EXISTS daily_metrics (
             date TEXT PRIMARY KEY,
             sessions INTEGER DEFAULT 0,
@@ -45,7 +67,7 @@ def init_db():
     """)
     
     # 3. Create settings table
-    cursor.execute("""
+    _exec(cursor, """
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
@@ -53,8 +75,8 @@ def init_db():
     """)
     
     # Insert default settings if they don't exist
-    cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('newsletter_subscribers', '0')")
-    cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('last_synced_at', '')")
+    _exec(cursor, "INSERT INTO settings (key, value) VALUES ('newsletter_subscribers', '0') ON CONFLICT (key) DO NOTHING")
+    _exec(cursor, "INSERT INTO settings (key, value) VALUES ('last_synced_at', '') ON CONFLICT (key) DO NOTHING")
     
     conn.commit()
     conn.close()
@@ -67,7 +89,7 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
     # Calculate net revenue
     net_revenue = gross_revenue * (1.0 - (ota_fee_percent / 100.0))
     
-    cursor.execute("""
+    _exec(cursor, """
         INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
@@ -87,7 +109,7 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
 def get_all_bookings():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM bookings ORDER BY booking_date DESC")
+    _exec(cursor, "SELECT * FROM bookings ORDER BY booking_date DESC")
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]
@@ -95,7 +117,7 @@ def get_all_bookings():
 def clear_bookings():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM bookings")
+    _exec(cursor, "DELETE FROM bookings")
     conn.commit()
     conn.close()
 
@@ -116,7 +138,7 @@ def save_daily_metric_row(date_str, metrics_dict):
     meta_views = metrics_dict.get('meta_views', 0)
     meta_clicks = metrics_dict.get('meta_clicks', 0)
     
-    cursor.execute("""
+    _exec(cursor, """
         INSERT INTO daily_metrics (
             date, sessions, pageviews, checkouts_initiated,
             google_spend, google_impressions, google_clicks,
@@ -146,9 +168,9 @@ def get_daily_metrics_range(start_date=None, end_date=None):
     cursor = conn.cursor()
     
     if start_date and end_date:
-        cursor.execute("SELECT * FROM daily_metrics WHERE date >= ? AND date <= ? ORDER BY date ASC", (start_date, end_date))
+        _exec(cursor, "SELECT * FROM daily_metrics WHERE date >= ? AND date <= ? ORDER BY date ASC", (start_date, end_date))
     else:
-        cursor.execute("SELECT * FROM daily_metrics ORDER BY date ASC")
+        _exec(cursor, "SELECT * FROM daily_metrics ORDER BY date ASC")
         
     rows = cursor.fetchall()
     conn.close()
@@ -158,7 +180,7 @@ def get_daily_metrics_range(start_date=None, end_date=None):
 def save_setting(key, value):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    _exec(cursor, """
         INSERT INTO settings (key, value)
         VALUES (?, ?)
         ON CONFLICT(key) DO UPDATE SET value=excluded.value
@@ -169,7 +191,7 @@ def save_setting(key, value):
 def get_setting(key, default_value=""):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT value FROM settings WHERE key = ?", (key,))
+    _exec(cursor, "SELECT value FROM settings WHERE key = ?", (key,))
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -179,12 +201,12 @@ def get_setting(key, default_value=""):
 def get_first_booking_date():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT MIN(booking_date) FROM bookings")
+    _exec(cursor, "SELECT MIN(booking_date) AS min_date FROM bookings")
     row = cursor.fetchone()
     conn.close()
-    return row[0] if row and row[0] else None
+    return row['min_date'] if row and row['min_date'] else None
 
 # Initial run to ensure tables exist
 if __name__ == "__main__":
     init_db()
-    print("Database initialized successfully at:", DB_PATH)
+    print("Database initialized successfully.")

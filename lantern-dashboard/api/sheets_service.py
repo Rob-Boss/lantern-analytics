@@ -6,15 +6,17 @@ from google.oauth2.service_account import Credentials
 
 try:
     from .database import save_booking
+    from .credentials_loader import get_ga4_creds_path
 except ImportError:
     from database import save_booking
+    from credentials_loader import get_ga4_creds_path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Paths to credentials (relative to parent directory of this file)
+# Paths to credentials (relative to parent directory of this file, or loaded from env)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GA4_CREDS_PATH = os.path.join(BASE_DIR, "ga4-credentials.json")
+GA4_CREDS_PATH = get_ga4_creds_path(BASE_DIR)
 
 def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z5000"):
     """Fetches bookings from a Google Sheet using the GA4 service account credentials."""
