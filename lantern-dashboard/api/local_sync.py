@@ -54,6 +54,19 @@ def main():
         except Exception as e:
             logger.error(f"Step 2 Failed: {e}")
             
+    # 3. Run Google Ads Budget Rollover Auto-Pacing
+    logger.info("Step 3: Running Google Ads budget rollover auto-pacing...")
+    try:
+        # Resolve path to import google_budget_rollover from root
+        root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if root_dir not in sys.path:
+            sys.path.append(root_dir)
+        import google_budget_rollover
+        google_budget_rollover.main()
+        logger.info("Step 3 Complete! Google Ads budget rollover executed.")
+    except Exception as e:
+        logger.error(f"Step 3 Failed: {e}")
+            
     logger.info("================ MASTER LOCAL SYNC COMPLETE ================")
 
 if __name__ == "__main__":
