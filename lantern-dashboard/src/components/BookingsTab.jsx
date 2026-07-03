@@ -40,10 +40,11 @@ export default function BookingsTab({ bookingsData, loading }) {
     return matchesSearch && matchesChannel;
   });
 
-  // Calculate filtered totals
+  // Calculate filtered totals for operational booking cards
+  const totalNights = filteredBookings.reduce((acc, b) => acc + (b.nights || 0), 0);
   const totalGross = filteredBookings.reduce((acc, b) => acc + (b.gross_revenue || 0), 0);
-  const totalNet = filteredBookings.reduce((acc, b) => acc + (b.net_revenue || 0), 0);
-  const avgFee = totalGross > 0 ? ((totalGross - totalNet) / totalGross * 100) : 0;
+  const avgBookingValue = filteredBookings.length > 0 ? (totalGross / filteredBookings.length) : 0;
+  const avgStay = filteredBookings.length > 0 ? (totalNights / filteredBookings.length) : 0;
 
   // Pagination Math
   const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
@@ -72,7 +73,7 @@ export default function BookingsTab({ bookingsData, loading }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* Ledger Stats Row */}
+      {/* Ledger Operational Stats Row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
         <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
           <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>LEDGER BOOKINGS COUNT</div>
@@ -81,21 +82,21 @@ export default function BookingsTab({ bookingsData, loading }) {
         </div>
 
         <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>TOTAL NET REVENUE</div>
-          <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d4a3e" }}>{formatCurrency(totalNet)}</div>
-          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Excluding channel fees</div>
+          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>TOTAL NIGHTS BOOKED</div>
+          <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d4a3e" }}>{formatNumber(totalNights)}</div>
+          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Sum of stay durations</div>
         </div>
 
         <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>TOTAL GROSS REVENUE</div>
-          <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d312e" }}>{formatCurrency(totalGross)}</div>
-          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Before channel commission</div>
+          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>AVERAGE STAY LENGTH</div>
+          <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d312e" }}>{avgStay.toFixed(1)} <span style={{ fontSize: "15px", fontWeight: "500", color: "#606862" }}>nights</span></div>
+          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Average nights per booking</div>
         </div>
 
         <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>AVERAGE COMMISSION FEE</div>
-          <div style={{ fontSize: "24px", fontWeight: "700", color: "#d67a47" }}>{avgFee.toFixed(1)}%</div>
-          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Weighted average rate</div>
+          <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>AVG BOOKING VALUE (GROSS)</div>
+          <div style={{ fontSize: "24px", fontWeight: "700", color: "#d67a47" }}>{formatCurrency(avgBookingValue)}</div>
+          <div style={{ fontSize: "11px", color: "#8a928c", marginTop: "4px" }}>Average gross value per stay</div>
         </div>
       </div>
 
