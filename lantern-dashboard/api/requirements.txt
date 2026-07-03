@@ -2,9 +2,5 @@ fastapi
 uvicorn
 pydantic
 requests
-google-ads
-google-analytics-data
-google-api-python-client
-google-auth
 aiofiles
 psycopg2-binary
