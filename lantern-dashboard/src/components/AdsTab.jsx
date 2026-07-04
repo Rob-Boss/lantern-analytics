@@ -104,12 +104,17 @@ export default function AdsTab({ adsData, loading }) {
       };
     });
 
-    // Calculate overall period averages for reference lines and tooltips
+    // Calculate overall period averages for reference lines and tooltips, excluding days with $0 spend
+    const googleSpendDays = dailyMetrics.filter(d => d.gSpend > 0).length;
+    const metaSpendDays = dailyMetrics.filter(d => d.mSpend > 0).length;
+    const combinedSpendDays = dailyMetrics.filter(d => d.totalSpend > 0).length;
+
     const totalGoogleSpend = dailyMetrics.reduce((acc, curr) => acc + curr.gSpend, 0);
     const totalMetaSpend = dailyMetrics.reduce((acc, curr) => acc + curr.mSpend, 0);
-    const avgGoogleSpend = pointsCount > 0 ? (totalGoogleSpend / pointsCount) : 0;
-    const avgMetaSpend = pointsCount > 0 ? (totalMetaSpend / pointsCount) : 0;
-    const avgTotalSpend = pointsCount > 0 ? ((totalGoogleSpend + totalMetaSpend) / pointsCount) : 0;
+
+    const avgGoogleSpend = googleSpendDays > 0 ? (totalGoogleSpend / googleSpendDays) : 0;
+    const avgMetaSpend = metaSpendDays > 0 ? (totalMetaSpend / metaSpendDays) : 0;
+    const avgTotalSpend = combinedSpendDays > 0 ? ((totalGoogleSpend + totalMetaSpend) / combinedSpendDays) : 0;
 
     if (activeTab === "cpc") {
       const peakCpc = Math.max(...dailyMetrics.map((d) => d.cpc), 0.05);
