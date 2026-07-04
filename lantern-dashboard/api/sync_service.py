@@ -190,31 +190,37 @@ def fetch_meta_ads_metrics(start_date_str, end_date_str):
             "time_increment": 1,  # Get daily stats
             "time_range": json.dumps({"since": start_date_str, "until": end_date_str}),
             "fields": "spend,impressions,clicks,actions",
+            "limit": 100,
             "access_token": access_token
         }
         
-        response = requests.get(insights_url, params=params)
-        data = response.json()
-        
-        if "error" in data:
-            logger.error(f"Meta API Error: {data['error']['message']}")
-            return results
+        url = insights_url
+        while url:
+            # params should only be passed for the initial request; subsequent paging URLs contain parameters already
+            response = requests.get(url, params=params if url == insights_url else None)
+            data = response.json()
             
-        for item in data.get("data", []):
-            date_str = item.get("date_start")  # YYYY-MM-DD
-            spend = float(item.get("spend", 0.0))
-            impressions = int(item.get("impressions", 0))
-            clicks = int(item.get("clicks", 0))
-            actions = item.get("actions", [])
-            views = get_action_value(actions, "landing_page_view")
-            
-            if date_str not in results:
-                results[date_str] = {"meta_spend": 0.0, "meta_impressions": 0, "meta_views": 0, "meta_clicks": 0}
+            if "error" in data:
+                logger.error(f"Meta API Error: {data['error']['message']}")
+                break
                 
-            results[date_str]["meta_spend"] += spend
-            results[date_str]["meta_impressions"] += impressions
-            results[date_str]["meta_views"] += views
-            results[date_str]["meta_clicks"] += clicks
+            for item in data.get("data", []):
+                date_str = item.get("date_start")  # YYYY-MM-DD
+                spend = float(item.get("spend", 0.0))
+                impressions = int(item.get("impressions", 0))
+                clicks = int(item.get("clicks", 0))
+                actions = item.get("actions", [])
+                views = get_action_value(actions, "landing_page_view")
+                
+                if date_str not in results:
+                    results[date_str] = {"meta_spend": 0.0, "meta_impressions": 0, "meta_views": 0, "meta_clicks": 0}
+                    
+                results[date_str]["meta_spend"] += spend
+                results[date_str]["meta_impressions"] += impressions
+                results[date_str]["meta_views"] += views
+                results[date_str]["meta_clicks"] += clicks
+                
+            url = data.get("paging", {}).get("next")
             
     except Exception as e:
         logger.error(f"Error fetching Meta Ads metrics: {e}")

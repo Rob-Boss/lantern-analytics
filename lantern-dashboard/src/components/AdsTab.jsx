@@ -117,12 +117,9 @@ export default function AdsTab({ adsData, loading }) {
     } else if (activeTab === "daily_spend") {
       const peakSpend = Math.max(...dailyMetrics.map((d) => d.totalSpend), 10.0);
       maxVal = peakSpend * 1.15;
-    } else if (activeTab === "total_clicks") {
+    } else {
       const peakClicks = Math.max(...dailyMetrics.map((d) => d.runningAvgClicks), 10);
       maxVal = peakClicks * 1.15;
-    } else {
-      const peakChanSpend = Math.max(...dailyMetrics.map((d) => Math.max(d.gSpend, d.mSpend)), 10.0);
-      maxVal = peakChanSpend * 1.15;
     }
 
     const getY = (val) => {
@@ -140,19 +137,21 @@ export default function AdsTab({ adsData, loading }) {
         pathPoints1.push(`${x},${getY(d.cpc)}`);
       } else if (activeTab === "daily_spend") {
         pathPoints1.push(`${x},${getY(d.totalSpend)}`);
+        pathPoints2.push(`${x},${getY(d.gSpend)}`);
       } else if (activeTab === "total_clicks") {
         pathPoints1.push(`${x},${getY(d.runningAvgClicks)}`);
-      } else {
-        pathPoints1.push(`${x},${getY(d.gSpend)}`);
-        pathPoints2.push(`${x},${getY(d.mSpend)}`);
       }
     });
 
     const path1 = pointsCount > 0 ? `M ${pathPoints1.join(" L ")}` : "";
     const path2 = pointsCount > 0 && pathPoints2.length > 0 ? `M ${pathPoints2.join(" L ")}` : "";
 
-    const areaPath1 = pointsCount > 0 && activeTab !== "channel_spend"
+    const areaPath1 = pointsCount > 0
       ? `${path1} L ${getX(pointsCount - 1)},${height - padding.bottom} L ${getX(0)},${height - padding.bottom} Z`
+      : "";
+
+    const areaPath2 = pointsCount > 0 && activeTab === "daily_spend"
+      ? `${path2} L ${getX(pointsCount - 1)},${height - padding.bottom} L ${getX(0)},${height - padding.bottom} Z`
       : "";
 
     // Grid lines (y-axis steps)
@@ -245,12 +244,10 @@ export default function AdsTab({ adsData, loading }) {
       if (activeTab === "cpc") {
         circle1 = <circle cx={hX} cy={getY(hData.cpc)} r="5" fill="#2d4a3e" stroke="#ffffff" strokeWidth="2" />;
       } else if (activeTab === "daily_spend") {
-        circle1 = <circle cx={hX} cy={getY(hData.totalSpend)} r="5" fill="#8eb29d" stroke="#ffffff" strokeWidth="2" />;
+        circle1 = <circle cx={hX} cy={getY(hData.totalSpend)} r="5" fill="#ea580c" stroke="#ffffff" strokeWidth="2" />;
+        circle2 = <circle cx={hX} cy={getY(hData.gSpend)} r="5" fill="#4f46e5" stroke="#ffffff" strokeWidth="2" />;
       } else if (activeTab === "total_clicks") {
         circle1 = <circle cx={hX} cy={getY(hData.runningAvgClicks)} r="5" fill="#d67a47" stroke="#ffffff" strokeWidth="2" />;
-      } else {
-        circle1 = <circle cx={hX} cy={getY(hData.gSpend)} r="5" fill="#4f46e5" stroke="#ffffff" strokeWidth="2" />;
-        circle2 = <circle cx={hX} cy={getY(hData.mSpend)} r="5" fill="#ea580c" stroke="#ffffff" strokeWidth="2" />;
       }
     }
 
@@ -449,21 +446,16 @@ export default function AdsTab({ adsData, loading }) {
       legend = (
         <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#8eb29d" }}></span>
-            <span style={{ color: "#606862" }}>Daily Ad Spend ($)</span>
+            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#ea580c" }}></span>
+            <span style={{ color: "#606862" }}>Meta Spend</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "1px", borderTop: "2px dashed #8eb29d" }}></span>
-            <span style={{ color: "#8eb29d", opacity: 0.8 }}>Average Daily Spend ({formatCurrency(avgTotalSpend)}/day)</span>
+            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#4f46e5" }}></span>
+            <span style={{ color: "#606862" }}>Google Spend</span>
           </div>
-        </div>
-      );
-    } else if (activeTab === "total_clicks") {
-      legend = (
-        <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#d67a47" }}></span>
-            <span style={{ color: "#d67a47" }}>Running Average Clicks / Day</span>
+            <span style={{ display: "inline-block", width: "12px", height: "1px", borderTop: "2px dashed #ea580c" }}></span>
+            <span style={{ color: "#ea580c", opacity: 0.8 }}>Average Daily Combined ({formatCurrency(avgTotalSpend)}/day)</span>
           </div>
         </div>
       );
@@ -471,12 +463,8 @@ export default function AdsTab({ adsData, loading }) {
       legend = (
         <div className="chart-legend" style={{ display: "flex", gap: "16px", justifyContent: "flex-end", marginBottom: "12px", fontSize: "11px", fontWeight: "600" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "3px", backgroundColor: "#4f46e5" }}></span>
-            <span style={{ color: "#606862" }}>Google Spend</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "12px", height: "3px", backgroundColor: "#ea580c" }}></span>
-            <span style={{ color: "#606862" }}>Meta Spend</span>
+            <span style={{ display: "inline-block", width: "12px", height: "4px", backgroundColor: "#d67a47" }}></span>
+            <span style={{ color: "#d67a47" }}>Running Average Clicks / Day</span>
           </div>
         </div>
       );
@@ -511,14 +499,27 @@ export default function AdsTab({ adsData, loading }) {
               <stop offset="0%" stopColor="#d67a47" stopOpacity="0.25" />
               <stop offset="100%" stopColor="#d67a47" stopOpacity="0.0" />
             </linearGradient>
+            <linearGradient id="googleGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.05" />
+            </linearGradient>
+            <linearGradient id="metaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ea580c" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#ea580c" stopOpacity="0.05" />
+            </linearGradient>
           </defs>
 
           {/* Grid lines */}
           {gridLines}
 
           {/* Area gradients */}
-          {activeTab !== "channel_spend" && areaPath1 && (
-            <path d={areaPath1} fill={`url(#${gradId})`} />
+          {activeTab === "daily_spend" ? (
+            <>
+              {areaPath1 && <path d={areaPath1} fill="url(#metaGrad)" />}
+              {areaPath2 && <path d={areaPath2} fill="url(#googleGrad)" />}
+            </>
+          ) : (
+            areaPath1 && <path d={areaPath1} fill={`url(#${gradId})`} />
           )}
 
           {/* Horizontal Average reference line (Daily spend tab only) */}
@@ -529,10 +530,10 @@ export default function AdsTab({ adsData, loading }) {
                 y1={getY(avgTotalSpend)}
                 x2={width - padding.right}
                 y2={getY(avgTotalSpend)}
-                stroke="#8eb29d"
+                stroke="#ea580c"
                 strokeWidth="1.5"
                 strokeDasharray="4 4"
-                opacity="0.65"
+                opacity="0.5"
               />
               <text
                 x={width - padding.right - 6}
@@ -540,32 +541,32 @@ export default function AdsTab({ adsData, loading }) {
                 textAnchor="end"
                 fontSize="9.5"
                 fontWeight="600"
-                fill="#8eb29d"
+                fill="#ea580c"
                 opacity="0.85"
               >
-                Avg: {formatCurrency(avgTotalSpend)}/day
+                Avg Combined: {formatCurrency(avgTotalSpend)}/day
               </text>
             </g>
           )}
 
-          {/* Line 2 (For Google vs Meta spend in channel_spend mode) */}
+          {/* Line 2 (For Google Spend in daily_spend stacked mode) */}
           {path2 && (
             <path
               d={path2}
               fill="none"
-              stroke="#ea580c"
+              stroke={activeTab === "daily_spend" ? "#4f46e5" : "#ea580c"}
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           )}
 
-          {/* Line 1 */}
+          {/* Line 1 (For Total/Meta Spend in daily_spend stacked mode, or CPC/Clicks lines) */}
           {path1 && (
             <path
               d={path1}
               fill="none"
-              stroke={activeTab === "channel_spend" ? "#4f46e5" : strokeColor}
+              stroke={activeTab === "daily_spend" ? "#ea580c" : strokeColor}
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -671,8 +672,7 @@ export default function AdsTab({ adsData, loading }) {
             {[
               { key: "cpc", label: "Cost Per Click (CPC)" },
               { key: "daily_spend", label: "Daily Ad Spend" },
-              { key: "total_clicks", label: "Link Clicks (Results)" },
-              { key: "channel_spend", label: "Channel Budgets" }
+              { key: "total_clicks", label: "Link Clicks (Results)" }
             ].map((tab) => {
               const isSelected = activeTab === tab.key;
               return (
