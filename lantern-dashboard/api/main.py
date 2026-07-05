@@ -168,6 +168,9 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     last_7_sessions = sum(m['sessions'] for m in last_7_metrics)
     daily_sessions_7d = last_7_sessions / len(last_7_metrics) if last_7_metrics else 0.0
     
+    last_7_checkouts = sum(m['checkouts_initiated'] for m in last_7_metrics)
+    checkout_rate_7d = (last_7_checkouts / last_7_sessions * 100.0) if last_7_sessions > 0 else 0.0
+    
     # Construct trend chart data (grouped by date)
     trend_dict = {}
     
@@ -219,7 +222,8 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
             "conversion_rate": round(conv_rate, 2),
             "total_impressions": total_impressions,
             "cost_per_view_7d": round(cost_per_view_7d, 4),
-            "daily_sessions_7d": round(daily_sessions_7d, 1)
+            "daily_sessions_7d": round(daily_sessions_7d, 1),
+            "checkout_rate_7d": round(checkout_rate_7d, 2)
         },
         "trend_chart": trend_data,
         "channel_summary": channel_summary,
