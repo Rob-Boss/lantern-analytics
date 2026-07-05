@@ -103,16 +103,16 @@ def main():
         sys.exit(1)
         
     # 2. Get yesterday's combined Search spend
-    search_daily_cap = 25.00
+    search_daily_cap = 40.00
     yesterday_cost = get_yesterday_spend(client, googleads_service, customer_id, search_campaigns)
     print(f"Combined Search Spend Yesterday: ${yesterday_cost:.2f} (Daily Cap: ${search_daily_cap:.2f})")
     
     # 3. Calculate rollover amount
     rollover = max(0.0, search_daily_cap - yesterday_cost)
-    new_pmax_budget = 25.00 + rollover
+    new_pmax_budget = 10.00 + rollover
     
-    # Cap P-Max at $50 max to prevent accidental budget spikes if spend was 0
-    new_pmax_budget = min(new_pmax_budget, 50.00)
+    # Cap P-Max at $30 max to prevent excessive display spend
+    new_pmax_budget = min(new_pmax_budget, 30.00)
     
     print(f"Unspent Search Budget: ${rollover:.2f}")
     print(f"Target Performance Max Budget for Today: ${new_pmax_budget:.2f}/day")
