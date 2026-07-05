@@ -137,9 +137,9 @@ def main():
         sys.exit(1)
         
     try:
-        # Step A: Update budgets (Completed in previous run)
-        # update_budget_amount(client, customer_id, shared_budget_res, 40.00)
-        # update_budget_amount(client, customer_id, pmax_budget_res, 10.00)
+        # Step A: Update budgets (Resetting to static base budgets)
+        update_budget_amount(client, customer_id, shared_budget_res, 40.00)
+        update_budget_amount(client, customer_id, pmax_budget_res, 10.00)
         
         # Step B: Add campaign-level negative keywords (Completed in previous run)
         # negatives = ["under canvas", "terramor", "ferncrest", "acadia yurts"]
@@ -148,22 +148,22 @@ def main():
         # if mof_res:
         #     add_campaign_negatives(client, customer_id, mof_res, negatives)
             
-        # Step C: Add keywords to mid-funnel ad group "Regional Glamping & Nature Lodging"
-        if mof_res:
-            ad_group_res = get_ad_group_resource(client, googleads_service, customer_id, mof_res, "Regional Glamping & Nature Lodging")
-            if ad_group_res:
-                new_keywords = [
-                    "acadia glamping",
-                    "luxury glamping maine",
-                    "maine glamping cabin rentals",
-                    "camping cabins near acadia",
-                    "luxury camping maine"
-                ]
-                add_ad_group_keywords(client, customer_id, ad_group_res, new_keywords)
-            else:
-                print("Error: Could not find ad group 'Regional Glamping & Nature Lod'")
-                
-        print("\nAll Google Ads optimizations applied successfully!")
+        # Step C: Add keywords to mid-funnel ad group "Regional Glamping & Nature Lodging" (Completed in previous run)
+        # if mof_res:
+        #     ad_group_res = get_ad_group_resource(client, googleads_service, customer_id, mof_res, "Regional Glamping & Nature Lodging")
+        #     if ad_group_res:
+        #         new_keywords = [
+        #             "acadia glamping",
+        #             "luxury glamping maine",
+        #             "maine glamping cabin rentals",
+        #             "camping cabins near acadia",
+        #             "luxury camping maine"
+        #         ]
+        #         add_ad_group_keywords(client, customer_id, ad_group_res, new_keywords)
+        #     else:
+        #         print("Error: Could not find ad group 'Regional Glamping & Nature Lod'")
+                 
+        print("\nAll Google Ads budgets reset successfully!")
         
     except GoogleAdsException as ex:
         print(f"\nGoogle Ads API Error:")
