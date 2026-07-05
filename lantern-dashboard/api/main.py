@@ -652,6 +652,10 @@ def webhook_mews_report(payload: dict):
                 logger.error(f"Missing required header '{h}' in Mews report webhook payload")
                 raise HTTPException(status_code=400, detail=f"Missing required header '{h}'")
                 
+        # Clear all existing bookings for clean report replacement
+        logger.info("Clearing bookings database table for full report import")
+        clear_bookings()
+                
         # Find column indices
         number_idx = headers.index('Number')
         origin_idx = headers.index('Origin')
