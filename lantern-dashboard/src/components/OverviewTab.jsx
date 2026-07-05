@@ -364,7 +364,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
         <div className="kpi-card">
           <div className="kpi-label">Cost per Landing Page View</div>
           <div className="kpi-value">{costPerView > 0 ? `$${costPerView.toFixed(2)}` : "$0.00"}</div>
-          <div className="kpi-subtext">7-day moving average (Meta)</div>
+          <div className="kpi-subtext">7-day moving average (Google + Meta)</div>
         </div>
 
         <div className="kpi-card">

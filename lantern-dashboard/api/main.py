@@ -158,12 +158,12 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     total_meta_impressions = sum(m['meta_impressions'] for m in metrics)
     total_impressions = total_google_impressions + total_meta_impressions
     
-    # Calculate 7-day moving average of Meta cost per view
+    # Calculate 7-day moving average of Meta & Google cost per view combined
     sorted_metrics = sorted(metrics, key=lambda x: x['date'])
     last_7_metrics = sorted_metrics[-7:] if len(sorted_metrics) >= 7 else sorted_metrics
-    last_7_meta_spend = sum(m['meta_spend'] for m in last_7_metrics)
-    last_7_meta_views = sum(m['meta_views'] for m in last_7_metrics)
-    cost_per_view_7d = last_7_meta_spend / last_7_meta_views if last_7_meta_views > 0 else 0.0
+    last_7_combined_spend = sum(m['google_spend'] + m['meta_spend'] for m in last_7_metrics)
+    last_7_combined_views = sum(m['google_clicks'] + m['meta_views'] for m in last_7_metrics)
+    cost_per_view_7d = last_7_combined_spend / last_7_combined_views if last_7_combined_views > 0 else 0.0
     
     # Construct trend chart data (grouped by date)
     trend_dict = {}
