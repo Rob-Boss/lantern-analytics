@@ -191,8 +191,8 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
             trend_dict[d] = {"date": d, "spend": 0.0, "revenue": 0.0, "sessions": 0}
         trend_dict[d]["revenue"] += b['net_revenue']
         
-    # Format trend to sorted list
-    trend_data = [trend_dict[k] for k in sorted(trend_dict.keys())]
+    # Format trend to sorted list, starting graphs on June 1st
+    trend_data = [trend_dict[k] for k in sorted(trend_dict.keys()) if k >= "2026-06-01"]
     
     # Calculate channel summary (normalized)
     channels_dict = {}
@@ -283,7 +283,7 @@ def get_ads_data(start_date: Optional[str] = None, end_date: Optional[str] = Non
                 "meta_spend": round(m['meta_spend'], 2),
                 "meta_clicks": m['meta_clicks'],
                 "meta_views": m['meta_views']
-            } for m in metrics
+            } for m in metrics if m['date'] >= "2026-06-01"
         ]
     }
 
@@ -364,6 +364,8 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
     
     for m in metrics_current:
         c_date = m['date']
+        if c_date < "2026-06-01":
+            continue
         try:
             c_dt = datetime.strptime(c_date, "%Y-%m-%d").date()
             p_dt = c_dt - timedelta(days=period_days)
