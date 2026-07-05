@@ -18,8 +18,8 @@ export default function App() {
     return validTabs.includes(hash) ? hash : "overview";
   });
   
-  // Set default date range: June 1, 2026 to today
-  const [startDate, setStartDate] = useState("2026-06-01");
+  // Set default date range: May 1, 2026 to today
+  const [startDate, setStartDate] = useState("2026-05-01");
   const [endDate, setEndDate] = useState(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -204,7 +204,7 @@ export default function App() {
     }
   };
 
-  const showDateFilter = activeTab === "overview" || activeTab === "ads" || activeTab === "traffic";
+  const showDateFilter = false;
 
   return (
     <div className="dashboard-container">
