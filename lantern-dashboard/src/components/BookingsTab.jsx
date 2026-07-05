@@ -3,8 +3,6 @@ import React, { useState } from "react";
 export default function BookingsTab({ bookingsData, loading }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const bookingsPerPage = 15;
 
   if (loading) {
     return <div style={{ padding: "80px", textAlign: "center", color: "#606862" }}>Loading Bookings ledger...</div>;
@@ -46,11 +44,7 @@ export default function BookingsTab({ bookingsData, loading }) {
   const avgBookingValue = filteredBookings.length > 0 ? (totalGross / filteredBookings.length) : 0;
   const avgStay = filteredBookings.length > 0 ? (totalNights / filteredBookings.length) : 0;
 
-  // Pagination Math
-  const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
-  const indexOfLastBooking = currentPage * bookingsPerPage;
-  const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
-  const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking);
+  // No pagination: render all filtered rows directly
 
   const getChannelBadgeClass = (channel) => {
     const ch = (channel || "").toLowerCase();
@@ -111,7 +105,7 @@ export default function BookingsTab({ bookingsData, loading }) {
               type="text" 
               placeholder="Search guest email or reservation ID..." 
               value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => { setSearchQuery(e.target.value); }}
               style={{
                 padding: "8px 12px",
                 borderRadius: "6px",
@@ -124,7 +118,7 @@ export default function BookingsTab({ bookingsData, loading }) {
             
             <select
               value={channelFilter}
-              onChange={(e) => { setChannelFilter(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => { setChannelFilter(e.target.value); }}
               style={{
                 padding: "8px 12px",
                 borderRadius: "6px",
@@ -165,7 +159,7 @@ export default function BookingsTab({ bookingsData, loading }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentBookings.map((b) => {
+                  {filteredBookings.map((b) => {
                     return (
                       <tr 
                         key={b.id} 
@@ -216,46 +210,10 @@ export default function BookingsTab({ bookingsData, loading }) {
               </table>
             </div>
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "20px", borderTop: "1px solid #e2e8e4", paddingTop: "16px" }}>
-                <span style={{ fontSize: "12px", color: "#606862" }}>
-                  Showing page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> (<strong>{filteredBookings.length}</strong> bookings matching)
-                </span>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #e2e8e4",
-                      backgroundColor: currentPage === 1 ? "#fafbfa" : "#ffffff",
-                      cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                      fontSize: "12.5px",
-                      color: currentPage === 1 ? "#c2c8c4" : "#2d312e"
-                    }}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #e2e8e4",
-                      backgroundColor: currentPage === totalPages ? "#fafbfa" : "#ffffff",
-                      cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                      fontSize: "12.5px",
-                      color: currentPage === totalPages ? "#c2c8c4" : "#2d312e"
-                    }}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Ledger Match Indicator */}
+            <div style={{ marginTop: "20px", borderTop: "1px solid #e2e8e4", paddingTop: "16px", fontSize: "12px", color: "#606862" }}>
+              Showing <strong>{filteredBookings.length}</strong> bookings matching active filters.
+            </div>
           </div>
         )}
       </div>
