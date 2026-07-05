@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 Google Ads Budget Rollover Script
-Queries yesterday's Performance Max campaign spend and rolls over any unspent 
-portions of the $10.00 daily baseline PMax budget to today's Search Campaigns Shared Budget.
+Queries yesterday's combined Google Ads spend (Search + Performance Max) 
+and rolls over any unspent portions of the $50.00 daily total Google budget 
+to today's Search Campaigns Shared Budget, keeping Performance Max locked to $10.00.
 """
 
 import sys
@@ -103,10 +104,15 @@ def main():
     customer_id = str(client.login_customer_id).replace("-", "")
     googleads_service = client.get_service("GoogleAdsService")
 
+    search_campaigns = [
+        "Lantern Camp - Search - bottom_of_funnel",
+        "Lantern Camp - Search - mid_funnel"
+    ]
     pmax_campaign_name = "Lantern Camp - Performance Max - Visual"
+    all_campaigns = search_campaigns + [pmax_campaign_name]
     
     print("="*60)
-    print("RUNNING GOOGLE ADS DYNAMIC BUDGET ROLLOVER TO SEARCH")
+    print("RUNNING GOOGLE ADS DYNAMIC BUDGET ROLLOVER TO SEARCH (COMBINED TOTAL)")
     print("="*60)
 
     # 1. Lookup campaign and budget resource names
@@ -117,19 +123,19 @@ def main():
         print("Error: Could not locate budget resource details.")
         sys.exit(1)
         
-    # 2. Get yesterday's P-Max spend
-    pmax_daily_cap = 10.00
-    yesterday_cost = get_yesterday_spend(client, googleads_service, customer_id, [pmax_campaign_name])
-    print(f"P-Max Spend Yesterday: ${yesterday_cost:.2f} (Base Cap: ${pmax_daily_cap:.2f})")
+    # 2. Get yesterday's combined total Google Ads spend
+    google_daily_cap = 50.00
+    yesterday_cost = get_yesterday_spend(client, googleads_service, customer_id, all_campaigns)
+    print(f"Combined Google Ads Spend Yesterday: ${yesterday_cost:.2f} (Total Daily Cap: ${google_daily_cap:.2f})")
     
     # 3. Calculate rollover amount for Search budget
-    rollover = max(0.0, pmax_daily_cap - yesterday_cost)
+    rollover = max(0.0, google_daily_cap - yesterday_cost)
     new_search_budget = 40.00 + rollover
     
-    # Cap Search budget at $60.00 max to keep budgets controlled
-    new_search_budget = min(new_search_budget, 60.00)
+    # Cap Search budget at $90.00 max to keep budgets controlled
+    new_search_budget = min(new_search_budget, 90.00)
     
-    print(f"Unspent P-Max Budget (Rollover to Search): ${rollover:.2f}")
+    print(f"Unspent Google Ads Budget (Rollover to Search): ${rollover:.2f}")
     print(f"Target Search Shared Budget for Today: ${new_search_budget:.2f}/day")
     
     # 4. Apply budget changes
