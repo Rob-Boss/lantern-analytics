@@ -360,7 +360,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
         <div className="kpi-card">
           <div className="kpi-label">ROAS</div>
           <div className="kpi-value">{roas.toFixed(2)}x</div>
-          <div className="kpi-subtext">Revenue ÷ Ad Spend</div>
+          <div className="kpi-subtext">Mews Revenue ÷ Ad Spend</div>
         </div>
 
         <div className="kpi-card">

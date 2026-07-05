@@ -58,7 +58,7 @@ def normalize_channel(ch: str) -> str:
         return "Airbnb"
     if "booking.com" in ch_lower or "bcom" in ch_lower or "bdc" in ch_lower:
         return "Booking.com"
-    if "booking engine" in ch_lower or "mews" in ch_lower or "direct" in ch_lower:
+    if "booking engine" in ch_lower or "mews" in ch_lower or "direct" in ch_lower or "distributor" in ch_lower:
         return "Mews Booking Engine"
     return "Other"
 
@@ -144,8 +144,8 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     total_meta_spend = sum(m['meta_spend'] for m in metrics)
     total_spend = total_google_spend + total_meta_spend
     
-    # ROAS
-    roas = total_net_rev / total_spend if total_spend > 0 else 0.0
+    # ROAS (Only include direct booking engine bookings, excluding Airbnb)
+    roas = mews_net_rev / total_spend if total_spend > 0 else 0.0
     
     # Newsletter signups
     newsletter_subs = int(get_setting("newsletter_subscribers", "0"))
