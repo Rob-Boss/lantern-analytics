@@ -132,8 +132,8 @@ def main():
     rollover = max(0.0, google_daily_cap - yesterday_cost)
     new_search_budget = 40.00 + rollover
     
-    # Cap Search budget at $90.00 max to keep budgets controlled
-    new_search_budget = min(new_search_budget, 90.00)
+    # Cap Search budget at $50.00 max to keep budgets controlled
+    new_search_budget = min(new_search_budget, 50.00)
     
     print(f"Unspent Google Ads Budget (Rollover to Search): ${rollover:.2f}")
     print(f"Target Search Shared Budget for Today: ${new_search_budget:.2f}/day")
