@@ -100,8 +100,8 @@ class BookingWebhook(BaseModel):
     id: str
     channel: str
     booking_date: str  # YYYY-MM-DD
-    nights: int
-    gross_revenue: float
+    nights: Optional[int] = None
+    gross_revenue: Optional[float] = None
     ota_fee_percent: Optional[float] = 0.0
     guest_email: Optional[str] = None
 
@@ -475,6 +475,11 @@ def get_bookings_ledger(start_date: Optional[str] = None, end_date: Optional[str
 def webhook_booking(booking: BookingWebhook):
     """Zapier webhook endpoint. Real-time insertion from Mews."""
     try:
+        # If nights or gross_revenue is missing, it's an incomplete/draft booking
+        if booking.nights is None or booking.gross_revenue is None:
+            logger.info(f"Skipping incomplete/draft webhook insertion: {booking.id} ({booking.channel})")
+            return {"status": "skipped", "id": booking.id, "message": "Incomplete reservation data"}
+            
         ota_fee = booking.ota_fee_percent or 0.0
         if ota_fee == 0.0 and booking.channel:
             ch_lower = booking.channel.lower()
