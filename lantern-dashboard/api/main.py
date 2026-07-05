@@ -165,6 +165,9 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     last_7_combined_views = sum(m['google_clicks'] + m['meta_views'] for m in last_7_metrics)
     cost_per_view_7d = last_7_combined_spend / last_7_combined_views if last_7_combined_views > 0 else 0.0
     
+    last_7_sessions = sum(m['sessions'] for m in last_7_metrics)
+    daily_sessions_7d = last_7_sessions / len(last_7_metrics) if last_7_metrics else 0.0
+    
     # Construct trend chart data (grouped by date)
     trend_dict = {}
     
@@ -215,7 +218,8 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
             "total_sessions": total_sessions,
             "conversion_rate": round(conv_rate, 2),
             "total_impressions": total_impressions,
-            "cost_per_view_7d": round(cost_per_view_7d, 4)
+            "cost_per_view_7d": round(cost_per_view_7d, 4),
+            "daily_sessions_7d": round(daily_sessions_7d, 1)
         },
         "trend_chart": trend_data,
         "channel_summary": channel_summary,

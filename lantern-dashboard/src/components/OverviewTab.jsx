@@ -46,6 +46,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
   const convRate = kpis.conversion_rate || 0.0;
   const costPerView = kpis.cost_per_view_7d || 0.0;
   const totalImpressions = kpis.total_impressions || 0;
+  const dailySessionsAvg = kpis.daily_sessions_7d || 0.0;
 
   // Helper to trim trailing empty days where there is no traffic or transaction activity
   const trimTrailingEmptyDays = (arr, checkIsEmpty) => {
@@ -377,6 +378,12 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
           <div className="kpi-label">Web Sessions</div>
           <div className="kpi-value">{formatNumber(webSessions)}</div>
           <div className="kpi-subtext">Total visits from GA4</div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-label">Daily Sessions</div>
+          <div className="kpi-value">{dailySessionsAvg.toFixed(1)}</div>
+          <div className="kpi-subtext">7-day moving average (GA4)</div>
         </div>
       </div>
 
