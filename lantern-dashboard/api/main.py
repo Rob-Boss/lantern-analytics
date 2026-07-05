@@ -2,6 +2,7 @@ import os
 import csv
 import io
 import logging
+import requests
 from typing import Optional
 from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -112,6 +113,114 @@ class SettingsUpdate(BaseModel):
 class SheetsSyncPayload(BaseModel):
     spreadsheet_id: str
     range_name: Optional[str] = "Sheet1!A1:Z5000"
+
+# --- MEWS API REAL-TIME SYNC HELPER ---
+
+MEWS_API_URL = os.getenv("MEWS_API_URL", "https://api.mews.com")
+MEWS_CLIENT_TOKEN = os.getenv("MEWS_CLIENT_TOKEN")
+MEWS_ACCESS_TOKEN = os.getenv("MEWS_ACCESS_TOKEN")
+MEWS_CLIENT_NAME = os.getenv("MEWS_CLIENT_NAME", "Lantern Camp Dashboard")
+
+def fetch_booking_details_from_mews(booking_id: str) -> dict:
+    """Queries Mews API in real-time to fetch reservation details, email, and revenue."""
+    if not MEWS_CLIENT_TOKEN or not MEWS_ACCESS_TOKEN:
+        raise ValueError("Mews API credentials not configured in environment variables")
+        
+    headers = {"Content-Type": "application/json"}
+    
+    # 1. Fetch Reservation details
+    res_payload = {
+        "ClientToken": MEWS_CLIENT_TOKEN,
+        "AccessToken": MEWS_ACCESS_TOKEN,
+        "Client": MEWS_CLIENT_NAME
+    }
+    # Check if booking_id is a UUID or a confirmation number (digit)
+    is_uuid = len(booking_id) > 10 and "-" in booking_id
+    if is_uuid:
+        res_payload["ReservationIds"] = [booking_id]
+    else:
+        res_payload["Numbers"] = [str(booking_id)]
+        
+    logger.info(f"Mews API: Fetching reservation {booking_id} from {MEWS_API_URL}")
+    res_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/reservations/getAll/2023-06-06", json=res_payload, headers=headers)
+    res_resp.raise_for_status()
+    res_data = res_resp.json()
+    
+    reservations = res_data.get("Reservations", [])
+    if not reservations:
+        raise ValueError(f"Reservation {booking_id} not found in Mews")
+    res = reservations[0]
+    
+    # Gather reservation fields
+    number = res.get("Number")
+    channel = res.get("Origin") or ""
+    created_utc = res.get("CreatedUtc")
+    booking_date = created_utc.split("T")[0] if created_utc else datetime.utcnow().strftime("%Y-%m-%d")
+    
+    # Calculate nights from stay dates
+    start_utc = res.get("StartUtc")
+    end_utc = res.get("EndUtc")
+    nights = 1
+    if start_utc and end_utc:
+        try:
+            start_dt = datetime.fromisoformat(start_utc.replace("Z", "+00:00"))
+            end_dt = datetime.fromisoformat(end_utc.replace("Z", "+00:00"))
+            nights = max(1, (end_dt - start_dt).days)
+        except Exception as e:
+            logger.warning(f"Error calculating nights: {e}")
+            
+    customer_id = res.get("CustomerId")
+    res_uuid = res.get("Id")
+    
+    # 2. Fetch Customer profile (for Email)
+    guest_email = None
+    if customer_id:
+        cust_payload = {
+            "ClientToken": MEWS_CLIENT_TOKEN,
+            "AccessToken": MEWS_ACCESS_TOKEN,
+            "Client": MEWS_CLIENT_NAME,
+            "CustomerIds": [customer_id]
+        }
+        try:
+            cust_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/customers/getAll/2023-06-06", json=cust_payload, headers=headers)
+            if cust_resp.status_code == 200:
+                cust_data = cust_resp.json()
+                customers = cust_data.get("Customers", [])
+                if customers:
+                    guest_email = customers[0].get("Email")
+        except Exception as e:
+            logger.warning(f"Error fetching customer email: {e}")
+            
+    # 3. Fetch Order Items (for total Gross Revenue)
+    gross_revenue = 0.0
+    if res_uuid:
+        order_payload = {
+            "ClientToken": MEWS_CLIENT_TOKEN,
+            "AccessToken": MEWS_ACCESS_TOKEN,
+            "Client": MEWS_CLIENT_NAME,
+            "ReservationIds": [res_uuid]
+        }
+        try:
+            order_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/orderItems/getAll/2023-06-06", json=order_payload, headers=headers)
+            if order_resp.status_code == 200:
+                order_data = order_resp.json()
+                # Sum the value of all order items that are not canceled
+                for item in order_data.get("OrderItems", []):
+                    if item.get("State") != "Canceled":
+                        amount_obj = item.get("Amount") or {}
+                        val = amount_obj.get("Value") or 0.0
+                        gross_revenue += float(val)
+        except Exception as e:
+            logger.warning(f"Error fetching order items: {e}")
+            
+    return {
+        "id": number,
+        "channel": channel,
+        "booking_date": booking_date,
+        "nights": nights,
+        "gross_revenue": round(gross_revenue, 2),
+        "guest_email": guest_email
+    }
 
 # --- API ENDPOINTS ---
 
@@ -475,11 +584,21 @@ def get_bookings_ledger(start_date: Optional[str] = None, end_date: Optional[str
 def webhook_booking(booking: BookingWebhook):
     """Zapier webhook endpoint. Real-time insertion from Mews."""
     try:
-        # If nights or gross_revenue is missing, it's an incomplete/draft booking
+        # Check if we need to query Mews directly to resolve missing fields
         if booking.nights is None or booking.gross_revenue is None:
-            logger.info(f"Skipping incomplete/draft webhook insertion: {booking.id} ({booking.channel})")
-            return {"status": "skipped", "id": booking.id, "message": "Incomplete reservation data"}
-            
+            try:
+                logger.info(f"Triggering Mews API lookup for booking ID: {booking.id}")
+                resolved = fetch_booking_details_from_mews(booking.id)
+                booking.nights = resolved["nights"]
+                booking.gross_revenue = resolved["gross_revenue"]
+                if resolved["guest_email"]:
+                    booking.guest_email = resolved["guest_email"]
+                if resolved["channel"]:
+                    booking.channel = resolved["channel"]
+            except Exception as lookup_err:
+                logger.error(f"Failed to resolve Mews details for {booking.id}: {lookup_err}")
+                return {"status": "skipped", "id": booking.id, "message": f"Could not resolve Mews details: {lookup_err}"}
+                
         ota_fee = booking.ota_fee_percent or 0.0
         if ota_fee == 0.0 and booking.channel:
             ch_lower = booking.channel.lower()
