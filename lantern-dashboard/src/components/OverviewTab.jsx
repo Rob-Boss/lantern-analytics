@@ -372,6 +372,12 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
           <div className="kpi-value">{formatNumber(totalImpressions)}</div>
           <div className="kpi-subtext">Google & Meta combined</div>
         </div>
+
+        <div className="kpi-card">
+          <div className="kpi-label">Web Sessions</div>
+          <div className="kpi-value">{formatNumber(webSessions)}</div>
+          <div className="kpi-subtext">Total visits from GA4</div>
+        </div>
       </div>
 
       {/* Channel Revenue Share Breakdown */}
