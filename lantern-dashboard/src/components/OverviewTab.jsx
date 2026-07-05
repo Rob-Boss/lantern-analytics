@@ -44,6 +44,8 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
   const webSessions = kpis.total_sessions || 0;
   const bookingsCount = kpis.total_bookings || 0;
   const convRate = kpis.conversion_rate || 0.0;
+  const costPerView = kpis.cost_per_view_7d || 0.0;
+  const totalImpressions = kpis.total_impressions || 0;
 
   // Helper to trim trailing empty days where there is no traffic or transaction activity
   const trimTrailingEmptyDays = (arr, checkIsEmpty) => {
@@ -336,6 +338,18 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
         </div>
 
         <div className="kpi-card">
+          <div className="kpi-label">Bookings Count</div>
+          <div className="kpi-value">{formatNumber(bookingsCount)}</div>
+          <div className="kpi-subtext">Total reservations loaded</div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-label">Subscribers</div>
+          <div className="kpi-value">{formatNumber(newsletterSubs)}</div>
+          <div className="kpi-subtext">Squarespace newsletter list</div>
+        </div>
+
+        <div className="kpi-card">
           <div className="kpi-label">Total Ad Spend</div>
           <div className="kpi-value orange">{formatCurrency(totalSpend)}</div>
           <div className="kpi-subtext">Google: {formatCurrency(kpis.google_spend || 0)} | Meta: {formatCurrency(kpis.meta_spend || 0)}</div>
@@ -348,21 +362,15 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-label">Bookings Count</div>
-          <div className="kpi-value">{formatNumber(bookingsCount)}</div>
-          <div className="kpi-subtext">Total reservations loaded</div>
+          <div className="kpi-label">Cost per Landing Page View</div>
+          <div className="kpi-value">{costPerView > 0 ? `$${costPerView.toFixed(2)}` : "$0.00"}</div>
+          <div className="kpi-subtext">7-day moving average (Meta)</div>
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-label">Web Sessions</div>
-          <div className="kpi-value">{formatNumber(webSessions)}</div>
-          <div className="kpi-subtext">Total visits from GA4</div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label">Newsletter List</div>
-          <div className="kpi-value">{formatNumber(newsletterSubs)}</div>
-          <div className="kpi-subtext">Subscribers (Squarespace)</div>
+          <div className="kpi-label">Total Ad Impressions</div>
+          <div className="kpi-value">{formatNumber(totalImpressions)}</div>
+          <div className="kpi-subtext">Google & Meta combined</div>
         </div>
       </div>
 

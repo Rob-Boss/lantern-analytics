@@ -150,9 +150,20 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     # Newsletter signups
     newsletter_subs = int(get_setting("newsletter_subscribers", "0"))
     
-    # Web Traffic
+    # Web Traffic & Impressions
     total_sessions = sum(m['sessions'] for m in metrics)
     conv_rate = (total_bookings / total_sessions * 100.0) if total_sessions > 0 else 0.0
+    
+    total_google_impressions = sum(m['google_impressions'] for m in metrics)
+    total_meta_impressions = sum(m['meta_impressions'] for m in metrics)
+    total_impressions = total_google_impressions + total_meta_impressions
+    
+    # Calculate 7-day moving average of Meta cost per view
+    sorted_metrics = sorted(metrics, key=lambda x: x['date'])
+    last_7_metrics = sorted_metrics[-7:] if len(sorted_metrics) >= 7 else sorted_metrics
+    last_7_meta_spend = sum(m['meta_spend'] for m in last_7_metrics)
+    last_7_meta_views = sum(m['meta_views'] for m in last_7_metrics)
+    cost_per_view_7d = last_7_meta_spend / last_7_meta_views if last_7_meta_views > 0 else 0.0
     
     # Construct trend chart data (grouped by date)
     trend_dict = {}
@@ -187,6 +198,7 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
         channels_dict[ch]["gross"] += b['gross_revenue']
         channels_dict[ch]["net"] += b['net_revenue']
         
+    # channel_summary
     channel_summary = list(channels_dict.values())
     
     return {
@@ -201,7 +213,9 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
             "roas": round(roas, 2),
             "newsletter_subscribers": newsletter_subs,
             "total_sessions": total_sessions,
-            "conversion_rate": round(conv_rate, 2)
+            "conversion_rate": round(conv_rate, 2),
+            "total_impressions": total_impressions,
+            "cost_per_view_7d": round(cost_per_view_7d, 4)
         },
         "trend_chart": trend_data,
         "channel_summary": channel_summary,
