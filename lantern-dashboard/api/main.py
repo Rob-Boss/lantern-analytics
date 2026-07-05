@@ -503,6 +503,125 @@ def webhook_booking(booking: BookingWebhook):
         logger.error(f"Webhook error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/webhooks/mews-report")
+def webhook_mews_report(payload: dict):
+    """Webhook endpoint for Mews scheduled Reservations Report exports."""
+    try:
+        documents = payload.get("Documents", [])
+        reservations_doc = None
+        for doc in documents:
+            if doc.get("Name") == "Reservations":
+                reservations_doc = doc
+                break
+                
+        if not reservations_doc:
+            logger.warning("No Reservations document found in Mews report webhook payload")
+            return {"status": "skipped", "message": "No Reservations document found"}
+            
+        data = reservations_doc.get("Data", [])
+        if len(data) < 2:
+            logger.info("Empty Reservations document in Mews report")
+            return {"status": "skipped", "message": "Reservations document is empty"}
+            
+        headers = data[0]
+        rows = data[1:]
+        
+        # Check required headers
+        required_headers = ['Number', 'Origin', 'Created', 'Count (hours)', 'Count (nights)', 'Total amount', 'Email']
+        for h in required_headers:
+            if h not in headers:
+                logger.error(f"Missing required header '{h}' in Mews report webhook payload")
+                raise HTTPException(status_code=400, detail=f"Missing required header '{h}'")
+                
+        # Find column indices
+        number_idx = headers.index('Number')
+        origin_idx = headers.index('Origin')
+        created_idx = headers.index('Created')
+        hours_idx = headers.index('Count (hours)')
+        nights_idx = headers.index('Count (nights)')
+        amount_idx = headers.index('Total amount')
+        email_idx = headers.index('Email')
+        travel_agency_idx = headers.index('Travel agency') if 'Travel agency' in headers else -1
+        source_idx = headers.index('Reservation source') if 'Reservation source' in headers else -1
+        
+        imported_count = 0
+        
+        for row in rows:
+            if not row or len(row) <= number_idx:
+                continue
+            booking_id = row[number_idx]
+            if not booking_id or booking_id == 'Total':
+                continue
+                
+            raw_origin = row[origin_idx]
+            if not raw_origin and travel_agency_idx != -1 and len(row) > travel_agency_idx:
+                raw_origin = row[travel_agency_idx]
+            if not raw_origin and source_idx != -1 and len(row) > source_idx:
+                raw_origin = row[source_idx]
+            raw_origin = raw_origin or ''
+            
+            channel = normalize_channel(raw_origin)
+            
+            # Date format parsing
+            raw_date = row[created_idx] or ''
+            booking_date = raw_date.split('T')[0] if 'T' in raw_date else raw_date
+            
+            # Nights calculation (Stays use 'Count (hours)' in the report, Sauna uses 'Count (nights)')
+            c_hours = row[hours_idx] if len(row) > hours_idx else None
+            c_nights = row[nights_idx] if len(row) > nights_idx else None
+            nights = 0
+            if c_hours is not None:
+                try:
+                    nights = int(c_hours)
+                except (ValueError, TypeError):
+                    pass
+            elif c_nights is not None:
+                try:
+                    nights = int(c_nights)
+                except (ValueError, TypeError):
+                    pass
+                    
+            # Gross revenue
+            raw_amount = row[amount_idx] if len(row) > amount_idx else None
+            gross_revenue = 0.0
+            if raw_amount is not None:
+                try:
+                    gross_revenue = float(raw_amount)
+                except (ValueError, TypeError):
+                    pass
+                    
+            # Guest Email
+            guest_email = row[email_idx] if (email_idx != -1 and len(row) > email_idx) else None
+            
+            # Calculate OTA fee
+            ota_fee = 0.0
+            if channel:
+                ch_lower = channel.lower()
+                if "airbnb" in ch_lower or "abb" in ch_lower:
+                    ota_fee = 15.0
+                elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
+                    ota_fee = 17.0
+                    
+            save_booking(
+                booking_id=booking_id,
+                channel=channel,
+                booking_date=booking_date,
+                nights=nights,
+                gross_revenue=gross_revenue,
+                ota_fee_percent=ota_fee,
+                guest_email=guest_email
+            )
+            imported_count += 1
+            
+        logger.info(f"Mews report webhook processed: imported {imported_count} reservations")
+        return {"status": "success", "imported": imported_count}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in Mews report webhook: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/data/upload-csv")
 async def upload_bookings_csv(file: UploadFile = File(...)):
     """Parses and imports bookings from a Mews Reservations CSV."""
