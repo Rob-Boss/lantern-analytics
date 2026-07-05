@@ -666,6 +666,8 @@ def webhook_mews_report(payload: dict):
         email_idx = headers.index('Email')
         travel_agency_idx = headers.index('Travel agency') if 'Travel agency' in headers else -1
         source_idx = headers.index('Reservation source') if 'Reservation source' in headers else -1
+        space_category_idx = headers.index('Space category') if 'Space category' in headers else -1
+        requested_category_idx = headers.index('Requested category') if 'Requested category' in headers else -1
         
         imported_count = 0
         
@@ -689,20 +691,26 @@ def webhook_mews_report(payload: dict):
             raw_date = row[created_idx] or ''
             booking_date = raw_date.split('T')[0] if 'T' in raw_date else raw_date
             
-            # Nights calculation (Stays use 'Count (hours)' in the report, Sauna uses 'Count (nights)')
-            c_hours = row[hours_idx] if len(row) > hours_idx else None
-            c_nights = row[nights_idx] if len(row) > nights_idx else None
+            # Check if this is a Sauna booking to prevent stay metrics inflation
+            space_cat = row[space_category_idx] if (space_category_idx != -1 and len(row) > space_category_idx) else ''
+            req_cat = row[requested_category_idx] if (requested_category_idx != -1 and len(row) > requested_category_idx) else ''
+            is_sauna = 'sauna' in (space_cat or '').lower() or 'sauna' in (req_cat or '').lower()
+            
+            # Nights calculation (Stays use 'Count (hours)', Sauna uses 0 nights)
             nights = 0
-            if c_hours is not None:
-                try:
-                    nights = int(c_hours)
-                except (ValueError, TypeError):
-                    pass
-            elif c_nights is not None:
-                try:
-                    nights = int(c_nights)
-                except (ValueError, TypeError):
-                    pass
+            if not is_sauna:
+                c_hours = row[hours_idx] if len(row) > hours_idx else None
+                c_nights = row[nights_idx] if len(row) > nights_idx else None
+                if c_hours is not None:
+                    try:
+                        nights = int(c_hours)
+                    except (ValueError, TypeError):
+                        pass
+                elif c_nights is not None:
+                    try:
+                        nights = int(c_nights)
+                    except (ValueError, TypeError):
+                        pass
                     
             # Gross revenue
             raw_amount = row[amount_idx] if len(row) > amount_idx else None
