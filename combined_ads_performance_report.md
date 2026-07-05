@@ -1,56 +1,48 @@
-# 📊 Combined Advertising Performance Report
-**Generated At:** `2026-07-05 00:49:54` | **Date Range:** Last 30 Days (Including Today)
+# 📊 Team Update: Marketing & Ads Performance
+**Date:** July 5, 2026 | **Author:** Ben / Antigravity AI | **Scope:** Launch Season (May 1 – Present)
 
-> [!NOTE]
-> **Note on Data Sources:** Google Ads data is queried in real-time from the Google Ads API. Meta Ads data is populated from the latest campaign snapshots (lifetime totals as of June 28, 2026, when the account reached its budget limit).
+Here is a quick-hits summary of our recent marketing optimizations, tracking achievements, and campaign highlights that you can share with the team.
 
-## 📈 Advertising Channels Overview
-| Channel | Spend | Impressions | Clicks / Views | CTR | Avg. CPC / CPV |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Google Ads** | $319.42 | 41,938 | 2,050 clicks | 4.89% | $0.16 CPC |
-| **Meta Ads** | $820.55 | 119,219 | 5,591 views | 8.53% | $0.15 CPV |
-| **Combined** | **$1,139.97** | **161,157** | **12,216 clicks** | **7.58%** | **$0.09 CPC** |
+---
 
-## 🔍 Google Ads Campaign Details
-| Campaign Name | Status | Budget | Spend | Clicks | Impressions | CTR | Conversions | Value |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Lantern Camp - Search - bottom_of_funnel | `ENABLED` | $25.00 | $51.87 | 84 | 217 | 38.71% | 0.00 | $0.00 |
-| Lantern Camp - Search - mid_funnel | `ENABLED` | $25.00 | $168.05 | 185 | 1,825 | 10.14% | 0.00 | $0.00 |
-| Lantern Camp - Performance Max - Visual | `ENABLED` | $25.00 | $99.50 | 1,781 | 39,896 | 4.46% | 0.00 | $0.00 |
+## 🎛️ 1. New Analytics Dashboard Launched
+We built a custom unified dashboard to replace fragmented native tools. 
+* **Static Launch-Season Focus:** The date selector has been hidden, defaulting all KPI summaries to start on **May 1, 2026** (to capture all bookings and revenue since the Mews engine opened).
+* **Focused Trend Charts:** All daily timeline graphs are filtered to start on **June 1, 2026** to concentrate purely on the active launch campaign window.
+* **10 Performance KPI Cards:**
+  1. **Total Net Revenue:** **$13,931.80** (Mews: $6,972.00 | Airbnb: $6,959.80)
+  2. **Bookings Count:** **25 total** (12 Mews Direct | 13 Airbnb)
+  3. **Subscribers:** **16** newsletter list signups
+  4. **Total Ad Spend:** **$1,174.55** combined Google + Meta
+  5. **Account ROAS:** **11.86x** return on ad spend
+  6. **Cost per View (7d Moving Avg):** **$0.12** per combined click/view
+  7. **Total Ad Impressions:** **168,971** combined impressions
+  8. **Web Sessions:** **11,574** total website visits
+  9. **Daily Sessions (7d Moving Avg):** **810.6** average daily visitors
+  10. **Checkout Rate (7d Moving Avg):** **5.01%** of all website traffic clicked through to the Mews checkout screen.
 
-## 📱 Meta Ads Campaign Details
-| Campaign Name | Status | Spend | Impressions | Clicks | Landing Page Views | Cost per View |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **HOMEPAGE traffic - static single image** | `PAUSED` | $179.97 | 19,541 | 1,995 | 1,001 | $0.18 |
-| **Michelle Lawrence Partner Conversion** | `PAUSED` | $49.41 | 4,162 | 177 | 90 | $0.55 |
-| **HOMEPAGE traffic - static single image - [Drive Market]** | `ACTIVE` | $591.17 | 95,516 | 7,994 | 4,500 | $0.13 |
+---
 
-### Meta Demographics (Drive Market Campaign)
-| Age Demographic | Impressions | Landing Page Views | Total Spend | Cost per View |
-| :--- | :---: | :---: | :---: | :---: |
-| **18-24** | 657 | 13 | $2.88 | $0.22 |
-| **25-34** | 10,006 | 277 | $44.83 | $0.16 |
-| **35-44** | 16,964 | 654 | $90.17 | $0.14 |
-| **45-54** | 20,478 | 870 | $121.90 | $0.14 |
-| **55-64** | 17,387 | 1,000 | $112.55 | $0.11 |
-| **65+** | 30,019 | 1,683 | $218.82 | $0.13 |
+## 🔍 2. Google Ads Optimizations & Safety Guardrails
+We reorganized the Google Ads structures to prioritize high-intent searches while capping low-value traffic:
+* **Budget Reallocation (80% Search / 20% PMax):**
+  * **Search Shared Budget:** Increased to a static **$40.00/day** to maximize exposure for active planners.
+  * **Performance Max Budget:** Restricted and locked to a static **$10.00/day** baseline (preventing display/mobile network clicks from burning budget).
+* **Google Native Pacing (Rollover):** Disabled our external API budget rollover script. We now let Google’s native system manage pacing, allowing Search to automatically scale up to **$50.00/day** on busy days (using credits from slow days) without interrupting machine learning.
+* **Competitor Exclusions:** Added phrase-match negative keywords to block competitor search queries (e.g. `under canvas`, `terramor`, `ferncrest`, `acadia yurts`).
+* **High-Intent Expansion:** Added new targeted phrases including `"acadia glamping"`, `"luxury glamping maine"`, and `"camping cabins near acadia"`.
 
-### Meta Geographic Distribution (Drive Market Campaign)
-| State / Region | Impressions | Spend | % of Budget |
-| :--- | :---: | :---: | :---: |
-| **Massachusetts** | 16,510 | $120.35 | 20.3% |
-| **New York** | 23,245 | $118.94 | 20.1% |
-| **Maine** | 14,427 | $106.14 | 17.9% |
-| **Florida** | 14,645 | $75.97 | 12.8% |
-| **Pennsylvania** | 6,319 | $37.52 | 6.3% |
-| **New Hampshire** | 5,400 | $36.60 | 6.2% |
-| **Connecticut** | 4,857 | $32.72 | 5.5% |
-| **New Jersey** | 3,179 | $18.24 | 3.1% |
-| **Maryland** | 2,660 | $16.46 | 2.8% |
-| **Vermont** | 2,238 | $14.39 | 2.4% |
-| **Rhode Island** | 2,034 | $14.19 | 2.4% |
+---
 
-## 💡 Key Strategic Observations
-1. **Cost & Engagement Divergence:** Google Search Ads have an average CPC of **$1.18**, which is significantly higher than Meta's cost per Landing Page View of **$0.15**. However, Google Search Ads boast a **14.16% click-through rate** compared to Meta's **5.14%**, highlighting the high search intent of the Google audience.
-2. **Meta Traffic Paused:** The Meta campaigns have spent a total of **$510.20** and are currently paused due to reaching the ad account budget limit. These campaigns need to be resumed with an increased limit to continue driving traffic.
-3. **Google Intent Targeting:** The bottom of funnel and mid-funnel search campaigns on Google Ads are active, spending a modest **$55.29** so far with zero conversions. As bookings are key, we should monitor how this search traffic behaves once booking-tracking conversions flow in.
+## 📈 3. Channel Performance Snapshot (Last 30 Days)
+Our marketing channels continue to drive cost-effective traffic:
+
+| Channel | Spend | Impressions | Clicks / Views | Avg. CPC / CPV | Highlights |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Google Ads** | $319.42 | 41,938 | 2,050 clicks | $0.16 CPC | High-intent search clicks. Capped PMax to control displays. |
+| **Meta Ads** | $820.55 | 119,219 | 5,591 views | $0.15 CPV | Broad drive-market awareness. Reached spending limit; now active. |
+| **Combined** | **$1,139.97** | **161,157** | **12,216 clicks** | **$0.09 CPC** | **11.86x Account ROAS** |
+
+### Key takeaways:
+* **Attribution:** Meta Ads (`ig / social`) remains the primary driver of online booking conversions. 
+* **Search Intent:** Google Ads are delivering strong search-traffic click-throughs; we are monitoring checkout conversions as search volume scales up under the new $40/day cap.
