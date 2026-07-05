@@ -60,7 +60,7 @@ export default function App() {
         const data = await res.json();
         setTraffic(data);
       } else if (activeTab === "bookings") {
-        url = `${API_BASE}/dashboard/bookings`;
+        url = `${API_BASE}/dashboard/bookings?start_date=${startDate}&end_date=${endDate}`;
         const res = await fetch(url);
         const data = await res.json();
         setBookings(data);

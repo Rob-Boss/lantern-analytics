@@ -434,10 +434,22 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
     }
 
 @app.get("/api/dashboard/bookings")
-def get_bookings_ledger():
+def get_bookings_ledger(start_date: Optional[str] = None, end_date: Optional[str] = None):
     """Returns booking records and channels aggregate statistics."""
     bookings = get_all_bookings()
     
+    # Filter bookings by date range if provided
+    if start_date or end_date:
+        filtered_bookings = []
+        for b in bookings:
+            b_date = b['booking_date']
+            if start_date and b_date < start_date:
+                continue
+            if end_date and b_date > end_date:
+                continue
+            filtered_bookings.append(b)
+        bookings = filtered_bookings
+        
     # Group by normalized channel and attach to bookings
     channels_dict = {}
     for b in bookings:
