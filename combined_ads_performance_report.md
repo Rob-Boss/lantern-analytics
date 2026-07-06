@@ -1,5 +1,5 @@
 # 📊 Team Update: Marketing & Ads Performance
-**Date:** July 5, 2026 | **Author:** Ben / Antigravity AI | **Scope:** Launch Season (May 1 – Present)
+**Date:** July 5, 2026 | **Author:** Ben Swardlick | **Scope:** Launch Season (May 1 – Present)
 
 Here is a quick-hits summary of our recent marketing optimizations, tracking achievements, and campaign highlights that you can share with the team.
 
