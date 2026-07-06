@@ -7,8 +7,6 @@ Here is a quick-hits summary of our recent marketing optimizations, tracking ach
 
 ## 🎛️ 1. New Analytics Dashboard Launched
 We built a custom unified dashboard to replace fragmented native tools. 
-* **Static Launch-Season Focus:** The date selector has been hidden, defaulting all KPI summaries to start on **May 1, 2026** (to capture all bookings and revenue since the Mews engine opened).
-* **Focused Trend Charts:** All daily timeline graphs are filtered to start on **June 1, 2026** to concentrate purely on the active launch campaign window.
 * **10 Performance KPI Cards:**
   1. **Total Net Revenue:** **$15,692.80** (Mews: $8,733.00 | Airbnb: $6,959.80)
   2. **Bookings Count:** **27 total** (13 Mews Direct | 14 Airbnb)
@@ -28,7 +26,6 @@ We reorganized the Google Ads structures to prioritize high-intent searches whil
 * **Budget Reallocation (80% Search / 20% PMax):**
   * **Search Shared Budget:** Increased to a static **$40.00/day** to maximize exposure for active planners.
   * **Performance Max Budget:** Restricted and locked to a static **$10.00/day** baseline (preventing display/mobile network clicks from burning budget).
-* **Google Native Pacing (Rollover):** Disabled our external API budget rollover script. We now let Google’s native system manage pacing, allowing Search to automatically scale up to **$50.00/day** on busy days (using credits from slow days) without interrupting machine learning.
 * **Competitor Exclusions:** Added phrase-match negative keywords to block competitor search queries (e.g. `under canvas`, `terramor`, `ferncrest`, `acadia yurts`).
 * **High-Intent Expansion:** Added new targeted phrases including `"acadia glamping"`, `"luxury glamping maine"`, and `"camping cabins near acadia"`.
 
@@ -46,3 +43,4 @@ Our marketing channels continue to drive cost-effective traffic:
 ### Key takeaways:
 * **Attribution:** Meta Ads (`ig / social`) remains the primary driver of online booking conversions. 
 * **Search Intent:** Google Ads are delivering strong search-traffic click-throughs; we are monitoring checkout conversions as search volume scales up under the new $40/day cap.
+* **Checkout Funnel Insights:** With direct checkout tracking now active in the dashboard, we recorded **322 initiated checkouts** from **11,824 web sessions** (a 2.7% checkout initiation rate). Over **8%** of these checkouts convert into finalized reservations, giving us a highly valuable benchmark for testing booking engine page optimizations and monitoring leakage.
