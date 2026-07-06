@@ -1,6 +1,34 @@
 import os
 from datetime import datetime
 
+def load_dotenv():
+    search_dirs = [
+        os.getcwd(),
+        os.path.dirname(os.path.abspath(__file__)),
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    ]
+    for d in search_dirs:
+        env_path = os.path.join(d, ".env")
+        if os.path.isfile(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if "=" in line:
+                            key, val = line.split("=", 1)
+                            key = key.strip()
+                            val = val.strip().strip('"').strip("'")
+                            if key:
+                                os.environ[key] = val
+                break
+            except Exception:
+                pass
+
+load_dotenv()
+
 DATABASE_URL = os.environ.get("DATABASE_URL")
 IS_POSTGRES = DATABASE_URL is not None and DATABASE_URL.startswith("postgres")
 
