@@ -603,15 +603,19 @@ export default function AdsTab({ adsData, loading }) {
     );
   };
 
-  // Calculate 7-day moving average CPC and CPV
+  // Calculate 7-day moving average CPC, CPV and CTR
   const last7Days = dailyBreakdownClean.slice(-7);
   const gSpend7d = last7Days.reduce((acc, curr) => acc + (curr.google_spend || 0), 0);
   const gClicks7d = last7Days.reduce((acc, curr) => acc + (curr.google_clicks || 0), 0);
+  const gImpressions7d = last7Days.reduce((acc, curr) => acc + (curr.google_impressions || 0), 0);
   const googleCpc7d = gClicks7d > 0 ? (gSpend7d / gClicks7d) : 0.0;
+  const googleCtr7d = gImpressions7d > 0 ? (gClicks7d / gImpressions7d * 100.0) : 0.0;
 
   const mSpend7d = last7Days.reduce((acc, curr) => acc + (curr.meta_spend || 0), 0);
   const mClicks7d = last7Days.reduce((acc, curr) => acc + (curr.meta_clicks || 0), 0);
+  const mImpressions7d = last7Days.reduce((acc, curr) => acc + (curr.meta_impressions || 0), 0);
   const metaCpv7d = mClicks7d > 0 ? (mSpend7d / mClicks7d) : 0.0;
+  const metaCtr7d = mImpressions7d > 0 ? (mClicks7d / mImpressions7d * 100.0) : 0.0;
 
   return (
     <div>
@@ -620,6 +624,7 @@ export default function AdsTab({ adsData, loading }) {
         {channels.map((chan, idx) => {
           const isGoogle = chan.name.toLowerCase().includes("google");
           const cpv7d = isGoogle ? googleCpc7d : metaCpv7d;
+          const ctr7d = isGoogle ? googleCtr7d : metaCtr7d;
           return (
             <div className="panel" key={chan.name}>
               <div className="panel-header">
@@ -658,9 +663,12 @@ export default function AdsTab({ adsData, loading }) {
                 </div>
 
                 <div style={{ padding: "12px", border: "1px solid #e2e8e4", borderRadius: "8px" }}>
-                  <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>CTR</div>
+                  <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>CTR (7D MOVING AVG)</div>
                   <div style={{ fontSize: "20px", fontWeight: "700", color: "#2d312e" }}>
-                    {chan.ctr.toFixed(2)}%
+                    {ctr7d.toFixed(2)}%
+                  </div>
+                  <div style={{ fontSize: "10.5px", color: "#a2a8a4", marginTop: "4px" }}>
+                    Lifetime CTR: {chan.ctr.toFixed(2)}%
                   </div>
                 </div>
 

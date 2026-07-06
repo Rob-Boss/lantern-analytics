@@ -389,9 +389,11 @@ def get_ads_data(start_date: Optional[str] = None, end_date: Optional[str] = Non
                 "date": m['date'],
                 "google_spend": round(m['google_spend'], 2),
                 "google_clicks": m['google_clicks'],
+                "google_impressions": m['google_impressions'],
                 "meta_spend": round(m['meta_spend'], 2),
                 "meta_clicks": m['meta_clicks'],
-                "meta_views": m['meta_views']
+                "meta_views": m['meta_views'],
+                "meta_impressions": m['meta_impressions']
             } for m in metrics if m['date'] >= "2026-06-01"
         ]
     }
