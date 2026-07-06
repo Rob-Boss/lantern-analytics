@@ -258,8 +258,10 @@ export default function App() {
       <main className="main-content">
         <header className="page-header">
           <div className="page-title">
-            <h1 style={{ textTransform: "capitalize" }}>{activeTab} Workspace</h1>
-            <p>Lantern Camp Analytics Integration Hub</p>
+            <h1 style={{ textTransform: "capitalize" }}>
+              {activeTab === 'overview' ? 'Lantern Camp Launch Marketing Dashboard' : `Lantern Camp ${activeTab}`}
+            </h1>
+            <p>Unified advertising performance, reservation data, and web traffic insights to date</p>
           </div>
 
           <div className="header-actions">
