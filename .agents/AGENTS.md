@@ -18,3 +18,8 @@ If the user asks to **"refresh lantern dashboard"**, **"update data"**, **"sync 
     `postgresql://neondb_owner:[PASSWORD_REDACTED]@ep-ancient-pine-atwfrg68.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require`
 *   **Vercel Configuration:** Main configuration in `lantern-dashboard/vercel.json`.
 *   **Credential Files (Local):** `ga4-credentials.json`, `google-ads.yaml`, `meta-credentials.json` are stored in the root folder.
+
+## 3. Custom Dashboard Reference (Lantern Analytics)
+*   **No Looker Studio:** The project does **NOT** use Looker Studio. Do not suggest or mention it. All historical planning mentions are obsolete.
+*   **Application Name:** The dashboard is a custom web application called **Lantern Analytics** hosted at `https://lantern-analytics.vercel.app`.
+
