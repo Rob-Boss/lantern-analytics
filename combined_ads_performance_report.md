@@ -12,7 +12,7 @@ We built a custom unified dashboard to replace fragmented native tools.
   2. **Bookings Count:** **27 total** (13 Mews Direct | 14 Airbnb)
   3. **Subscribers:** **16** newsletter list signups
   4. **Total Ad Spend:** **$1,219.32** combined Google + Meta
-  5. **Account ROAS:** **7.16x** return on ad spend
+  5. **Account ROAS:** **7.16x** return on ad spend *(Note: This includes all Mews Direct bookings and may be inflated until we implement granular multi-touch attribution to isolate paid traffic from organic/direct stays)*
   6. **Cost per View (7d Moving Avg):** **$0.13** per combined click/view
   7. **Total Ad Impressions:** **172,833** combined impressions
   8. **Web Sessions:** **11,824** total website visits
