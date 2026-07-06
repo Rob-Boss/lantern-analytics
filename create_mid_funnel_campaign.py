@@ -94,7 +94,7 @@ def add_keywords(client, customer_id, ad_group_resources):
             "modern cabins near acadia",
             "boutique cabin lodging maine",
             "premium cabin rental maine",
-            "stay in mid-coast maine",
+            "stay in downeast maine",
             "orland maine cabin rentals"
         ],
         "Regional Glamping & Luxury Camping": [
@@ -166,7 +166,7 @@ def create_responsive_search_ads(client, customer_id, ad_group_resources):
         "Modern Cabins Near Acadia",
         "Boutique Cabin Lodging Maine",
         "Premium Cabin Rental Maine",
-        "Stay in Mid-Coast Maine",
+        "Stay in Downeast Maine",
         "This Is Not A Hotel",
         "Grown-Ups Love Camp, Too",
         "Like Vacation, But Peaceful",
@@ -182,7 +182,7 @@ def create_responsive_search_ads(client, customer_id, ad_group_resources):
     # Reusing descriptions from Ad Group 1 as noted in guide
     ag2_descriptions = [
         "Scandinavian comfort meets serene nature at our private retreat near Acadia National Park.",
-        "Modern solar-powered cabins near Bar Harbor & Mid-Coast Maine. Book your getaway today.",
+        "Modern solar-powered cabins near Bar Harbor & Downeast Maine. Book your getaway today.",
         "Dog-friendly cabins with 100+ acres of trails, fire pits, and easy Acadia access.",
         "The peaceful Maine escape you've been looking for, just outside tourist-packed Acadia."
     ]

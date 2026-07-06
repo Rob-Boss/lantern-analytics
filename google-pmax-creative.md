@@ -43,7 +43,7 @@ This document organizes the visual and text assets required for the **Lantern Ca
 | `Modern Solar-Powered Cabins on 166 Acres of Serene Maine Wilderness` | 67 | Nature & Eco |
 | `Experience Premium Scandinavian Comfort Just Outside Acadia National Park` | 73 | Location & Comfort |
 | `Dog-Friendly Forest Cabins with Private Fire Pits & Cedarwood Sauna` | 67 | Amenities & Pet-Friendly |
-| `Secluded Nature Lodging and 100-Mile Mountain Views in Mid-Coast Maine` | 70 | Views & Seclusion |
+| `Secluded Nature Lodging and 100-Mile Mountain Views in Downeast Maine` | 69 | Views & Seclusion |
 | `Bypass OTA Booking Fees and Secure Your Stay Directly with Us` | 60 | Booking Value / Direct |
 
 ### 3. Descriptions (90 Characters Max)
@@ -75,7 +75,7 @@ Performance Max relies heavily on high-quality visuals. Sourced from your active
     *   *Select 3:* Happy dog sitting on the cabin's private deck.
 *   **Portrait (4:5 - Min: 480x600, Rec: 960x1200):**
     *   *Select 1:* Vertical shot of a cabin nestled in the trees.
-    *   *Select 2:* Vertical sunset view framing the mid-coast Maine wilderness.
+    *   *Select 2:* Vertical sunset view framing the Downeast Maine wilderness.
 
 ### 2. Logos
 *   **Square (1:1 - Rec: 1200x1200):** Dark-theme circular Lantern Camp icon.
@@ -123,8 +123,8 @@ To seed the Performance Max campaign with search and visitor signals:
 *   **Description Line 2 (35 Chars Max):** `Beautiful 100-mile mountain views`
 *   **Final URL:** `https://www.lanterncamp.com/#gallery`
 
-### 4. Explore Mid-Coast Maine
-*   **Headline (25 Chars Max):** `Explore Mid-Coast Maine`
+### 4. Explore Downeast Maine
+*   **Headline (25 Chars Max):** `Explore Downeast Maine`
 *   **Description Line 1 (35 Chars Max):** `Hikes, dining, and local guides`
 *   **Description Line 2 (35 Chars Max):** `Just outside Acadia National Park`
 *   **Final URL:** `https://www.lanterncamp.com/onsite`

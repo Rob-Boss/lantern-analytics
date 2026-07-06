@@ -136,7 +136,7 @@ def add_new_keywords(client, customer_id, ad_groups):
             "modern cabins near acadia",
             "boutique cabin lodging maine",
             "premium cabin rental maine",
-            "stay in mid-coast maine",
+            "stay in downeast maine",
             "eco retreat near acadia",
             "nature cabins bar harbor"
         ],
@@ -209,7 +209,7 @@ def create_new_ads(client, customer_id, ad_groups):
         "Modern Cabins Near Acadia",
         "Boutique Cabin Lodging Maine",
         "Premium Cabin Rental Maine",
-        "Stay in Mid-Coast Maine",
+        "Stay in Downeast Maine",
         "A Landscape Hotel near Acadia",
         "Framing the Maine Wilderness",
         "Low-Impact Design in Nature",
@@ -224,7 +224,7 @@ def create_new_ads(client, customer_id, ad_groups):
     
     ag1_descriptions = [
         "Scandinavian comfort meets serene nature at our private retreat near Acadia National Park.",
-        "Modern solar-powered cabins near Bar Harbor & Mid-Coast Maine. Book your getaway today.",
+        "Modern solar-powered cabins near Bar Harbor & Downeast Maine. Book your getaway today.",
         "Dog-friendly cabins with forest trails, private fire pits, and easy Acadia access.",
         "The peaceful Maine escape you've been looking for, just outside tourist-packed Acadia."
     ]
