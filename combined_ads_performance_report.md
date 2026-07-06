@@ -10,16 +10,16 @@ We built a custom unified dashboard to replace fragmented native tools.
 * **Static Launch-Season Focus:** The date selector has been hidden, defaulting all KPI summaries to start on **May 1, 2026** (to capture all bookings and revenue since the Mews engine opened).
 * **Focused Trend Charts:** All daily timeline graphs are filtered to start on **June 1, 2026** to concentrate purely on the active launch campaign window.
 * **10 Performance KPI Cards:**
-  1. **Total Net Revenue:** **$13,931.80** (Mews: $6,972.00 | Airbnb: $6,959.80)
-  2. **Bookings Count:** **25 total** (12 Mews Direct | 13 Airbnb)
+  1. **Total Net Revenue:** **$15,692.80** (Mews: $8,733.00 | Airbnb: $6,959.80)
+  2. **Bookings Count:** **27 total** (13 Mews Direct | 14 Airbnb)
   3. **Subscribers:** **16** newsletter list signups
-  4. **Total Ad Spend:** **$1,174.55** combined Google + Meta
-  5. **Account ROAS:** **11.86x** return on ad spend
-  6. **Cost per View (7d Moving Avg):** **$0.12** per combined click/view
-  7. **Total Ad Impressions:** **168,971** combined impressions
-  8. **Web Sessions:** **11,574** total website visits
-  9. **Daily Sessions (7d Moving Avg):** **810.6** average daily visitors
-  10. **Checkout Rate (7d Moving Avg):** **5.01%** of all website traffic clicked through to the Mews checkout screen.
+  4. **Total Ad Spend:** **$1,219.32** combined Google + Meta
+  5. **Account ROAS:** **7.16x** return on ad spend
+  6. **Cost per View (7d Moving Avg):** **$0.13** per combined click/view
+  7. **Total Ad Impressions:** **172,833** combined impressions
+  8. **Web Sessions:** **11,824** total website visits
+  9. **Daily Sessions (7d Moving Avg):** **846.3** average daily visitors
+  10. **Checkout Rate (7d Moving Avg):** **5.44%** of all website traffic clicked through to the Mews checkout screen.
 
 ---
 
@@ -39,9 +39,9 @@ Our marketing channels continue to drive cost-effective traffic:
 
 | Channel | Spend | Impressions | Clicks / Views | Avg. CPC / CPV | Highlights |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Google Ads** | $319.42 | 41,938 | 2,050 clicks | $0.16 CPC | High-intent search clicks. Capped PMax to control displays. |
-| **Meta Ads** | $820.55 | 119,219 | 5,591 views | $0.15 CPV | Broad drive-market awareness. Reached spending limit; now active. |
-| **Combined** | **$1,139.97** | **161,157** | **12,216 clicks** | **$0.09 CPC** | **11.86x Account ROAS** |
+| **Google Ads** | $347.67 | 42,445 | 2,087 clicks | $0.17 CPC | High-intent search clicks. Capped PMax to control displays. |
+| **Meta Ads** | $871.65 | 130,388 | 11,011 views | $0.08 CPV | Broad drive-market awareness. Reached spending limit; now active. |
+| **Combined** | **$1,219.32** | **172,833** | **13,098 clicks** | **$0.09 CPC** | **7.16x Account ROAS** |
 
 ### Key takeaways:
 * **Attribution:** Meta Ads (`ig / social`) remains the primary driver of online booking conversions. 
