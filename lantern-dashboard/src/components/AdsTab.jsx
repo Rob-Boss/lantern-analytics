@@ -603,12 +603,23 @@ export default function AdsTab({ adsData, loading }) {
     );
   };
 
+  // Calculate 7-day moving average CPC and CPV
+  const last7Days = dailyBreakdownClean.slice(-7);
+  const gSpend7d = last7Days.reduce((acc, curr) => acc + (curr.google_spend || 0), 0);
+  const gClicks7d = last7Days.reduce((acc, curr) => acc + (curr.google_clicks || 0), 0);
+  const googleCpc7d = gClicks7d > 0 ? (gSpend7d / gClicks7d) : 0.0;
+
+  const mSpend7d = last7Days.reduce((acc, curr) => acc + (curr.meta_spend || 0), 0);
+  const mClicks7d = last7Days.reduce((acc, curr) => acc + (curr.meta_clicks || 0), 0);
+  const metaCpv7d = mClicks7d > 0 ? (mSpend7d / mClicks7d) : 0.0;
+
   return (
     <div>
       {/* Comparative Cards */}
       <div className="panel-grid" style={{ gridTemplateColumns: "1fr 1fr", marginBottom: "24px" }}>
         {channels.map((chan, idx) => {
           const isGoogle = chan.name.toLowerCase().includes("google");
+          const cpv7d = isGoogle ? googleCpc7d : metaCpv7d;
           return (
             <div className="panel" key={chan.name}>
               <div className="panel-header">
@@ -655,10 +666,13 @@ export default function AdsTab({ adsData, loading }) {
 
                 <div style={{ padding: "12px", border: "1px solid #e2e8e4", borderRadius: "8px", gridColumn: "span 2" }}>
                   <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>
-                    {chan.cpv_label.toUpperCase()}
+                    {chan.cpv_label.toUpperCase()} (7D MOVING AVG)
                   </div>
                   <div style={{ fontSize: "20px", fontWeight: "700", color: "#2d4a3e" }}>
-                    {formatCurrency(chan.cpv)}
+                    {formatCurrency(cpv7d)}
+                  </div>
+                  <div style={{ fontSize: "10.5px", color: "#a2a8a4", marginTop: "4px" }}>
+                    Lifetime average: {formatCurrency(chan.cpv)}
                   </div>
                 </div>
               </div>
