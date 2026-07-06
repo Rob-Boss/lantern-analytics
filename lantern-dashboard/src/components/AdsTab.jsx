@@ -116,6 +116,11 @@ export default function AdsTab({ adsData, loading }) {
     const avgMetaSpend = metaSpendDays > 0 ? (totalMetaSpend / metaSpendDays) : 0;
     const avgTotalSpend = combinedSpendDays > 0 ? ((totalGoogleSpend + totalMetaSpend) / combinedSpendDays) : 0;
 
+    // Calculate 7-day moving average combined spend
+    const last7DaysSpend = dailyMetrics.slice(-7);
+    const totalSpend7d = last7DaysSpend.reduce((acc, curr) => acc + curr.totalSpend, 0);
+    const avgCombinedSpend7d = last7DaysSpend.length > 0 ? (totalSpend7d / last7DaysSpend.length) : 0.0;
+
     if (activeTab === "cpc") {
       const peakCpc = Math.max(...dailyMetrics.map((d) => d.cpc), 0.05);
       maxVal = peakCpc * 1.15; // 15% safety margin above peak
@@ -460,7 +465,7 @@ export default function AdsTab({ adsData, loading }) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ display: "inline-block", width: "12px", height: "1px", borderTop: "2px dashed #ea580c" }}></span>
-            <span style={{ color: "#ea580c", opacity: 0.8 }}>Average Daily Combined ({formatCurrency(avgTotalSpend)}/day)</span>
+            <span style={{ color: "#ea580c", opacity: 0.8 }}>7D Avg Combined ({formatCurrency(avgCombinedSpend7d)}/day)</span>
           </div>
         </div>
       );
@@ -532,9 +537,9 @@ export default function AdsTab({ adsData, loading }) {
             <g>
               <line
                 x1={padding.left}
-                y1={getY(avgTotalSpend)}
+                y1={getY(avgCombinedSpend7d)}
                 x2={width - padding.right}
-                y2={getY(avgTotalSpend)}
+                y2={getY(avgCombinedSpend7d)}
                 stroke="#ea580c"
                 strokeWidth="1.5"
                 strokeDasharray="4 4"
@@ -542,14 +547,14 @@ export default function AdsTab({ adsData, loading }) {
               />
               <text
                 x={width - padding.right - 6}
-                y={getY(avgTotalSpend) - 6}
+                y={getY(avgCombinedSpend7d) - 6}
                 textAnchor="end"
                 fontSize="9.5"
                 fontWeight="600"
                 fill="#ea580c"
                 opacity="0.85"
               >
-                Avg Combined: {formatCurrency(avgTotalSpend)}/day
+                7D Avg Combined: {formatCurrency(avgCombinedSpend7d)}/day
               </text>
             </g>
           )}
