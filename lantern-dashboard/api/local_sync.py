@@ -36,23 +36,8 @@ def main():
     except Exception as e:
         logger.error(f"Step 1 Failed: {e}")
         
-    # 2. Sync Google Sheets Bookings
-    logger.info("Step 2: Syncing Bookings from Google Sheets...")
-    sheet_id = os.environ.get("MEWS_SHEET_ID")
-    if not sheet_id:
-        try:
-            sheet_id = get_setting("mews_sheet_id")
-        except Exception:
-            pass
-            
-    if not sheet_id:
-        logger.warning("Step 2 Skipped: Google Sheet ID not found in database settings. Set it in the dashboard settings page first!")
-    else:
-        try:
-            count, errors = sync_bookings_from_sheet(sheet_id)
-            logger.info(f"Step 2 Complete! Imported {count} bookings. Warnings: {len(errors)}")
-        except Exception as e:
-            logger.error(f"Step 2 Failed: {e}")
+    # 2. Sync Google Sheets Bookings (DISABLED: Mews reports are now the sole database bookings source of truth)
+    logger.info("Step 2: Syncing Bookings from Google Sheets (Skipped - database updates directly from Mews reports).")
             
     # 3. Run Google Ads Budget Rollover Auto-Pacing (Disabled: letting Google handle pacing natively)
     # logger.info("Step 3: Running Google Ads budget rollover auto-pacing...")
