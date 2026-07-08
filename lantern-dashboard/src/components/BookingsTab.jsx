@@ -150,7 +150,7 @@ export default function BookingsTab({ bookingsData, loading }) {
               <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
                 <thead>
                   <tr style={{ borderBottom: "2px solid #e2e8e4", color: "#606862", fontWeight: "600" }}>
-                    <th style={{ padding: "12px 8px" }}>Booking Date</th>
+                    <th style={{ padding: "12px 8px" }}>Date Created</th>
                     <th style={{ padding: "12px 8px" }}>Stay Dates</th>
                     <th style={{ padding: "12px 8px" }}>Reservation ID</th>
                     <th style={{ padding: "12px 8px" }}>Guest</th>
