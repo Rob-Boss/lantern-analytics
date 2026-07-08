@@ -73,9 +73,20 @@ def init_db():
             gross_revenue REAL NOT NULL,
             ota_fee_percent REAL DEFAULT 0.0,
             net_revenue REAL NOT NULL,
-            guest_email TEXT
+            guest_email TEXT,
+            guest_name TEXT,
+            check_in_date TEXT,
+            check_out_date TEXT
         )
     """)
+    
+    # Migration: Ensure bookings has guest_name, check_in_date, check_out_date
+    for col in ("guest_name", "check_in_date", "check_out_date"):
+        try:
+            _exec(cursor, f"ALTER TABLE bookings ADD COLUMN {col} TEXT")
+        except Exception:
+            pass
+    conn.commit()
     
     # 2. Create daily_metrics table (caches GA4 and Google/Meta ad spend/clicks/impressions)
     _exec(cursor, """
@@ -131,7 +142,7 @@ def init_db():
     conn.close()
 
 # --- Bookings Helpers ---
-def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None):
+def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -139,8 +150,8 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
     net_revenue = gross_revenue * (1.0 - (ota_fee_percent / 100.0))
     
     _exec(cursor, """
-        INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email, guest_name, check_in_date, check_out_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             channel=excluded.channel,
             booking_date=excluded.booking_date,
@@ -148,8 +159,11 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
             gross_revenue=excluded.gross_revenue,
             ota_fee_percent=excluded.ota_fee_percent,
             net_revenue=excluded.net_revenue,
-            guest_email=excluded.guest_email
-    """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email))
+            guest_email=excluded.guest_email,
+            guest_name=excluded.guest_name,
+            check_in_date=excluded.check_in_date,
+            check_out_date=excluded.check_out_date
+    """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email, guest_name, check_in_date, check_out_date))
     
     conn.commit()
     conn.close()

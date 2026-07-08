@@ -105,6 +105,9 @@ class BookingWebhook(BaseModel):
     gross_revenue: Optional[float] = None
     ota_fee_percent: Optional[float] = 0.0
     guest_email: Optional[str] = None
+    guest_name: Optional[str] = None
+    check_in_date: Optional[str] = None
+    check_out_date: Optional[str] = None
 
 class SettingsUpdate(BaseModel):
     newsletter_subscribers: int
@@ -160,6 +163,8 @@ def fetch_booking_details_from_mews(booking_id: str) -> dict:
     # Calculate nights from stay dates
     start_utc = res.get("StartUtc")
     end_utc = res.get("EndUtc")
+    check_in_date = start_utc.split("T")[0] if start_utc else None
+    check_out_date = end_utc.split("T")[0] if end_utc else None
     nights = 1
     if start_utc and end_utc:
         try:
@@ -172,8 +177,9 @@ def fetch_booking_details_from_mews(booking_id: str) -> dict:
     customer_id = res.get("CustomerId")
     res_uuid = res.get("Id")
     
-    # 2. Fetch Customer profile (for Email)
+    # 2. Fetch Customer profile (for Email & Name)
     guest_email = None
+    guest_name = None
     if customer_id:
         cust_payload = {
             "ClientToken": MEWS_CLIENT_TOKEN,
@@ -188,8 +194,11 @@ def fetch_booking_details_from_mews(booking_id: str) -> dict:
                 customers = cust_data.get("Customers", [])
                 if customers:
                     guest_email = customers[0].get("Email")
+                    first_name = customers[0].get("FirstName") or ""
+                    last_name = customers[0].get("LastName") or ""
+                    guest_name = f"{first_name} {last_name}".strip() or None
         except Exception as e:
-            logger.warning(f"Error fetching customer email: {e}")
+            logger.warning(f"Error fetching customer details: {e}")
             
     # 3. Fetch Order Items (for total Gross Revenue)
     gross_revenue = 0.0
@@ -219,7 +228,10 @@ def fetch_booking_details_from_mews(booking_id: str) -> dict:
         "booking_date": booking_date,
         "nights": nights,
         "gross_revenue": round(gross_revenue, 2),
-        "guest_email": guest_email
+        "guest_email": guest_email,
+        "guest_name": guest_name,
+        "check_in_date": check_in_date,
+        "check_out_date": check_out_date
     }
 
 # --- API ENDPOINTS ---
@@ -587,7 +599,7 @@ def webhook_booking(booking: BookingWebhook):
     """Zapier webhook endpoint. Real-time insertion from Mews."""
     try:
         # Check if we need to query Mews directly to resolve missing fields
-        if booking.nights is None or booking.gross_revenue is None:
+        if booking.nights is None or booking.gross_revenue is None or booking.guest_name is None:
             try:
                 logger.info(f"Triggering Mews API lookup for booking ID: {booking.id}")
                 resolved = fetch_booking_details_from_mews(booking.id)
@@ -595,6 +607,12 @@ def webhook_booking(booking: BookingWebhook):
                 booking.gross_revenue = resolved["gross_revenue"]
                 if resolved["guest_email"]:
                     booking.guest_email = resolved["guest_email"]
+                if resolved["guest_name"]:
+                    booking.guest_name = resolved["guest_name"]
+                if resolved["check_in_date"]:
+                    booking.check_in_date = resolved["check_in_date"]
+                if resolved["check_out_date"]:
+                    booking.check_out_date = resolved["check_out_date"]
                 if resolved["channel"]:
                     booking.channel = resolved["channel"]
             except Exception as lookup_err:
@@ -616,7 +634,10 @@ def webhook_booking(booking: BookingWebhook):
             nights=booking.nights,
             gross_revenue=booking.gross_revenue,
             ota_fee_percent=ota_fee,
-            guest_email=booking.guest_email
+            guest_email=booking.guest_email,
+            guest_name=booking.guest_name,
+            check_in_date=booking.check_in_date,
+            check_out_date=booking.check_out_date
         )
         logger.info(f"Webhook insertion success: {booking.id} ({booking.channel}) - Net: ${net}")
         return {"status": "success", "id": booking.id, "net_revenue": round(net, 2)}
@@ -659,6 +680,14 @@ def webhook_mews_report(payload: dict):
         clear_bookings()
                 
         # Find column indices
+        def get_col_idx_case_insensitive(headers_list, aliases):
+            for alias in aliases:
+                alias_lower = alias.lower()
+                for idx, h in enumerate(headers_list):
+                    if h.strip().lower() == alias_lower:
+                        return idx
+            return -1
+
         number_idx = headers.index('Number')
         origin_idx = headers.index('Origin')
         created_idx = headers.index('Created')
@@ -671,6 +700,12 @@ def webhook_mews_report(payload: dict):
         space_category_idx = headers.index('Space category') if 'Space category' in headers else -1
         requested_category_idx = headers.index('Requested category') if 'Requested category' in headers else -1
         
+        # New optional indices
+        first_name_idx = get_col_idx_case_insensitive(headers, ['First name', 'FirstName', 'First_Name'])
+        last_name_idx = get_col_idx_case_insensitive(headers, ['Last name', 'LastName', 'Last_Name'])
+        arrival_idx = get_col_idx_case_insensitive(headers, ['Arrival', 'Arrival UTC', 'ArrivalUtc', 'Start', 'StartUtc', 'Check-in', 'Checkin'])
+        departure_idx = get_col_idx_case_insensitive(headers, ['Departure', 'Departure UTC', 'DepartureUtc', 'End', 'EndUtc', 'Check-out', 'Checkout'])
+
         imported_count = 0
         
         for row in rows:
@@ -726,6 +761,24 @@ def webhook_mews_report(payload: dict):
             # Guest Email
             guest_email = row[email_idx] if (email_idx != -1 and len(row) > email_idx) else None
             
+            # Guest Name
+            guest_name = None
+            first_name = row[first_name_idx] if (first_name_idx != -1 and len(row) > first_name_idx) else None
+            last_name = row[last_name_idx] if (last_name_idx != -1 and len(row) > last_name_idx) else None
+            if first_name or last_name:
+                guest_name = f"{first_name or ''} {last_name or ''}".strip()
+                
+            # Stay Dates
+            check_in_date = None
+            check_out_date = None
+            raw_arrival = row[arrival_idx] if (arrival_idx != -1 and len(row) > arrival_idx) else None
+            raw_departure = row[departure_idx] if (departure_idx != -1 and len(row) > departure_idx) else None
+            
+            if raw_arrival:
+                check_in_date = raw_arrival.split('T')[0] if 'T' in raw_arrival else raw_arrival
+            if raw_departure:
+                check_out_date = raw_departure.split('T')[0] if 'T' in raw_departure else raw_departure
+
             # Calculate OTA fee
             ota_fee = 0.0
             if channel:
@@ -742,7 +795,10 @@ def webhook_mews_report(payload: dict):
                 nights=nights,
                 gross_revenue=gross_revenue,
                 ota_fee_percent=ota_fee,
-                guest_email=guest_email
+                guest_email=guest_email,
+                guest_name=guest_name,
+                check_in_date=check_in_date,
+                check_out_date=check_out_date
             )
             imported_count += 1
             
@@ -785,11 +841,20 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
     # Standard field mapping
     id_idx = find_col_idx(["id", "reservation number", "confirmation number", "number", "reservation id"])
     channel_idx = find_col_idx(["channel", "source", "reservation source", "origin", "type"])
-    date_idx = find_col_idx(["date", "booking date", "booking_date", "created", "start", "start date", "arrival"])
+    date_idx = find_col_idx(["date", "booking date", "booking_date", "created"])
+    if date_idx is None:
+        date_idx = find_col_idx(["start", "start date", "arrival", "arrival date"])
     nights_idx = find_col_idx(["nights", "duration", "nights count"])
     gross_idx = find_col_idx(["gross revenue", "gross_revenue", "revenue", "gross value", "price", "amount"])
     fee_idx = find_col_idx(["ota fee %", "ota fee percent", "fee %", "ota fee"])
     email_idx = find_col_idx(["guest email", "guest_email", "email", "reservation owner email"])
+    
+    # New fields mapping
+    first_name_idx = find_col_idx(["first name", "first_name", "firstname", "guest first name"])
+    last_name_idx = find_col_idx(["last name", "last_name", "lastname", "guest last name"])
+    name_idx = find_col_idx(["guest name", "guest_name", "name", "customer", "customer name", "reservation owner"])
+    arrival_idx = find_col_idx(["arrival", "arrival date", "check-in", "check in", "start", "start date", "checkin date", "arrival_date", "check_in_date"])
+    departure_idx = find_col_idx(["departure", "departure date", "check-out", "check out", "end", "end date", "checkout date", "departure_date", "check_out_date"])
     
     if None in (id_idx, channel_idx, date_idx, nights_idx, gross_idx):
         raise HTTPException(
@@ -851,6 +916,42 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
             if email_idx is not None and len(row) > email_idx:
                 guest_email = row[email_idx].strip()
                 
+            # Guest Name
+            guest_name = None
+            if name_idx is not None and len(row) > name_idx:
+                guest_name = row[name_idx].strip()
+            else:
+                first_name = row[first_name_idx].strip() if (first_name_idx is not None and len(row) > first_name_idx) else ""
+                last_name = row[last_name_idx].strip() if (last_name_idx is not None and len(row) > last_name_idx) else ""
+                if first_name or last_name:
+                    guest_name = f"{first_name} {last_name}".strip()
+                    
+            # Stay Dates
+            check_in_date = None
+            check_out_date = None
+            
+            if arrival_idx is not None and len(row) > arrival_idx:
+                raw_arr = row[arrival_idx].strip()
+                # Parse date format
+                for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%y"):
+                    try:
+                        dt = datetime.strptime(raw_arr.split(" ")[0], fmt)
+                        check_in_date = dt.strftime("%Y-%m-%d")
+                        break
+                    except ValueError:
+                        continue
+            
+            if departure_idx is not None and len(row) > departure_idx:
+                raw_dep = row[departure_idx].strip()
+                # Parse date format
+                for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%y"):
+                    try:
+                        dt = datetime.strptime(raw_dep.split(" ")[0], fmt)
+                        check_out_date = dt.strftime("%Y-%m-%d")
+                        break
+                    except ValueError:
+                        continue
+                        
             save_booking(
                 booking_id=booking_id,
                 channel=channel,
@@ -858,7 +959,10 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
                 nights=nights,
                 gross_revenue=gross_revenue,
                 ota_fee_percent=ota_fee,
-                guest_email=guest_email
+                guest_email=guest_email,
+                guest_name=guest_name,
+                check_in_date=check_in_date,
+                check_out_date=check_out_date
             )
             count += 1
         except Exception as err:

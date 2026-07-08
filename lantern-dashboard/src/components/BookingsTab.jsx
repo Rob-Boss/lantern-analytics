@@ -24,12 +24,14 @@ export default function BookingsTab({ bookingsData, loading }) {
   // Filter bookings by search and channel
   const filteredBookings = bookings.filter((b) => {
     const guestEmail = b.guest_email || "";
+    const guestName = b.guest_name || "";
     const bookingId = b.id || "";
     const normChannel = b.normalized_channel || "Other";
 
     const matchesSearch = 
       bookingId.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      guestEmail.toLowerCase().includes(searchQuery.toLowerCase());
+      guestEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      guestName.toLowerCase().includes(searchQuery.toLowerCase());
       
     const matchesChannel = 
       channelFilter === "all" || 
@@ -103,7 +105,7 @@ export default function BookingsTab({ bookingsData, loading }) {
           <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
             <input 
               type="text" 
-              placeholder="Search guest email or reservation ID..." 
+              placeholder="Search guest name, email, or reservation ID..." 
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); }}
               style={{
@@ -148,9 +150,10 @@ export default function BookingsTab({ bookingsData, loading }) {
               <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
                 <thead>
                   <tr style={{ borderBottom: "2px solid #e2e8e4", color: "#606862", fontWeight: "600" }}>
-                    <th style={{ padding: "12px 8px" }}>Date</th>
+                    <th style={{ padding: "12px 8px" }}>Booking Date</th>
+                    <th style={{ padding: "12px 8px" }}>Stay Dates</th>
                     <th style={{ padding: "12px 8px" }}>Reservation ID</th>
-                    <th style={{ padding: "12px 8px" }}>Guest Contact</th>
+                    <th style={{ padding: "12px 8px" }}>Guest</th>
                     <th style={{ padding: "12px 8px", textAlign: "center" }}>Nights</th>
                     <th style={{ padding: "12px 8px" }}>Channel Source</th>
                     <th style={{ padding: "12px 8px", textAlign: "right" }}>Gross</th>
@@ -173,11 +176,19 @@ export default function BookingsTab({ bookingsData, loading }) {
                         <td style={{ padding: "10px 8px", whiteSpace: "nowrap", fontWeight: "500", color: "#2d312e" }}>
                           {formatDate(b.booking_date)}
                         </td>
+                        <td style={{ padding: "10px 8px", whiteSpace: "nowrap", color: "#2d312e" }}>
+                          {b.check_in_date && b.check_out_date ? (
+                            <span style={{ fontWeight: "500" }}>{formatDate(b.check_in_date)} – {formatDate(b.check_out_date)}</span>
+                          ) : b.check_in_date ? (
+                            <span>{formatDate(b.check_in_date)} (check-in)</span>
+                          ) : "-"}
+                        </td>
                         <td style={{ padding: "10px 8px", fontFamily: "monospace", color: "#606862", fontSize: "12px" }}>
                           {b.id}
                         </td>
                         <td style={{ padding: "10px 8px", color: "#2d312e" }}>
-                          {b.guest_email || "-"}
+                          <div style={{ fontWeight: "600" }}>{b.guest_name || "-"}</div>
+                          <div style={{ fontSize: "11px", color: "#606862" }}>{b.guest_email || "-"}</div>
                         </td>
                         <td style={{ padding: "10px 8px", textAlign: "center", fontWeight: "500" }}>
                           {b.nights}

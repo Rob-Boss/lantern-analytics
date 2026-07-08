@@ -62,11 +62,19 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
     # Map column headers dynamically
     id_idx = find_col_idx(["id", "confirmation number", "reservation number", "number", "reservation id"])
     channel_idx = find_col_idx(["channel", "source", "reservation source", "origin", "type"])
-    date_idx = find_col_idx(["date", "booking date", "booking_date", "created", "start", "start date", "arrival"])
+    date_idx = find_col_idx(["date", "booking date", "booking_date", "created"])
+    if date_idx is None:
+        date_idx = find_col_idx(["start", "start date", "arrival", "arrival date"])
     nights_idx = find_col_idx(["nights", "duration", "nights count"])
     gross_idx = find_col_idx(["gross revenue", "gross_revenue", "revenue", "gross value", "price", "amount"])
     fee_idx = find_col_idx(["ota fee %", "ota fee percent", "fee %", "ota fee"])
     email_idx = find_col_idx(["guest email", "guest_email", "email", "reservation owner email"])
+    
+    first_name_idx = find_col_idx(["first name", "first_name", "firstname", "guest first name"])
+    last_name_idx = find_col_idx(["last name", "last_name", "lastname", "guest last name"])
+    name_idx = find_col_idx(["guest name", "guest_name", "name", "customer", "customer name", "reservation owner"])
+    arrival_idx = find_col_idx(["arrival", "arrival date", "check-in", "check in", "start", "start date", "checkin date", "arrival_date", "check_in_date"])
+    departure_idx = find_col_idx(["departure", "departure date", "check-out", "check out", "end", "end date", "checkout date", "departure_date", "check_out_date"])
     
     if None in (id_idx, channel_idx, date_idx, nights_idx, gross_idx):
         raise ValueError(
@@ -129,6 +137,42 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
             if email_idx is not None and len(row) > email_idx:
                 guest_email = row[email_idx].strip()
                 
+            # Guest Name
+            guest_name = None
+            if name_idx is not None and len(row) > name_idx:
+                guest_name = row[name_idx].strip()
+            else:
+                first_name = row[first_name_idx].strip() if (first_name_idx is not None and len(row) > first_name_idx) else ""
+                last_name = row[last_name_idx].strip() if (last_name_idx is not None and len(row) > last_name_idx) else ""
+                if first_name or last_name:
+                    guest_name = f"{first_name} {last_name}".strip()
+                    
+            # Stay Dates
+            check_in_date = None
+            check_out_date = None
+            
+            if arrival_idx is not None and len(row) > arrival_idx:
+                raw_arr = row[arrival_idx].strip()
+                # Parse date format
+                for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%y"):
+                    try:
+                        dt = datetime.strptime(raw_arr.split(" ")[0], fmt)
+                        check_in_date = dt.strftime("%Y-%m-%d")
+                        break
+                    except ValueError:
+                        continue
+            
+            if departure_idx is not None and len(row) > departure_idx:
+                raw_dep = row[departure_idx].strip()
+                # Parse date format
+                for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%y"):
+                    try:
+                        dt = datetime.strptime(raw_dep.split(" ")[0], fmt)
+                        check_out_date = dt.strftime("%Y-%m-%d")
+                        break
+                    except ValueError:
+                        continue
+                        
             save_booking(
                 booking_id=booking_id,
                 channel=channel,
@@ -136,7 +180,10 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
                 nights=nights,
                 gross_revenue=gross_revenue,
                 ota_fee_percent=ota_fee,
-                guest_email=guest_email
+                guest_email=guest_email,
+                guest_name=guest_name,
+                check_in_date=check_in_date,
+                check_out_date=check_out_date
             )
             count += 1
         except Exception as e:
