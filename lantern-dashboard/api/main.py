@@ -703,8 +703,23 @@ def webhook_mews_report(payload: dict):
         # New optional indices
         first_name_idx = get_col_idx_case_insensitive(headers, ['First name', 'FirstName', 'First_Name'])
         last_name_idx = get_col_idx_case_insensitive(headers, ['Last name', 'LastName', 'Last_Name'])
-        arrival_idx = get_col_idx_case_insensitive(headers, ['Arrival', 'Arrival UTC', 'ArrivalUtc', 'Start', 'StartUtc', 'Check-in', 'Checkin'])
-        departure_idx = get_col_idx_case_insensitive(headers, ['Departure', 'Departure UTC', 'DepartureUtc', 'End', 'EndUtc', 'Check-out', 'Checkout'])
+        customer_idx = get_col_idx_case_insensitive(headers, ['Customer', 'Guest', 'Name', 'Customer Name', 'Guest Name'])
+        arrival_idx = get_col_idx_case_insensitive(headers, ['Arrival', 'Arrival UTC', 'ArrivalUtc', 'Start', 'StartUtc', 'Check-in', 'Checkin', 'Arrival (date)', 'Arrival_Date'])
+        departure_idx = get_col_idx_case_insensitive(headers, ['Departure', 'Departure UTC', 'DepartureUtc', 'End', 'EndUtc', 'Check-out', 'Checkout', 'Departure (date)', 'Departure_Date'])
+
+        def clean_and_format_date(raw_date):
+            if not raw_date:
+                return None
+            raw_date = raw_date.strip()
+            if 'T' in raw_date:
+                return raw_date.split('T')[0]
+            for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%y"):
+                try:
+                    dt = datetime.strptime(raw_date.split(" ")[0], fmt)
+                    return dt.strftime("%Y-%m-%d")
+                except ValueError:
+                    continue
+            return raw_date
 
         imported_count = 0
         
@@ -763,21 +778,19 @@ def webhook_mews_report(payload: dict):
             
             # Guest Name
             guest_name = None
-            first_name = row[first_name_idx] if (first_name_idx != -1 and len(row) > first_name_idx) else None
-            last_name = row[last_name_idx] if (last_name_idx != -1 and len(row) > last_name_idx) else None
-            if first_name or last_name:
-                guest_name = f"{first_name or ''} {last_name or ''}".strip()
+            if customer_idx != -1 and len(row) > customer_idx:
+                guest_name = row[customer_idx].strip() if row[customer_idx] else None
+            else:
+                first_name = row[first_name_idx] if (first_name_idx != -1 and len(row) > first_name_idx) else None
+                last_name = row[last_name_idx] if (last_name_idx != -1 and len(row) > last_name_idx) else None
+                if first_name or last_name:
+                    guest_name = f"{first_name or ''} {last_name or ''}".strip()
                 
             # Stay Dates
-            check_in_date = None
-            check_out_date = None
             raw_arrival = row[arrival_idx] if (arrival_idx != -1 and len(row) > arrival_idx) else None
             raw_departure = row[departure_idx] if (departure_idx != -1 and len(row) > departure_idx) else None
-            
-            if raw_arrival:
-                check_in_date = raw_arrival.split('T')[0] if 'T' in raw_arrival else raw_arrival
-            if raw_departure:
-                check_out_date = raw_departure.split('T')[0] if 'T' in raw_departure else raw_departure
+            check_in_date = clean_and_format_date(raw_arrival)
+            check_out_date = clean_and_format_date(raw_departure)
 
             # Calculate OTA fee
             ota_fee = 0.0
