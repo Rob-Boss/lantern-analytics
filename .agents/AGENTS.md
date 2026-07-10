@@ -8,7 +8,7 @@ If the user asks to **"refresh lantern dashboard"**, **"update data"**, **"sync 
 2.  Immediately invoke the `run_command` tool from the workspace root directory:
     *   **Cwd:** `/Users/swardy/Documents/Antigravity Projects/Lantern Advertising`
     *   **Command:** `.venv/bin/python lantern-dashboard/api/local_sync.py`
-3.  Explain that you are running the master sync script in the background to update the GA4, Google Ads, Meta Ads, and Google Sheets bookings database.
+3.  Explain that you are running the master sync script in the background to update the GA4, Google Ads, and Meta Ads databases (note: bookings are updated directly from Mews reports/CSV imports, and Google Sheets is no longer used in the sync process).
 4.  Once the background task completes, inform the user to refresh their live dashboard at `https://lantern-analytics.vercel.app`.
 
 ## 2. Technical Stack Reference

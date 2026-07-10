@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.lantern.analytics.sync</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/swardy/Documents/Antigravity Projects/Lantern Advertising/.venv/bin/python</string>
+        <string>/Users/swardy/Documents/Antigravity Projects/Lantern Advertising/lantern-dashboard/api/local_sync.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/swardy/Documents/Antigravity Projects/Lantern Advertising</string>
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>StandardOutPath</key>
+    <string>/Users/swardy/Library/Logs/lantern-sync.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/swardy/Library/Logs/lantern-sync.log</string>
+</dict>
+</plist>
