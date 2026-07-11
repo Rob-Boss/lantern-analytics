@@ -11,8 +11,11 @@
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/swardy/Documents/Antigravity Projects/Lantern Advertising</string>
-    <key>StartInterval</key>
-    <integer>3600</integer>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
     <key>StandardOutPath</key>
     <string>/Users/swardy/Library/Logs/lantern-sync.log</string>
     <key>StandardErrorPath</key>
