@@ -313,10 +313,6 @@ export default function App() {
                 />
               </div>
             )}
-            
-            <button className="btn btn-secondary" onClick={fetchData}>
-              🔄 Refresh
-            </button>
           </div>
         </header>
 
