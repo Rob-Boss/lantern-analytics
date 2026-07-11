@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function OverviewTab({ kpis, trendChart, channelSummary = [], loading }) {
+export default function OverviewTab({ kpis, trendChart, channelSummary = [], loading, isMobile }) {
   const [hoveredData, setHoveredData] = useState(null);
 
   if (loading) {
@@ -345,11 +345,13 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
           <div className="kpi-subtext">Total reservations loaded</div>
         </div>
 
-        <div className="kpi-card">
-          <div className="kpi-label">Subscribers</div>
-          <div className="kpi-value">{formatNumber(newsletterSubs)}</div>
-          <div className="kpi-subtext">Squarespace newsletter list</div>
-        </div>
+        {!isMobile && (
+          <div className="kpi-card">
+            <div className="kpi-label">Subscribers</div>
+            <div className="kpi-value">{formatNumber(newsletterSubs)}</div>
+            <div className="kpi-subtext">Squarespace newsletter list</div>
+          </div>
+        )}
 
         <div className="kpi-card">
           <div className="kpi-label">Total Ad Spend</div>
@@ -363,35 +365,39 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
           <div className="kpi-subtext">Mews Revenue ÷ Ad Spend</div>
         </div>
 
-        <div className="kpi-card">
-          <div className="kpi-label">Cost per Landing Page View</div>
-          <div className="kpi-value">{costPerView > 0 ? `$${costPerView.toFixed(2)}` : "$0.00"}</div>
-          <div className="kpi-subtext">7-day moving average (Google + Meta)</div>
-        </div>
+        {!isMobile && (
+          <>
+            <div className="kpi-card">
+              <div className="kpi-label">Cost per Landing Page View</div>
+              <div className="kpi-value">{costPerView > 0 ? `$${costPerView.toFixed(2)}` : "$0.00"}</div>
+              <div className="kpi-subtext">7-day moving average (Google + Meta)</div>
+            </div>
 
-        <div className="kpi-card">
-          <div className="kpi-label">Total Ad Impressions</div>
-          <div className="kpi-value">{formatNumber(totalImpressions)}</div>
-          <div className="kpi-subtext">Google & Meta combined</div>
-        </div>
+            <div className="kpi-card">
+              <div className="kpi-label">Total Ad Impressions</div>
+              <div className="kpi-value">{formatNumber(totalImpressions)}</div>
+              <div className="kpi-subtext">Google & Meta combined</div>
+            </div>
 
-        <div className="kpi-card">
-          <div className="kpi-label">Web Sessions</div>
-          <div className="kpi-value">{formatNumber(webSessions)}</div>
-          <div className="kpi-subtext">Total visits from GA4</div>
-        </div>
+            <div className="kpi-card">
+              <div className="kpi-label">Web Sessions</div>
+              <div className="kpi-value">{formatNumber(webSessions)}</div>
+              <div className="kpi-subtext">Total visits from GA4</div>
+            </div>
 
-        <div className="kpi-card">
-          <div className="kpi-label">Daily Sessions</div>
-          <div className="kpi-value">{dailySessionsAvg.toFixed(1)}</div>
-          <div className="kpi-subtext">7-day moving average (GA4)</div>
-        </div>
+            <div className="kpi-card">
+              <div className="kpi-label">Daily Sessions</div>
+              <div className="kpi-value">{dailySessionsAvg.toFixed(1)}</div>
+              <div className="kpi-subtext">7-day moving average (GA4)</div>
+            </div>
 
-        <div className="kpi-card">
-          <div className="kpi-label">Checkout Rate</div>
-          <div className="kpi-value">{checkoutRateAvg.toFixed(1)}%</div>
-          <div className="kpi-subtext">7-day moving average (GA4 → Mews)</div>
-        </div>
+            <div className="kpi-card">
+              <div className="kpi-label">Checkout Rate</div>
+              <div className="kpi-value">{checkoutRateAvg.toFixed(1)}%</div>
+              <div className="kpi-subtext">7-day moving average (GA4 → Mews)</div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Channel Revenue Share Breakdown */}

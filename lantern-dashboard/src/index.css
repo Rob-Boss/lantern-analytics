@@ -639,3 +639,303 @@ tr:hover td {
 .legend-dot.revenue {
   background-color: var(--forest-green);
 }
+
+/* ==========================================================================
+   Mobile Responsive Optimizations (<= 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Layout adjustments */
+  .dashboard-container.mobile-view {
+    flex-direction: column;
+    padding-top: 56px; /* Offset for fixed top header */
+  }
+
+  /* Fixed mobile header */
+  .mobile-top-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    z-index: 90;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hamburger-btn {
+    border: none;
+    background: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--forest-green);
+    margin-right: 12px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+  
+  .hamburger-btn:active {
+    background-color: var(--sage-light);
+  }
+
+  .mobile-header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--forest-green);
+  }
+
+  /* Mobile Drawer Sidebar */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Hidden offscreen by default */
+    width: 280px;
+    height: 100vh;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+    z-index: 100;
+  }
+
+  .sidebar.open {
+    left: 0;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    border: none;
+    background: none;
+    font-size: 22px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .sidebar-close-btn:active {
+    background-color: var(--sage-light);
+  }
+
+  /* Sidebar backdrop blur */
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(45, 74, 62, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 95;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Main content container reset */
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .page-title h1 {
+    font-size: 20px;
+  }
+
+  .page-title p {
+    font-size: 12px;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+  
+  .header-actions .btn {
+    width: 100%;
+  }
+
+  /* Grids adjustments */
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr !important; /* Nice 2x2 grid on mobile */
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .kpi-card {
+    padding: 14px;
+    border-radius: var(--radius-md);
+  }
+
+  .kpi-value {
+    font-size: 20px;
+  }
+
+  .panel-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Table styling fallback */
+  .table-container {
+    margin-top: 4px;
+  }
+
+  td, th {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  /* Geographic lists under Traffic tab */
+  .traffic-geo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Mobile Bookings Cards */
+  .booking-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .booking-mobile-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+  }
+
+  .booking-mobile-card.expanded {
+    border-color: var(--sage-green);
+    box-shadow: var(--shadow-md);
+  }
+
+  .booking-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .booking-card-main-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .booking-card-guest {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  .booking-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .booking-card-revenue-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .booking-card-net {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--forest-green);
+  }
+
+  .booking-card-chevron {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    transition: transform 0.2s ease;
+  }
+
+  .booking-mobile-card.expanded .booking-card-chevron {
+    transform: rotate(180deg);
+  }
+
+  .booking-card-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border-color);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-primary);
+    animation: slideDown 0.2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .booking-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .booking-detail-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .booking-detail-value {
+    font-weight: 500;
+  }
+
+  /* Form / Settings Page */
+  .settings-form {
+    max-width: 100%;
+  }
+
+  .upload-zone {
+    padding: 24px 16px;
+  }
+}
+

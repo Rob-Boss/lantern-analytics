@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function TrafficTab({ trafficData, loading }) {
+export default function TrafficTab({ trafficData, loading, isMobile }) {
   const [activeMetric, setActiveMetric] = useState("active_users"); // active_users, checkouts
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
@@ -555,7 +555,7 @@ export default function TrafficTab({ trafficData, loading }) {
         {/* Top States List */}
         <div className="panel" style={{ display: "flex", flexDirection: "column", minHeight: "280px" }}>
           <div className="panel-header" style={{ marginBottom: "14px" }}>
-            <div className="panel-title">Top 10 States & Regions</div>
+            <div className="panel-title">{isMobile ? "Top 5 States & Regions" : "Top 10 States & Regions"}</div>
           </div>
 
           {geoRegions.length === 0 ? (
@@ -565,7 +565,7 @@ export default function TrafficTab({ trafficData, loading }) {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {geoRegions.slice(0, 10).map((row, idx) => {
+              {geoRegions.slice(0, isMobile ? 5 : 10).map((row, idx) => {
                 const pct = maxStateUsers > 0 ? (row.users / maxStateUsers) * 100 : 0;
                 return (
                   <div key={`region-${idx}`} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -586,7 +586,7 @@ export default function TrafficTab({ trafficData, loading }) {
         {/* Top Cities List */}
         <div className="panel" style={{ display: "flex", flexDirection: "column", minHeight: "280px" }}>
           <div className="panel-header" style={{ marginBottom: "14px" }}>
-            <div className="panel-title">Top 10 Cities</div>
+            <div className="panel-title">{isMobile ? "Top 5 Cities" : "Top 10 Cities"}</div>
           </div>
 
           {filteredGeoCities.length === 0 ? (
@@ -596,7 +596,7 @@ export default function TrafficTab({ trafficData, loading }) {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {filteredGeoCities.slice(0, 10).map((row, idx) => {
+              {filteredGeoCities.slice(0, isMobile ? 5 : 10).map((row, idx) => {
                 const pct = maxCityUsers > 0 ? (row.users / maxCityUsers) * 100 : 0;
                 return (
                   <div key={`city-${idx}`} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>

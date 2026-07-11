@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 
-export default function BookingsTab({ bookingsData, loading }) {
+export default function BookingsTab({ bookingsData, loading, isMobile }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState("all");
+  const [expandedIds, setExpandedIds] = useState({});
+
+  const toggleExpand = (id) => {
+    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   if (loading) {
     return <div style={{ padding: "80px", textAlign: "center", color: "#606862" }}>Loading Bookings ledger...</div>;
@@ -142,6 +147,79 @@ export default function BookingsTab({ bookingsData, loading }) {
         {filteredBookings.length === 0 ? (
           <div style={{ padding: "60px", textAlign: "center", color: "#606862" }}>
             No booking records match the selected filters.
+          </div>
+        ) : isMobile ? (
+          <div className="booking-mobile-list">
+            {filteredBookings.map((b) => {
+              const isExpanded = !!expandedIds[b.id];
+              return (
+                <div 
+                  key={b.id} 
+                  className={`booking-mobile-card ${isExpanded ? "expanded" : ""}`}
+                >
+                  <div className="booking-card-header" onClick={() => toggleExpand(b.id)}>
+                    <div className="booking-card-main-info">
+                      <div className="booking-card-guest">{b.guest_name || "Guest"}</div>
+                      <div className="booking-card-meta">
+                        <span className={getChannelBadgeClass(b.normalized_channel)}>
+                          {b.normalized_channel}
+                        </span>
+                        <span>• {b.nights} nights</span>
+                      </div>
+                    </div>
+                    <div className="booking-card-revenue-section">
+                      <div className="booking-card-net">{formatCurrency(b.net_revenue)}</div>
+                      <div style={{ fontSize: "10px", color: "#606862", marginTop: "2px" }}>Net Revenue</div>
+                    </div>
+                    <div className="booking-card-chevron">
+                      {isExpanded ? "▲" : "▼"}
+                    </div>
+                  </div>
+                  
+                  {isExpanded && (
+                    <div className="booking-card-details">
+                      <div className="booking-detail-item">
+                        <span className="booking-detail-label">Email</span>
+                        <span className="booking-detail-value">{b.guest_email || "-"}</span>
+                      </div>
+                      <div className="booking-detail-item">
+                        <span className="booking-detail-label">Stay Dates</span>
+                        <span className="booking-detail-value">
+                          {b.check_in_date && b.check_out_date ? (
+                            `${formatDate(b.check_in_date)} – ${formatDate(b.check_out_date)}`
+                          ) : b.check_in_date ? (
+                            `${formatDate(b.check_in_date)}`
+                          ) : "-"}
+                        </span>
+                      </div>
+                      <div className="booking-detail-item">
+                        <span className="booking-detail-label">Gross Revenue</span>
+                        <span className="booking-detail-value">{formatCurrency(b.gross_revenue)}</span>
+                      </div>
+                      <div className="booking-detail-item">
+                        <span className="booking-detail-label">OTA Fee %</span>
+                        <span className="booking-detail-value">
+                          {b.ota_fee_percent > 0 ? `${b.ota_fee_percent.toFixed(1)}%` : "0.0%"}
+                        </span>
+                      </div>
+                      <div className="booking-detail-item" style={{ gridColumn: "span 2" }}>
+                        <span className="booking-detail-label">Reservation ID</span>
+                        <span className="booking-detail-value" style={{ fontFamily: "monospace", fontSize: "11px" }}>{b.id}</span>
+                      </div>
+                      <div className="booking-detail-item" style={{ gridColumn: "span 2" }}>
+                        <span className="booking-detail-label">Created Date</span>
+                        <span className="booking-detail-value">{formatDate(b.booking_date)}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            
+            {/* Ledger Match Indicator */}
+            <div style={{ marginTop: "20px", borderTop: "1px solid #e2e8e4", paddingTop: "16px", fontSize: "12px", color: "#606862" }}>
+              Showing <strong>{filteredBookings.length}</strong> bookings matching active filters.
+            </div>
           </div>
         ) : (
           <div>

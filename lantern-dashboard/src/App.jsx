@@ -12,6 +12,18 @@ const API_BASE = import.meta.env.DEV
 
 export default function App() {
   console.log("Lantern Analytics Dashboard Initialized V1.0.1");
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const [activeTab, setActiveTab] = useState(() => {
     const hash = window.location.hash.replace("#", "");
     const validTabs = ["overview", "ads", "traffic", "bookings", "settings"];
@@ -180,13 +192,13 @@ export default function App() {
   const renderActiveTab = () => {
     switch (activeTab) {
       case "overview":
-        return <OverviewTab kpis={overview.kpis} trendChart={overview.trend_chart} channelSummary={overview.channel_summary || []} loading={loading} />;
+        return <OverviewTab kpis={overview.kpis} trendChart={overview.trend_chart} channelSummary={overview.channel_summary || []} loading={loading} isMobile={isMobile} />;
       case "ads":
-        return <AdsTab adsData={ads} loading={loading} />;
+        return <AdsTab adsData={ads} loading={loading} isMobile={isMobile} />;
       case "traffic":
-        return <TrafficTab trafficData={traffic} loading={loading} />;
+        return <TrafficTab trafficData={traffic} loading={loading} isMobile={isMobile} />;
       case "bookings":
-        return <BookingsTab bookingsData={bookings} loading={loading} />;
+        return <BookingsTab bookingsData={bookings} loading={loading} isMobile={isMobile} />;
       case "settings":
         return (
           <SettingsTab 
@@ -197,6 +209,7 @@ export default function App() {
             onClearBookings={handleClearBookings}
             lastSynced={overview.last_synced || settings.last_synced_at}
             onSyncSheets={handleSyncSheets}
+            isMobile={isMobile}
           />
         );
       default:
@@ -207,9 +220,24 @@ export default function App() {
   const showDateFilter = false;
 
   return (
-    <div className="dashboard-container">
+    <div className={`dashboard-container ${isMobile ? "mobile-view" : ""}`}>
+      {/* Mobile Top Header */}
+      {isMobile && (
+        <header className="mobile-top-header">
+          <button className="hamburger-btn" onClick={() => setSidebarOpen(true)}>
+            ☰
+          </button>
+          <div className="mobile-header-title">⛺ Lantern Analytics</div>
+        </header>
+      )}
+
       {/* Sidebar navigation */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isMobile && sidebarOpen ? "open" : ""}`}>
+        {isMobile && (
+          <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
+            ✕
+          </button>
+        )}
         <div className="sidebar-logo">
           <div className="logo-icon">⛺</div>
           <div className="logo-text">Lantern Camp</div>
@@ -218,31 +246,31 @@ export default function App() {
         <nav className="sidebar-menu">
           <button 
             className={`menu-item ${activeTab === "overview" ? "active" : ""}`}
-            onClick={() => setActiveTab("overview")}
+            onClick={() => { setActiveTab("overview"); if (isMobile) setSidebarOpen(false); }}
           >
             📊 Overview
           </button>
           <button 
             className={`menu-item ${activeTab === "ads" ? "active" : ""}`}
-            onClick={() => setActiveTab("ads")}
+            onClick={() => { setActiveTab("ads"); if (isMobile) setSidebarOpen(false); }}
           >
             📱 Ads Performance
           </button>
           <button 
             className={`menu-item ${activeTab === "traffic" ? "active" : ""}`}
-            onClick={() => setActiveTab("traffic")}
+            onClick={() => { setActiveTab("traffic"); if (isMobile) setSidebarOpen(false); }}
           >
             📈 Traffic & Funnel
           </button>
           <button 
             className={`menu-item ${activeTab === "bookings" ? "active" : ""}`}
-            onClick={() => setActiveTab("bookings")}
+            onClick={() => { setActiveTab("bookings"); if (isMobile) setSidebarOpen(false); }}
           >
             🛏 Bookings Ledger
           </button>
           <button 
             className={`menu-item ${activeTab === "settings" ? "active" : ""}`}
-            onClick={() => setActiveTab("settings")}
+            onClick={() => { setActiveTab("settings"); if (isMobile) setSidebarOpen(false); }}
           >
             ⚙️ Data Operations
           </button>
@@ -254,14 +282,19 @@ export default function App() {
         </div>
       </aside>
 
+      {/* Sidebar mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Main Workspace */}
       <main className="main-content">
         <header className="page-header">
           <div className="page-title">
             <h1 style={{ textTransform: "capitalize" }}>
-              {activeTab === 'overview' ? 'Lantern Camp Launch Marketing Dashboard' : `Lantern Camp ${activeTab}`}
+              {activeTab === 'overview' ? (isMobile ? 'Dashboard Overview' : 'Lantern Camp Launch Marketing Dashboard') : `Lantern Camp ${activeTab}`}
             </h1>
-            <p>Unified advertising performance, reservation data, and web traffic insights to date</p>
+            <p>{isMobile ? 'Unified performance, reservations, and traffic' : 'Unified advertising performance, reservation data, and web traffic insights to date'}</p>
           </div>
 
           <div className="header-actions">
