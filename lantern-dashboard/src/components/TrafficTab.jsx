@@ -214,6 +214,7 @@ export default function TrafficTab({ trafficData, loading, isMobile }) {
           onMouseEnter={() => setHoveredIdx(idx)}
           onMouseMove={() => setHoveredIdx(idx)}
           onMouseLeave={() => setHoveredIdx(null)}
+          onTouchStart={() => setHoveredIdx(idx)}
         />
       );
     });
@@ -452,6 +453,7 @@ export default function TrafficTab({ trafficData, loading, isMobile }) {
                 <div 
                   onMouseEnter={() => setHoveredIdx(idxJune27)}
                   onMouseLeave={() => setHoveredIdx(null)}
+                  onTouchStart={() => setHoveredIdx(idxJune27)}
                   style={{ 
                     fontSize: "11px", 
                     color: "#5b7d90", 
@@ -468,13 +470,14 @@ export default function TrafficTab({ trafficData, loading, isMobile }) {
                   }}
                 >
                   <span style={{ fontSize: "12px" }}>ℹ️</span>
-                  <span><strong>June 27, 2026:</strong> Meta Ads reached its monthly budget cap, causing ads to temporarily pause and site traffic to briefly drop. (Hover to highlight date on chart)</span>
+                  <span><strong>June 27, 2026:</strong> Meta Ads reached its monthly budget cap, causing ads to temporarily pause and site traffic to briefly drop. (Tap/Hover to highlight date on chart)</span>
                 </div>
               )}
               {idxJune29 !== -1 && (
                 <div 
                   onMouseEnter={() => setHoveredIdx(idxJune29)}
                   onMouseLeave={() => setHoveredIdx(null)}
+                  onTouchStart={() => setHoveredIdx(idxJune29)}
                   style={{ 
                     fontSize: "11px", 
                     color: "#c57e5a", 
@@ -491,7 +494,7 @@ export default function TrafficTab({ trafficData, loading, isMobile }) {
                   }}
                 >
                   <span style={{ fontSize: "12px" }}>⚠️</span>
-                  <span><strong>June 29, 2026:</strong> Google P-Max campaign activation triggered a temporary bot scrape spike of 1,500+ visits from Algeria before targeting filters were adjusted. (Hover to highlight date on chart)</span>
+                  <span><strong>June 29, 2026:</strong> Google P-Max campaign activation triggered a temporary bot scrape spike of 1,500+ visits from Algeria before targeting filters were adjusted. (Tap/Hover to highlight date on chart)</span>
                 </div>
               )}
             </>
@@ -501,6 +504,7 @@ export default function TrafficTab({ trafficData, loading, isMobile }) {
             <div 
               onMouseEnter={() => setHoveredIdx(idxJuly2)}
               onMouseLeave={() => setHoveredIdx(null)}
+              onTouchStart={() => setHoveredIdx(idxJuly2)}
               style={{ 
                 fontSize: "11px", 
                 color: "#c57e5a", 
@@ -517,7 +521,7 @@ export default function TrafficTab({ trafficData, loading, isMobile }) {
               }}
             >
               <span style={{ fontSize: "12px" }}>ℹ️</span>
-              <span><strong>July 2, 2026:</strong> Checkout tracking went live. Dates before this show 0 checkouts as tracking was not yet active. (Hover to highlight launch date on chart)</span>
+              <span><strong>July 2, 2026:</strong> Checkout tracking went live. Dates before this show 0 checkouts as tracking was not yet active. (Tap/Hover to highlight launch date on chart)</span>
             </div>
           )}
         </div>

@@ -277,6 +277,7 @@ export default function AdsTab({ adsData, loading, isMobile }) {
           onMouseEnter={() => setHoveredIdx(idx)}
           onMouseMove={() => setHoveredIdx(idx)}
           onMouseLeave={() => setHoveredIdx(null)}
+          onTouchStart={() => setHoveredIdx(idx)}
         />
       );
     });

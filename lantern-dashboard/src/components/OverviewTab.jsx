@@ -249,6 +249,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
                 key={`interactive-${index}`}
                 onMouseEnter={() => setHoveredData({ ...d, x, yRev, ySpend })}
                 onMouseLeave={() => setHoveredData(null)}
+                onTouchStart={() => setHoveredData({ ...d, x, yRev, ySpend })}
                 style={{ cursor: "pointer" }}
               >
                 {/* Invisible hover capture bar */}
