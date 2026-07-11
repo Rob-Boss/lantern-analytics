@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function AdsTab({ adsData, loading }) {
+export default function AdsTab({ adsData, loading, isMobile }) {
   const [activeTab, setActiveTab] = useState("cpc"); // cpc, daily_spend, total_clicks, channel_spend
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
@@ -646,12 +646,14 @@ export default function AdsTab({ adsData, loading }) {
               </div>
               
               <div className="kpi-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: 0 }}>
-                <div style={{ padding: "12px", border: "1px solid #e2e8e4", borderRadius: "8px" }}>
-                  <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>SPEND</div>
-                  <div style={{ fontSize: "20px", fontWeight: "700", color: isGoogle ? "#2d4a3e" : "#d67a47" }}>
-                    {formatCurrency(chan.spend)}
+                {!isMobile && (
+                  <div style={{ padding: "12px", border: "1px solid #e2e8e4", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>SPEND</div>
+                    <div style={{ fontSize: "20px", fontWeight: "700", color: isGoogle ? "#2d4a3e" : "#d67a47" }}>
+                      {formatCurrency(chan.spend)}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div style={{ padding: "12px", border: "1px solid #e2e8e4", borderRadius: "8px" }}>
                   <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>CLICKS</div>
@@ -667,15 +669,17 @@ export default function AdsTab({ adsData, loading }) {
                   </div>
                 </div>
 
-                <div style={{ padding: "12px", border: "1px solid #e2e8e4", borderRadius: "8px" }}>
-                  <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>CTR (7D MOVING AVG)</div>
-                  <div style={{ fontSize: "20px", fontWeight: "700", color: "#2d312e" }}>
-                    {ctr7d.toFixed(2)}%
+                {!isMobile && (
+                  <div style={{ padding: "12px", border: "1px solid #e2e8e4", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>CTR (7D MOVING AVG)</div>
+                    <div style={{ fontSize: "20px", fontWeight: "700", color: "#2d312e" }}>
+                      {ctr7d.toFixed(2)}%
+                    </div>
+                    <div style={{ fontSize: "10.5px", color: "#a2a8a4", marginTop: "4px" }}>
+                      Lifetime CTR: {chan.ctr.toFixed(2)}%
+                    </div>
                   </div>
-                  <div style={{ fontSize: "10.5px", color: "#a2a8a4", marginTop: "4px" }}>
-                    Lifetime CTR: {chan.ctr.toFixed(2)}%
-                  </div>
-                </div>
+                )}
 
                 <div style={{ padding: "12px", border: "1px solid #e2e8e4", borderRadius: "8px", gridColumn: "span 2" }}>
                   <div style={{ fontSize: "11px", color: "#606862", fontWeight: 500 }}>
