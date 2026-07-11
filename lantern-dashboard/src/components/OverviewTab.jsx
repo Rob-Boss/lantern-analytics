@@ -286,9 +286,9 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
           <div
             style={{
               position: "absolute",
-              top: `${hoveredData.yRev - 80}px`,
+              top: `${(hoveredData.yRev / height) * 100}%`,
               left: `${(hoveredData.x / width) * 100}%`,
-              transform: "translateX(-50%)",
+              transform: "translate(-50%, -105%)",
               backgroundColor: "#2d312e",
               color: "#fff",
               padding: "10px 14px",
