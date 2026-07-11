@@ -75,7 +75,7 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Ledger Operational Stats Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+      <div className="mobile-two-col" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
         <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8e4", borderRadius: "10px", padding: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
           <div style={{ fontSize: "11px", color: "#606862", fontWeight: "600", letterSpacing: "0.05em", marginBottom: "4px" }}>LEDGER BOOKINGS COUNT</div>
           <div style={{ fontSize: "24px", fontWeight: "700", color: "#2d312e" }}>{formatNumber(filteredBookings.length)}</div>

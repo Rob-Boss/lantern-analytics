@@ -529,7 +529,7 @@ export default function TrafficTab({ trafficData, loading, isMobile }) {
           <div className="panel-title">Funnel & Checkout Performance</div>
         </div>
         
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px", marginBottom: 0 }}>
+        <div className="mobile-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px", marginBottom: 0 }}>
           <div style={{ border: "1px solid #e2e8e4", padding: "12px", borderRadius: "8px", backgroundColor: "#fcfdfe" }}>
             <div style={{ fontSize: "10.5px", color: "#606862", fontWeight: 600, letterSpacing: "0.02em" }}>TOTAL SESSIONS</div>
             <div style={{ fontSize: "18px", fontWeight: "700", color: "#2d312e", marginTop: "2px" }}>{formatNumber(summary.sessions)}</div>

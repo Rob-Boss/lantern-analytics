@@ -442,7 +442,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
             </div>
 
             {/* Channel Cards Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
+            <div className="mobile-two-col" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
               {channelSummary.map((sum) => {
                 const totalNet = channelSummary.reduce((acc, curr) => acc + curr.net, 0);
                 const share = totalNet > 0 ? (sum.net / totalNet) * 100 : 0;

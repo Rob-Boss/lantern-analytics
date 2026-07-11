@@ -778,7 +778,8 @@ tr:hover td {
   }
 
   /* Grids adjustments */
-  .kpi-grid {
+  .kpi-grid,
+  .mobile-two-col {
     grid-template-columns: 1fr 1fr !important; /* Nice 2x2 grid on mobile */
     gap: 12px;
     margin-bottom: 20px;
