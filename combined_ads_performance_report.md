@@ -8,9 +8,12 @@
 
 On July 5, 2026, we adjusted campaign settings by capping Performance Max (PMax) display spend, increasing Search campaign daily budgets, and adding competitor negative keywords to filter out lower-intent traffic.
 
+> [!NOTE]
+> **Automated Hourly Sync Active:** Booking reservation data, GA4 traffic analytics, and ad campaign performance (Google & Meta Ads) are now configured to sync automatically every hour. The dashboard will continuously update in the background (with a maximum data lag of one hour), no longer requiring manual updates from Ben.
+
 **Key Metrics & Outcomes:**
 *   **Direct Booking Growth:** Direct bookings via the Mews Booking Engine increased by 150.9%, driving **$3,908.86** in net revenue, compared to $1,558.15 the previous week.
-*   **Checkout Initiations:** Initiated checkouts increased by 189.9% (803 vs. 277), indicating higher average intent among site visitors.
+*   **Checkout Initiations:** Recorded 803 initiated checkouts. This is our first full week of tracking checkout events, which will serve as a baseline for future comparisons (the prior week's data was only partially collected).
 *   **Channel Shift:** Total net revenue grew by 57.7% (from $3,583.75 to $5,652.28). The increase in Mews direct bookings offset a 13.9% decrease in Airbnb net revenue.
 
 ---
