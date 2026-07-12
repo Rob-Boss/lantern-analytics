@@ -23,3 +23,9 @@ If the user asks to **"refresh lantern dashboard"**, **"update data"**, **"sync 
 *   **No Looker Studio:** The project does **NOT** use Looker Studio. Do not suggest or mention it. All historical planning mentions are obsolete.
 *   **Application Name:** The dashboard is a custom web application called **Lantern Analytics** hosted at `https://lantern-analytics.vercel.app`.
 
+## 4. Lantern Living Documents Updates & Publishing
+*   **Report Mapping:** The file `combined_ads_performance_report.md` in the `Lantern Advertising` repository is the source file for the **Combined Ads Performance Report** (which is published on the web under the name "Marketing Update").
+*   **Target Location:** When you update `combined_ads_performance_report.md` in this repository, you **MUST** also copy its contents to `docs/marketing-summary-july-2026.md` in the `lantern-living-documents` sibling repository.
+*   **Git Sync:** After copying the updated report to `lantern-living-documents/docs/marketing-summary-july-2026.md`, stage, commit, and push the changes in `lantern-living-documents` to ensure the live Docsify website (hosted on Vercel at `https://lantern-living-documents.vercel.app`) reflects the updates.
+*   **General Publishing Script:** For general document updates, a publishing workflow exists in the sibling `task-manager` repository. Running `python manager.py publish` inside `/Users/swardy/Documents/Antigravity Projects/task-manager` automatically copies updated markdown documents from `task-manager/tasks/` to `lantern-living-documents/docs/` (or `mcd-living-documents/docs/`), commits, and pushes them.
+
