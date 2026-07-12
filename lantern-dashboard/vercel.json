@@ -25,11 +25,5 @@
       "src": "/((?!api($|/)).*)",
       "dest": "/index.html"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/sync",
-      "schedule": "0 * * * *"
-    }
   ]
 }

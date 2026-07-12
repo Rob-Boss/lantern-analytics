@@ -4,7 +4,7 @@ import io
 import logging
 import requests
 from typing import Optional
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -993,27 +993,6 @@ def trigger_sync(background_tasks: BackgroundTasks, days: int = 30):
         )
     background_tasks.add_task(sync_data, days=days)
     return {"status": "sync_started", "message": f"Sync task scheduled in background for the last {days} days."}
-
-@app.post("/api/cron/sync")
-def trigger_cron_sync(request: Request):
-    """Triggers hourly marketing API sync for Vercel Cron (3 days lookback)."""
-    # Verify authorization header matches CRON_SECRET environment variable
-    auth_header = request.headers.get("Authorization")
-    cron_secret = os.environ.get("CRON_SECRET")
-    
-    # Secure endpoint: only proceed if CRON_SECRET is configured and matches
-    if not cron_secret or auth_header != f"Bearer {cron_secret}":
-        raise HTTPException(status_code=401, detail="Unauthorized")
-        
-    if sync_data is None:
-        raise HTTPException(
-            status_code=500,
-            detail="Sync service is not available."
-        )
-        
-    # Execute synchronously so that Vercel serverless container does not suspend prematurely
-    sync_data(days=3)
-    return {"status": "success", "message": "Hourly sync completed for the last 3 days."}
 
 @app.post("/api/settings")
 def update_settings(payload: SettingsUpdate):
