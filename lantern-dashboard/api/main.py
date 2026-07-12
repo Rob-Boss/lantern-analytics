@@ -4,7 +4,7 @@ import io
 import logging
 import requests
 from typing import Optional
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -145,7 +145,7 @@ def fetch_booking_details_from_mews(booking_id: str) -> dict:
         res_payload["Numbers"] = [str(booking_id)]
         
     logger.info(f"Mews API: Fetching reservation {booking_id} from {MEWS_API_URL}")
-    res_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/reservations/getAll/2023-06-06", json=res_payload, headers=headers)
+    res_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/reservations/getAll/2023-06-06", json=res_payload, headers=headers, timeout=30)
     res_resp.raise_for_status()
     res_data = res_resp.json()
     
@@ -188,7 +188,7 @@ def fetch_booking_details_from_mews(booking_id: str) -> dict:
             "CustomerIds": [customer_id]
         }
         try:
-            cust_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/customers/getAll/2023-06-06", json=cust_payload, headers=headers)
+            cust_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/customers/getAll/2023-06-06", json=cust_payload, headers=headers, timeout=30)
             if cust_resp.status_code == 200:
                 cust_data = cust_resp.json()
                 customers = cust_data.get("Customers", [])
@@ -210,7 +210,7 @@ def fetch_booking_details_from_mews(booking_id: str) -> dict:
             "ReservationIds": [res_uuid]
         }
         try:
-            order_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/orderItems/getAll/2023-06-06", json=order_payload, headers=headers)
+            order_resp = requests.post(f"{MEWS_API_URL}/api/connector/v1/orderItems/getAll/2023-06-06", json=order_payload, headers=headers, timeout=30)
             if order_resp.status_code == 200:
                 order_data = order_resp.json()
                 # Sum the value of all order items that are not canceled
@@ -993,6 +993,27 @@ def trigger_sync(background_tasks: BackgroundTasks, days: int = 30):
         )
     background_tasks.add_task(sync_data, days=days)
     return {"status": "sync_started", "message": f"Sync task scheduled in background for the last {days} days."}
+
+@app.post("/api/cron/sync")
+def trigger_cron_sync(request: Request):
+    """Triggers hourly marketing API sync for Vercel Cron (3 days lookback)."""
+    # Verify authorization header matches CRON_SECRET environment variable
+    auth_header = request.headers.get("Authorization")
+    cron_secret = os.environ.get("CRON_SECRET")
+    
+    # Secure endpoint: only proceed if CRON_SECRET is configured and matches
+    if not cron_secret or auth_header != f"Bearer {cron_secret}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+        
+    if sync_data is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Sync service is not available."
+        )
+        
+    # Execute synchronously so that Vercel serverless container does not suspend prematurely
+    sync_data(days=3)
+    return {"status": "success", "message": "Hourly sync completed for the last 3 days."}
 
 @app.post("/api/settings")
 def update_settings(payload: SettingsUpdate):

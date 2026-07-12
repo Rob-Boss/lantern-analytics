@@ -284,9 +284,17 @@ def main():
         lines.append("")
         
     lines.append("## 💡 Key Strategic Observations")
-    lines.append("1. **Cost & Engagement Divergence:** Google Search Ads have an average CPC of **$1.18**, which is significantly higher than Meta's cost per Landing Page View of **$0.15**. However, Google Search Ads boast a **14.16% click-through rate** compared to Meta's **5.14%**, highlighting the high search intent of the Google audience.")
-    lines.append("2. **Meta Traffic Paused:** The Meta campaigns have spent a total of **$510.20** and are currently paused due to reaching the ad account budget limit. These campaigns need to be resumed with an increased limit to continue driving traffic.")
-    lines.append("3. **Google Intent Targeting:** The bottom of funnel and mid-funnel search campaigns on Google Ads are active, spending a modest **$55.29** so far with zero conversions. As bookings are key, we should monitor how this search traffic behaves once booking-tracking conversions flow in.")
+    lines.append(f"1. **Cost & Engagement Divergence:** Google Ads have an average CPC of **${g_cpc:.2f}**, compared to Meta's cost per Landing Page View of **${m_cpv:.2f}**. Google Search Ads boast a **{g_ctr:.2f}% click-through rate** compared to Meta's **{m_ctr:.2f}%**, highlighting the high search intent of the Google audience.")
+    
+    # Check status of Meta Drive Market campaign
+    drive_market_active = any(c['status'] == 'ACTIVE' for c in meta_campaigns if '[Drive Market]' in c['name'])
+    if drive_market_active:
+        lines.append(f"2. **Meta Traffic Active:** Meta campaigns are active, with a lifetime spend of **${m_spend:,.2f}**. The main [Drive Market] campaign is running and driving consistent, cost-effective traffic (~${m_cpv:.2f} per landing page view).")
+    else:
+        lines.append(f"2. **Meta Traffic Paused:** The Meta campaigns have spent a total of **${m_spend:,.2f}** and are currently paused due to reaching the ad account budget limit or being turned off.")
+        
+    google_conv = sum(c['conversions'] for c in google_campaigns)
+    lines.append(f"3. **Google Intent Targeting:** The Google Ads campaigns are active and have spent **${g_spend:,.2f}** over the last 30 days. Google Ads reports **{google_conv:.2f}** conversions directly. Note that GA4 has recorded a conversion of **$251.10** from `google / cpc` on July 9, which highlights the need to link GA4 and Google Ads to sync these conversions.")
     lines.append("")
     
     report_content = "\n".join(lines)

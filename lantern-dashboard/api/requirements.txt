@@ -5,3 +5,5 @@ requests
 aiofiles
 psycopg2-binary
 python-multipart
+google-analytics-data
+google-ads
