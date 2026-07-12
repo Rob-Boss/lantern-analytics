@@ -26,7 +26,7 @@ On July 5, 2026, we adjusted campaign settings by capping Performance Max (PMax)
 | **Total Gross Revenue** | $5,959.94 | $3,941.21 | **+51.2%** | |
 | **Total Net Revenue** | **$5,652.28** | **$3,583.75** | **+57.7%** | Growth driven by Mews direct bookings. |
 | **Mews Net Revenue** | $3,908.86 | $1,558.15 | **+150.9%** | |
-| **Airbnb Net Revenue** | $1,743.42 | $2,025.60 | **-13.9%** | One booking cancelled and rebooked directly on Mews.<br>Includes manually applied discounts: a couple of 10% discounts and 13% last-minute booking discounts. |
+| **Airbnb Net Revenue** | $1,743.42 | $2,025.60 | **-13.9%** | One booking cancelled and rebooked directly on Mews.<br>Includes manually applied discounts: a couple of 10% discounts and 13% last-minute booking discounts (which have since been disabled). |
 | **Total Pageviews** | 9,911 | 11,485 | **-13.7%** | Decrease directly associated with restructuring budget away from the Google PMax campaign and into high-intent search campaigns. |
 | **Initiated Checkouts** | **803** | **277** | **+189.9%** | Previous week was a partial week of data collection; this week represents our baseline. |
 
