@@ -53,6 +53,7 @@ export default function App() {
 
   // Fetch current tab data
   const fetchData = async () => {
+    if (window.location.pathname === "/airbnb-waiver-helper") return;
     setLoading(true);
     setAlert(null);
     try {
@@ -100,11 +101,14 @@ export default function App() {
 
   // Sync hash with active tab state
   useEffect(() => {
-    window.location.hash = activeTab;
+    if (window.location.pathname !== "/airbnb-waiver-helper") {
+      window.location.hash = activeTab;
+    }
   }, [activeTab]);
 
   // Listen to browser hash changes (for back/forward history support)
   useEffect(() => {
+    if (window.location.pathname === "/airbnb-waiver-helper") return;
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
       const validTabs = ["overview", "ads", "traffic", "bookings", "settings"];
