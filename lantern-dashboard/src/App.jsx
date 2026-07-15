@@ -4,6 +4,7 @@ import AdsTab from "./components/AdsTab";
 import TrafficTab from "./components/TrafficTab";
 import BookingsTab from "./components/BookingsTab";
 import SettingsTab from "./components/SettingsTab";
+import AirbnbWaiverHelper from "./components/AirbnbWaiverHelper";
 
 // Cache buster comment to force Vite bundle hash refresh
 const API_BASE = import.meta.env.DEV
@@ -218,6 +219,10 @@ export default function App() {
   };
 
   const showDateFilter = false;
+
+  if (window.location.pathname === "/airbnb-waiver-helper") {
+    return <AirbnbWaiverHelper apiBase={API_BASE} isMobile={isMobile} />;
+  }
 
   return (
     <div className={`dashboard-container ${isMobile ? "mobile-view" : ""}`}>

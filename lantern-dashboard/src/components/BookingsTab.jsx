@@ -104,7 +104,34 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
       {/* Ledger Table Panel */}
       <div className="panel">
         <div className="panel-header" style={{ flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
-          <div className="panel-title">Mews Bookings Ledger</div>
+          <div className="panel-title" style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+            <span>Mews Bookings Ledger</span>
+            <a 
+              href="/airbnb-waiver-helper" 
+              style={{ 
+                fontSize: "12px", 
+                fontWeight: "600", 
+                color: "#2d4a3e", 
+                backgroundColor: "#f0f4f1", 
+                padding: "6px 12px", 
+                borderRadius: "6px", 
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                border: "1px solid #e2e8e4",
+                transition: "all 0.2s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = "#e2e8e4";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "#f0f4f1";
+              }}
+            >
+              🔑 Airbnb Waiver Helper Page
+            </a>
+          </div>
           
           {/* Controls */}
           <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
@@ -179,6 +206,10 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
                   {isExpanded && (
                     <div className="booking-card-details">
                       <div className="booking-detail-item">
+                        <span className="booking-detail-label">Cabin</span>
+                        <span className="booking-detail-value" style={{ fontWeight: "600", color: "#2d4a3e" }}>{b.cabin_name || "-"}</span>
+                      </div>
+                      <div className="booking-detail-item">
                         <span className="booking-detail-label">Email</span>
                         <span className="booking-detail-value">{b.guest_email || "-"}</span>
                       </div>
@@ -232,6 +263,7 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
                     <th style={{ padding: "12px 8px" }}>Stay Dates</th>
                     <th style={{ padding: "12px 8px" }}>Reservation ID</th>
                     <th style={{ padding: "12px 8px" }}>Guest</th>
+                    <th style={{ padding: "12px 8px" }}>Cabin</th>
                     <th style={{ padding: "12px 8px", textAlign: "center" }}>Nights</th>
                     <th style={{ padding: "12px 8px" }}>Channel Source</th>
                     <th style={{ padding: "12px 8px", textAlign: "right" }}>Gross</th>
@@ -267,6 +299,9 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
                         <td style={{ padding: "10px 8px", color: "#2d312e" }}>
                           <div style={{ fontWeight: "600" }}>{b.guest_name || "-"}</div>
                           <div style={{ fontSize: "11px", color: "#606862" }}>{b.guest_email || "-"}</div>
+                        </td>
+                        <td style={{ padding: "10px 8px", color: "#2d4a3e", fontWeight: "600" }}>
+                          {b.cabin_name || "-"}
                         </td>
                         <td style={{ padding: "10px 8px", textAlign: "center", fontWeight: "500" }}>
                           {b.nights}

@@ -108,6 +108,7 @@ class BookingWebhook(BaseModel):
     guest_name: Optional[str] = None
     check_in_date: Optional[str] = None
     check_out_date: Optional[str] = None
+    cabin_name: Optional[str] = None
 
 class SettingsUpdate(BaseModel):
     newsletter_subscribers: int
@@ -637,7 +638,8 @@ def webhook_booking(booking: BookingWebhook):
             guest_email=booking.guest_email,
             guest_name=booking.guest_name,
             check_in_date=booking.check_in_date,
-            check_out_date=booking.check_out_date
+            check_out_date=booking.check_out_date,
+            cabin_name=booking.cabin_name
         )
         logger.info(f"Webhook insertion success: {booking.id} ({booking.channel}) - Net: ${net}")
         return {"status": "success", "id": booking.id, "net_revenue": round(net, 2)}
@@ -699,6 +701,7 @@ def webhook_mews_report(payload: dict):
         source_idx = headers.index('Reservation source') if 'Reservation source' in headers else -1
         space_category_idx = headers.index('Space category') if 'Space category' in headers else -1
         requested_category_idx = headers.index('Requested category') if 'Requested category' in headers else -1
+        space_number_idx = headers.index('Space number') if 'Space number' in headers else -1
         
         # New optional indices
         first_name_idx = get_col_idx_case_insensitive(headers, ['First name', 'FirstName', 'First_Name'])
@@ -792,6 +795,18 @@ def webhook_mews_report(payload: dict):
             check_in_date = clean_and_format_date(raw_arrival)
             check_out_date = clean_and_format_date(raw_departure)
 
+            # Cabin/Space Name
+            space_num = row[space_number_idx].strip() if (space_number_idx != -1 and len(row) > space_number_idx and row[space_number_idx]) else ''
+            space_cat = row[space_category_idx].strip() if (space_category_idx != -1 and len(row) > space_category_idx and row[space_category_idx]) else ''
+            
+            cabin_name = None
+            if space_cat and space_num:
+                cabin_name = f"{space_cat} {space_num}".strip()
+            elif space_cat:
+                cabin_name = space_cat
+            elif space_num:
+                cabin_name = space_num
+
             # Calculate OTA fee
             ota_fee = 0.0
             if channel:
@@ -811,7 +826,8 @@ def webhook_mews_report(payload: dict):
                 guest_email=guest_email,
                 guest_name=guest_name,
                 check_in_date=check_in_date,
-                check_out_date=check_out_date
+                check_out_date=check_out_date,
+                cabin_name=cabin_name
             )
             imported_count += 1
             
@@ -868,6 +884,7 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
     name_idx = find_col_idx(["guest name", "guest_name", "name", "customer", "customer name", "reservation owner"])
     arrival_idx = find_col_idx(["arrival", "arrival date", "check-in", "check in", "start", "start date", "checkin date", "arrival_date", "check_in_date"])
     departure_idx = find_col_idx(["departure", "departure date", "check-out", "check out", "end", "end date", "checkout date", "departure_date", "check_out_date"])
+    cabin_idx = find_col_idx(["space", "space name", "assigned space", "assigned space category", "resource", "resource name", "assigned resource", "room", "room name", "cabin", "category", "space category", "resource category", "room category"])
     
     if None in (id_idx, channel_idx, date_idx, nights_idx, gross_idx):
         raise HTTPException(
@@ -965,6 +982,11 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
                     except ValueError:
                         continue
                         
+            # Cabin/Space Name
+            cabin_name = None
+            if cabin_idx is not None and len(row) > cabin_idx:
+                cabin_name = row[cabin_idx].strip()
+
             save_booking(
                 booking_id=booking_id,
                 channel=channel,
@@ -975,7 +997,8 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
                 guest_email=guest_email,
                 guest_name=guest_name,
                 check_in_date=check_in_date,
-                check_out_date=check_out_date
+                check_out_date=check_out_date,
+                cabin_name=cabin_name
             )
             count += 1
         except Exception as err:

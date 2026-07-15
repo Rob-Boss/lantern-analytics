@@ -75,6 +75,7 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
     name_idx = find_col_idx(["guest name", "guest_name", "name", "customer", "customer name", "reservation owner"])
     arrival_idx = find_col_idx(["arrival", "arrival date", "check-in", "check in", "start", "start date", "checkin date", "arrival_date", "check_in_date"])
     departure_idx = find_col_idx(["departure", "departure date", "check-out", "check out", "end", "end date", "checkout date", "departure_date", "check_out_date"])
+    cabin_idx = find_col_idx(["space", "space name", "assigned space", "assigned space category", "resource", "resource name", "assigned resource", "room", "room name", "cabin", "category", "space category", "resource category", "room category"])
     
     if None in (id_idx, channel_idx, date_idx, nights_idx, gross_idx):
         raise ValueError(
@@ -173,6 +174,11 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
                     except ValueError:
                         continue
                         
+            # Cabin/Space Name
+            cabin_name = None
+            if cabin_idx is not None and len(row) > cabin_idx:
+                cabin_name = row[cabin_idx].strip()
+
             save_booking(
                 booking_id=booking_id,
                 channel=channel,
@@ -183,7 +189,8 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
                 guest_email=guest_email,
                 guest_name=guest_name,
                 check_in_date=check_in_date,
-                check_out_date=check_out_date
+                check_out_date=check_out_date,
+                cabin_name=cabin_name
             )
             count += 1
         except Exception as e:

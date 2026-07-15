@@ -64,6 +64,14 @@ def _exec(cursor, query, params=None):
     else:
         cursor.execute(query)
 
+def column_exists(cursor, table_name, column_name):
+    if IS_POSTGRES:
+        cursor.execute("SELECT 1 FROM information_schema.columns WHERE table_name = %s AND column_name = %s", (table_name, column_name))
+        return cursor.fetchone() is not None
+    else:
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        return any(row['name'] == column_name for row in cursor.fetchall())
+
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -84,14 +92,16 @@ def init_db():
             check_out_date TEXT
         )
     """)
-    
-    # Migration: Ensure bookings has guest_name, check_in_date, check_out_date
-    for col in ("guest_name", "check_in_date", "check_out_date"):
-        try:
-            _exec(cursor, f"ALTER TABLE bookings ADD COLUMN {col} TEXT")
-        except Exception:
-            pass
     conn.commit()
+    
+    # Migration: Ensure bookings has guest_name, check_in_date, check_out_date, cabin_name
+    for col in ("guest_name", "check_in_date", "check_out_date", "cabin_name"):
+        if not column_exists(cursor, "bookings", col):
+            try:
+                _exec(cursor, f"ALTER TABLE bookings ADD COLUMN {col} TEXT")
+                conn.commit()
+            except Exception:
+                pass
     
     # 2. Create daily_metrics table (caches GA4 and Google/Meta ad spend/clicks/impressions)
     _exec(cursor, """
@@ -111,14 +121,16 @@ def init_db():
             meta_clicks INTEGER DEFAULT 0
         )
     """)
+    conn.commit()
     
     # Migration: Ensure daily_metrics has new_users and active_users
     for col in ("new_users", "active_users"):
-        try:
-            _exec(cursor, f"ALTER TABLE daily_metrics ADD COLUMN {col} INTEGER DEFAULT 0")
-        except Exception:
-            pass
-    conn.commit()
+        if not column_exists(cursor, "daily_metrics", col):
+            try:
+                _exec(cursor, f"ALTER TABLE daily_metrics ADD COLUMN {col} INTEGER DEFAULT 0")
+                conn.commit()
+            except Exception:
+                pass
     
     # 3. Create settings table
     _exec(cursor, """
@@ -147,7 +159,7 @@ def init_db():
     conn.close()
 
 # --- Bookings Helpers ---
-def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None):
+def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None, cabin_name=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -155,8 +167,8 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
     net_revenue = gross_revenue * (1.0 - (ota_fee_percent / 100.0))
     
     _exec(cursor, """
-        INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email, guest_name, check_in_date, check_out_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email, guest_name, check_in_date, check_out_date, cabin_name)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             channel=excluded.channel,
             booking_date=excluded.booking_date,
@@ -167,8 +179,9 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
             guest_email=excluded.guest_email,
             guest_name=excluded.guest_name,
             check_in_date=excluded.check_in_date,
-            check_out_date=excluded.check_out_date
-    """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email, guest_name, check_in_date, check_out_date))
+            check_out_date=excluded.check_out_date,
+            cabin_name=excluded.cabin_name
+    """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email, guest_name, check_in_date, check_out_date, cabin_name))
     
     conn.commit()
     conn.close()
