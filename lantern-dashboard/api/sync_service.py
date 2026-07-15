@@ -197,7 +197,7 @@ def fetch_meta_ads_metrics(start_date_str, end_date_str):
         url = insights_url
         while url:
             # params should only be passed for the initial request; subsequent paging URLs contain parameters already
-            response = requests.get(url, params=params if url == insights_url else None, timeout=15)
+            response = requests.get(url, params=params if url == insights_url else None, timeout=30)
             data = response.json()
             
             if "error" in data:
