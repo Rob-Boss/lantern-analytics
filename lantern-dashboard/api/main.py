@@ -709,6 +709,8 @@ def webhook_mews_report(payload: dict):
         customer_idx = get_col_idx_case_insensitive(headers, ['Customer', 'Guest', 'Name', 'Customer Name', 'Guest Name'])
         arrival_idx = get_col_idx_case_insensitive(headers, ['Arrival', 'Arrival UTC', 'ArrivalUtc', 'Start', 'StartUtc', 'Check-in', 'Checkin', 'Arrival (date)', 'Arrival_Date'])
         departure_idx = get_col_idx_case_insensitive(headers, ['Departure', 'Departure UTC', 'DepartureUtc', 'End', 'EndUtc', 'Check-out', 'Checkout', 'Departure (date)', 'Departure_Date'])
+        products_idx = get_col_idx_case_insensitive(headers, ['Products', 'Product', 'Active Add-ons', 'Add-ons'])
+        notes_idx = get_col_idx_case_insensitive(headers, ['Notes', 'Note', 'Customer notes', 'CustomerNote', 'Customer_Notes'])
 
         def clean_and_format_date(raw_date):
             if not raw_date:
@@ -807,6 +809,10 @@ def webhook_mews_report(payload: dict):
             elif space_num:
                 cabin_name = space_num
 
+            # Products & Notes
+            products = row[products_idx].strip() if (products_idx != -1 and len(row) > products_idx and row[products_idx]) else None
+            notes = row[notes_idx].strip() if (notes_idx != -1 and len(row) > notes_idx and row[notes_idx]) else None
+
             # Calculate OTA fee
             ota_fee = 0.0
             if channel:
@@ -827,7 +833,9 @@ def webhook_mews_report(payload: dict):
                 guest_name=guest_name,
                 check_in_date=check_in_date,
                 check_out_date=check_out_date,
-                cabin_name=cabin_name
+                cabin_name=cabin_name,
+                products=products,
+                notes=notes
             )
             imported_count += 1
             
@@ -885,6 +893,8 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
     arrival_idx = find_col_idx(["arrival", "arrival date", "check-in", "check in", "start", "start date", "checkin date", "arrival_date", "check_in_date"])
     departure_idx = find_col_idx(["departure", "departure date", "check-out", "check out", "end", "end date", "checkout date", "departure_date", "check_out_date"])
     cabin_idx = find_col_idx(["space", "space name", "assigned space", "assigned space category", "resource", "resource name", "assigned resource", "room", "room name", "cabin", "category", "space category", "resource category", "room category"])
+    products_idx = find_col_idx(["products", "product", "active add-ons", "add-ons"])
+    notes_idx = find_col_idx(["notes", "note", "customer notes", "customernote", "customer_notes"])
     
     if None in (id_idx, channel_idx, date_idx, nights_idx, gross_idx):
         raise HTTPException(
@@ -987,6 +997,15 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
             if cabin_idx is not None and len(row) > cabin_idx:
                 cabin_name = row[cabin_idx].strip()
 
+            # Products & Notes
+            products = None
+            if products_idx is not None and len(row) > products_idx:
+                products = row[products_idx].strip()
+                
+            notes = None
+            if notes_idx is not None and len(row) > notes_idx:
+                notes = row[notes_idx].strip()
+
             save_booking(
                 booking_id=booking_id,
                 channel=channel,
@@ -998,7 +1017,9 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
                 guest_name=guest_name,
                 check_in_date=check_in_date,
                 check_out_date=check_out_date,
-                cabin_name=cabin_name
+                cabin_name=cabin_name,
+                products=products,
+                notes=notes
             )
             count += 1
         except Exception as err:

@@ -94,8 +94,8 @@ def init_db():
     """)
     conn.commit()
     
-    # Migration: Ensure bookings has guest_name, check_in_date, check_out_date, cabin_name
-    for col in ("guest_name", "check_in_date", "check_out_date", "cabin_name"):
+    # Migration: Ensure bookings has guest_name, check_in_date, check_out_date, cabin_name, products, notes
+    for col in ("guest_name", "check_in_date", "check_out_date", "cabin_name", "products", "notes"):
         if not column_exists(cursor, "bookings", col):
             try:
                 _exec(cursor, f"ALTER TABLE bookings ADD COLUMN {col} TEXT")
@@ -159,7 +159,7 @@ def init_db():
     conn.close()
 
 # --- Bookings Helpers ---
-def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None, cabin_name=None):
+def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None, cabin_name=None, products=None, notes=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -167,8 +167,8 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
     net_revenue = gross_revenue * (1.0 - (ota_fee_percent / 100.0))
     
     _exec(cursor, """
-        INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email, guest_name, check_in_date, check_out_date, cabin_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email, guest_name, check_in_date, check_out_date, cabin_name, products, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             channel=excluded.channel,
             booking_date=excluded.booking_date,
@@ -180,8 +180,10 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
             guest_name=excluded.guest_name,
             check_in_date=excluded.check_in_date,
             check_out_date=excluded.check_out_date,
-            cabin_name=excluded.cabin_name
-    """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email, guest_name, check_in_date, check_out_date, cabin_name))
+            cabin_name=excluded.cabin_name,
+            products=excluded.products,
+            notes=excluded.notes
+    """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email, guest_name, check_in_date, check_out_date, cabin_name, products, notes))
     
     conn.commit()
     conn.close()
