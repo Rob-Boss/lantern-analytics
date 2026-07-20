@@ -1,35 +1,36 @@
 # 📱 Live Meta Ads Performance Report
-**Last Queried At:** `2026-07-15 06:47:48`
+**Last Queried At:** `2026-07-20 10:07:13`
 
 ## 📊 Campaign Summary (Lifetime)
 | Campaign Name | Status | Spend | Impressions | Clicks | Landing Page Views | Cost per View |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **HOMEPAGE traffic - static single image** | `PAUSED` | $179.97 | 19,541 | 1,995 | 1,001 | $0.18 |
 | **Michelle Lawrence Partner Conversion** | `PAUSED` | $49.41 | 4,162 | 177 | 90 | $0.55 |
-| **HOMEPAGE traffic - static single image - [Drive Market]** | `ACTIVE` | $1,134.29 | 204,916 | 17,007 | 9,410 | $0.12 |
+| **HOMEPAGE traffic - static single image - [Drive Market]** | `ACTIVE` | $1,278.44 | 236,254 | 19,643 | 10,703 | $0.12 |
+| **Warm Retargeting Stack - Website + Social** | `ACTIVE` | $26.31 | 3,916 | 293 | 157 | $0.17 |
 
 ## 👥 Drive Market Campaign Breakdown
 ### Age Demographics
 | Age Demographic | Impressions | Landing Page Views | Total Spend | Cost per View |
 | :--- | :---: | :---: | :---: | :---: |
-| **18-24** | 1,953 | 34 | $5.88 | $0.17 |
-| **25-34** | 19,145 | 474 | $72.55 | $0.15 |
-| **35-44** | 33,178 | 1,262 | $157.74 | $0.12 |
-| **45-54** | 39,703 | 1,701 | $214.18 | $0.13 |
-| **55-64** | 43,250 | 2,231 | $246.01 | $0.11 |
-| **65+** | 67,680 | 3,695 | $437.88 | $0.12 |
+| **18-24** | 2,375 | 37 | $6.61 | $0.18 |
+| **25-34** | 21,978 | 528 | $79.12 | $0.15 |
+| **35-44** | 37,515 | 1,424 | $175.14 | $0.12 |
+| **45-54** | 44,659 | 1,888 | $236.52 | $0.13 |
+| **55-64** | 51,070 | 2,603 | $283.89 | $0.11 |
+| **65+** | 78,650 | 4,208 | $497.11 | $0.12 |
 
 ### Geographic Distribution
 | State / Region | Impressions | Spend | % of Budget |
 | :--- | :---: | :---: | :---: |
-| **Massachusetts** | 36,358 | $235.65 | 20.8% |
-| **New York** | 46,158 | $207.85 | 18.3% |
-| **Maine** | 31,827 | $202.65 | 17.9% |
-| **Florida** | 31,135 | $142.74 | 12.6% |
-| **New Hampshire** | 12,704 | $80.33 | 7.1% |
-| **Pennsylvania** | 13,419 | $71.17 | 6.3% |
-| **Connecticut** | 11,102 | $66.88 | 5.9% |
-| **New Jersey** | 6,922 | $37.46 | 3.3% |
-| **Maryland** | 5,738 | $31.37 | 2.8% |
-| **Rhode Island** | 4,712 | $29.99 | 2.6% |
-| **Vermont** | 4,839 | $28.31 | 2.5% |
+| **Massachusetts** | 42,039 | $266.82 | 20.9% |
+| **Maine** | 37,318 | $231.00 | 18.1% |
+| **New York** | 52,403 | $230.10 | 18.0% |
+| **Florida** | 35,819 | $159.90 | 12.5% |
+| **New Hampshire** | 14,622 | $90.60 | 7.1% |
+| **Pennsylvania** | 15,465 | $79.97 | 6.3% |
+| **Connecticut** | 13,052 | $76.79 | 6.0% |
+| **New Jersey** | 7,918 | $41.68 | 3.3% |
+| **Maryland** | 6,518 | $35.16 | 2.8% |
+| **Rhode Island** | 5,470 | $34.02 | 2.7% |
+| **Vermont** | 5,628 | $32.39 | 2.5% |
