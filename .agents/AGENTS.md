@@ -29,3 +29,7 @@ If the user asks to **"refresh lantern dashboard"**, **"update data"**, **"sync 
 *   **Git Sync:** After copying the updated report to `lantern-living-documents/docs/marketing-summary-july-2026.md`, stage, commit, and push the changes in `lantern-living-documents` to ensure the live Docsify website (hosted on Vercel at `https://lantern-living-documents.vercel.app`) reflects the updates.
 *   **General Publishing Script:** For general document updates, a publishing workflow exists in the sibling `task-manager` repository. Running `python manager.py publish` inside `/Users/swardy/Documents/Antigravity Projects/task-manager` automatically copies updated markdown documents from `task-manager/tasks/` to `lantern-living-documents/docs/` (or `mcd-living-documents/docs/`), commits, and pushes them.
 
+## 5. Report Tone and Content Guidelines
+*   **Factual and Dry Tone:** Since weekly and performance reports are for internal review by stakeholders who are already familiar with operational details, avoid marketing, promotional, or persuasive language. 
+*   **Keep it Objective:** Stick strictly to facts, dates, and statistics. Avoid hyperbolic descriptors (such as "extraordinary", "dramatic surge", "phenomenal") and replace them with direct terms (like "increase", "growth", or "change"). Do not try to "sell" outcomes; report the raw data and outcomes objectively.
+

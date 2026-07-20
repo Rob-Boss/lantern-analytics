@@ -6,27 +6,21 @@
 
 ## 📈 Executive Summary: Performance & Channel Shift
 
-This past week (July 12 – July 18) showed extraordinary revenue performance across both booking channels, highlighting a highly successful dual-track marketing strategy. 
+This past week (July 12 – July 18) showed revenue increases across both booking channels.
 
-### The Airbnb Optimization Surge
-At the top of last week (around July 13–14), we executed a comprehensive listing optimization on Airbnb. This included a copywriting refresh of listing descriptions, curating layout and site photos, and adjusting amenity filter settings (such as sauna access, hiking, and pet-friendliness) to trigger Airbnb’s search algorithm to reindex the listings. 
+### Airbnb Listing Optimization
+On July 13–14, optimizations were made to the Airbnb listings, including updating written descriptions, refreshing layout and site photos, and adjusting amenity filter settings (sauna access, hiking, and pet-friendliness). Following these updates, **Airbnb net revenue increased by +178.3%** week-over-week, rising from **$1,743.42** to **$4,851.40**.
 
-The organic visibility impact was immediate and dramatic: **Airbnb net revenue surged by +178.3%** week-over-week, climbing from **$1,743.42** to **$4,851.40**.
-
-### Direct Bookings (Mews) Keep the Lead
-While we anticipated that this organic Airbnb surge might eclipse direct bookings and take over as our primary revenue driver, direct bookings via the Mews Booking Engine performed phenomenally as well. Direct net revenue grew **+71.3%** week-over-week (climbing from **$3,908.86** to **$6,697.19**). 
-
-As a result, **direct bookings via Mews maintained their lead**, accounting for **58%** of the week's total net revenue ($6,697.19) compared to Airbnb's **42%** share ($4,851.40). 
-
-This is a highly encouraging story: it demonstrates that we can optimize OTA channels (Airbnb) for high visibility and volume while simultaneously growing and maintaining our direct booking pipeline (Mews) as the top margin driver, rather than direct traffic losing out to third-party platforms.
+### Channel Mix (Mews vs. Airbnb)
+Direct bookings via the Mews Booking Engine also increased, with net revenue up **+71.3%** week-over-week (from **$3,908.86** to **$6,697.19**). Direct bookings via Mews accounted for **58.0%** of the week's total net revenue ($6,697.19), while Airbnb accounted for **42.0%** ($4,851.40). The increase in Airbnb booking volume did not result in a decline in Mews direct revenue.
 
 > [!NOTE]
 > **Automated Hourly Sync Active:** Booking reservation data, GA4 traffic analytics, and ad campaign performance (Google & Meta Ads) are automatically synced every hour. The dashboard at `https://lantern-analytics.vercel.app` is updated in the background.
 
 **Key Metrics & Outcomes:**
-*   **Total Revenue Doubled:** Total weekly net revenue grew by **104.3%** week-over-week (from **$5,652.28** to **$11,548.59**).
-*   **Booking Volume Surge:** Completed bookings increased from 9 to 17 (**+88.9%**).
-*   **Conversion Efficiency:** While total pageviews fell by **-18.9%** and checkouts initiated fell by **-12.1%** (a result of filtering out lower-intent display clicks in Google Ads), completed bookings grew by **+88.9%**, showing a massive jump in high-intent buyers.
+*   **Total Revenue Growth:** Total weekly net revenue grew by **104.3%** week-over-week (from **$5,652.28** to **$11,548.59**).
+*   **Bookings Increase:** Completed bookings increased from 9 to 17 (**+88.9%**).
+*   **Traffic & Conversion Mix:** Total pageviews decreased by **-18.9%** and checkouts initiated decreased by **-12.1%** (associated with reduced display network spend in Google Ads). Completed bookings increased by **+88.9%**, indicating a higher conversion rate among the remaining search traffic.
 
 ---
 
@@ -34,13 +28,13 @@ This is a highly encouraging story: it demonstrates that we can optimize OTA cha
 
 | Metric | This Week (July 12 - 18) | Previous Week (July 5 - 11) | % Change | Notes |
 | :--- | :---: | :---: | :---: | :--- |
-| **Total Bookings** | 17 | 9 | **+88.9%** | Near doubling of total weekly bookings. |
+| **Total Bookings** | 17 | 9 | **+88.9%** | Increase of 8 bookings. |
 | **Total Gross Revenue** | $12,404.72 | $5,959.94 | **+108.1%** | |
 | **Total Net Revenue** | **$11,548.59** | **$5,652.28** | **+104.3%** | Growth driven by both Mews and Airbnb channels. |
-| **Mews Net Revenue** | $6,697.19 | $3,908.86 | **+71.3%** | Direct channel continues to dominate. |
-| **Airbnb Net Revenue** | $4,851.40 | $1,743.42 | **+178.3%** | Strong rebound after previous week's dip. |
-| **Total Pageviews** | 8,655 | 10,678 | **-18.9%** | Planned reduction of low-intent display traffic is working. |
-| **Initiated Checkouts** | **756** | **860** | **-12.1%** | A slight decrease, but conversion rate rose significantly. |
+| **Mews Net Revenue** | $6,697.19 | $3,908.86 | **+71.3%** | Mews remains the primary channel by volume. |
+| **Airbnb Net Revenue** | $4,851.40 | $1,743.42 | **+178.3%** | Increased following listing optimizations. |
+| **Total Pageviews** | 8,655 | 10,678 | **-18.9%** | Attributed to reduction in PMax display budget. |
+| **Initiated Checkouts** | **756** | **860** | **-12.1%** | Decrease of 104 checkouts. |
 
 ---
 
@@ -54,9 +48,9 @@ This is a highly encouraging story: it demonstrates that we can optimize OTA cha
 | **Combined Google Ads** | **$363.45** | **9,578** | **611** | **6.38%** | **$0.59** |
 
 ### 🛠️ Google Ads Analysis:
-*   **Search Budget Restructuring:** Shifting budget away from the broad Performance Max (PMax) display placements (down from $70.03 to $34.29) to Google Search campaigns (MOF budget grew from $257.92 to $286.47) has successfully prioritized high-intent buyers.
-*   **Competitor Exclusions:** Continued phrase-match exclusions of competitors (e.g. `sandy pines`, `huttopia`) keep Search CPCs stable (~$0.59 combined) while keeping traffic highly relevant.
-*   **Exceptional BOF CTR:** The Bottom of Funnel (Brand Protection) search campaign maintained a highly efficient **51.46% CTR** on brand queries, showing strong customer recall and intent.
+*   **Budget Allocation:** Performance Max display placement spend was reduced (from $70.03 to $34.29) while Search campaign spend increased (MOF spend rose from $257.92 to $286.47).
+*   **Competitor Exclusions:** Phrase-match exclusions for competing properties (e.g. `sandy pines`, `huttopia`) were maintained. Average Google Ads CPC was $0.59.
+*   **Brand Search CTR:** The Bottom of Funnel (Brand Protection) search campaign recorded a **51.46% CTR** on branded search terms.
 
 ---
 
@@ -67,7 +61,7 @@ This is a highly encouraging story: it demonstrates that we can optimize OTA cha
 *   **Clicks:** 4,627 (-18.3%)
 *   **Landing Page Views:** 2,320 (-27.6%)
 *   **Cost per View (CPV):** **$0.11** (stable)
-*   **Meta Avg. Daily Spend:** $38.07 (pacing slightly below the $50.00/day target)
+*   **Meta Avg. Daily Spend:** $38.07 (pacing below the $50.00/day target)
 
 ### Meta Campaign Summary
 | Campaign Name | Status | Spend | Impressions | Clicks | Landing Page Views | Cost per View |
@@ -104,5 +98,5 @@ This is a highly encouraging story: it demonstrates that we can optimize OTA cha
 | **Vermont** | 1,291 | $6.53 | 2.6% |
 
 ### 🛠️ Meta Ads Analysis:
-*   **Warm Retargeting Launch:** The `Warm Retargeting Stack` was activated this week, spending $13.17 and yielding 79 high-value views from users who already interacted with the site or social accounts. This will continue to serve as a low-cost mid-funnel nudge.
-*   **Core Geo Stable:** Massachusetts (21.6%), Maine (19.7%), and New York (15.5%) remain the dominant drive-market drivers, representing 56.8% of the total spend.
+*   **Warm Retargeting Campaign:** The `Warm Retargeting Stack` campaign was launched, spending $13.17 and generating 79 landing page views.
+*   **Geographic Focus:** Massachusetts (21.6%), Maine (19.7%), and New York (15.5%) accounted for 56.8% of the total Drive Market campaign spend.
