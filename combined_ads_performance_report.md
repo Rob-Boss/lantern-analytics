@@ -100,4 +100,4 @@ Direct bookings via the Mews Booking Engine also increased, with net revenue up 
 ### 🛠️ Meta Ads Analysis:
 *   **Warm Retargeting Campaign:** The `Warm Retargeting Stack` campaign was launched, spending $13.17 and generating 79 landing page views.
 *   **Geographic Focus:** Massachusetts (21.6%), Maine (19.7%), and New York (15.5%) accounted for 56.8% of the total Drive Market campaign spend.
-*   **Delivery Interruption (Monthly Spend Limit):** The declines in weekly spend (-23.8%) and impressions (-25.4%) are due to the ad account hitting a monthly spend limit guardrail set by ownership, which temporarily paused campaign delivery.
+*   **Delivery Interruption (Monthly Spend Limit):** The declines in weekly spend (-23.8%) and impressions (-25.4%) are due to the ad account hitting a monthly spend limit guardrail on Thursday, July 16. The limit was increased on Friday, July 17, accounting for a partial spend on both days.
