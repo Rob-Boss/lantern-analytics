@@ -6,17 +6,27 @@
 
 ## 📈 Executive Summary: Performance & Channel Shift
 
-This past week (July 12 – July 18) showed extraordinary revenue performance. Shifting budget into high-intent Search campaigns and applying competitor exclusions has continued to pay off, resulting in a dramatic increase in conversion efficiency even as top-of-funnel pageviews decreased.
+This past week (July 12 – July 18) showed extraordinary revenue performance across both booking channels, highlighting a highly successful dual-track marketing strategy. 
+
+### The Airbnb Optimization Surge
+At the top of last week (around July 13–14), we executed a comprehensive listing optimization on Airbnb. This included a copywriting refresh of listing descriptions, curating layout and site photos, and adjusting amenity filter settings (such as sauna access, hiking, and pet-friendliness) to trigger Airbnb’s search algorithm to reindex the listings. 
+
+The organic visibility impact was immediate and dramatic: **Airbnb net revenue surged by +178.3%** week-over-week, climbing from **$1,743.42** to **$4,851.40**.
+
+### Direct Bookings (Mews) Keep the Lead
+While we anticipated that this organic Airbnb surge might eclipse direct bookings and take over as our primary revenue driver, direct bookings via the Mews Booking Engine performed phenomenally as well. Direct net revenue grew **+71.3%** week-over-week (climbing from **$3,908.86** to **$6,697.19**). 
+
+As a result, **direct bookings via Mews maintained their lead**, accounting for **58%** of the week's total net revenue ($6,697.19) compared to Airbnb's **42%** share ($4,851.40). 
+
+This is a highly encouraging story: it demonstrates that we can optimize OTA channels (Airbnb) for high visibility and volume while simultaneously growing and maintaining our direct booking pipeline (Mews) as the top margin driver, rather than direct traffic losing out to third-party platforms.
 
 > [!NOTE]
 > **Automated Hourly Sync Active:** Booking reservation data, GA4 traffic analytics, and ad campaign performance (Google & Meta Ads) are automatically synced every hour. The dashboard at `https://lantern-analytics.vercel.app` is updated in the background.
 
 **Key Metrics & Outcomes:**
-*   **Revenue Doubled:** Total net revenue grew by **104.3%** week-over-week (from **$5,652.28** to **$11,548.59**).
+*   **Total Revenue Doubled:** Total weekly net revenue grew by **104.3%** week-over-week (from **$5,652.28** to **$11,548.59**).
 *   **Booking Volume Surge:** Completed bookings increased from 9 to 17 (**+88.9%**).
-*   **Mews Direct Booking Growth:** Direct bookings via the Mews Booking Engine increased by **71.3%**, driving **$6,697.19** in net revenue, compared to $3,908.86 the previous week.
-*   **Airbnb Recovery:** Airbnb net revenue surged **178.3%** (from $1,743.42 to $4,851.40), recovering from a lower-volume previous week.
-*   **Conversion Efficiency:** While total pageviews fell by **-18.9%** and checkouts initiated fell by **-12.1%**, the total completed bookings grew by **+88.9%**, showing a significant increase in booking intent and traffic quality.
+*   **Conversion Efficiency:** While total pageviews fell by **-18.9%** and checkouts initiated fell by **-12.1%** (a result of filtering out lower-intent display clicks in Google Ads), completed bookings grew by **+88.9%**, showing a massive jump in high-intent buyers.
 
 ---
 
