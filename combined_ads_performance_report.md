@@ -33,8 +33,8 @@ Direct bookings via the Mews Booking Engine also increased, with net revenue up 
 | **Total Net Revenue** | **$11,548.59** | **$5,652.28** | **+104.3%** | Growth driven by both Mews and Airbnb channels. |
 | **Mews Net Revenue** | $6,697.19 | $3,908.86 | **+71.3%** | Mews remains the primary channel by volume. |
 | **Airbnb Net Revenue** | $4,851.40 | $1,743.42 | **+178.3%** | Increased following listing optimizations. |
-| **Total Pageviews** | 8,655 | 10,678 | **-18.9%** | Attributed to reduction in PMax display budget. |
-| **Initiated Checkouts** | **756** | **860** | **-12.1%** | Decrease of 104 checkouts. |
+| **Total Pageviews** | 8,655 | 10,678 | **-18.9%** | Attributed to Google PMax display budget reduction and the Meta campaign delivery pause. |
+| **Initiated Checkouts** | **756** | **860** | **-12.1%** | Decrease of 104 checkouts, associated with the Meta campaign delivery pause. |
 
 ---
 
