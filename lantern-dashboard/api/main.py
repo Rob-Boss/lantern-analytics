@@ -57,11 +57,12 @@ def normalize_channel(ch: str) -> str:
     ch_lower = ch.lower()
     if "airbnb" in ch_lower or "abb" in ch_lower:
         return "Airbnb"
-    if "booking.com" in ch_lower or "bcom" in ch_lower or "bdc" in ch_lower:
-        return "Booking.com"
-    if "booking engine" in ch_lower or "mews" in ch_lower or "direct" in ch_lower or "distributor" in ch_lower:
+    # Booking Engine / Mews / Direct / Distributor must ALWAYS be Mews Booking Engine
+    if "booking engine" in ch_lower or "mews" in ch_lower or "direct" in ch_lower or "distributor" in ch_lower or "web" in ch_lower:
         return "Mews Booking Engine"
-    return "Other"
+    if ("booking.com" in ch_lower or "bcom" in ch_lower or "bdc" in ch_lower) and "booking engine" not in ch_lower:
+        return "Booking.com"
+    return "Mews Booking Engine"
 
 # Configurable CORS origins for production cross-domain fetching
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
