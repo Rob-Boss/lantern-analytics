@@ -736,6 +736,8 @@ def webhook_mews_report(payload: dict):
         departure_idx = get_col_idx_case_insensitive(headers, ['Departure', 'Departure UTC', 'DepartureUtc', 'End', 'EndUtc', 'Check-out', 'Checkout', 'Departure (date)', 'Departure_Date'])
         products_idx = get_col_idx_case_insensitive(headers, ['Products', 'Product', 'Active Add-ons', 'Add-ons'])
         notes_idx = get_col_idx_case_insensitive(headers, ['Notes', 'Note', 'Customer notes', 'CustomerNote', 'Customer_Notes'])
+        status_idx = get_col_idx_case_insensitive(headers, ['Status', 'State', 'Reservation Status', 'ReservationState'])
+        phone_idx = get_col_idx_case_insensitive(headers, ['Telephone', 'Telephone number', 'TelephoneNo', 'Telephone_Number', 'Phone', 'Phone number', 'Phone_Number', 'Guest Phone', 'Guest Phone Number', 'Mobile', 'Mobile Phone', 'MobilePhone', 'Customer phone', 'Customer telephone', 'Contact phone', 'Contact telephone', 'Mobile number', 'Mobile_Number'])
 
         def clean_and_format_date(raw_date):
             if not raw_date:
