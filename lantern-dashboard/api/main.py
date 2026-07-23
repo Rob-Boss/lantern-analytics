@@ -19,13 +19,13 @@ try:
     from .database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
         save_setting, get_setting, clear_bookings, get_first_booking_date,
-        get_geo_metrics
+        get_geo_metrics, get_operations_calendar, update_message_sent
     )
 except ImportError:
     from database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
         save_setting, get_setting, clear_bookings, get_first_booking_date,
-        get_geo_metrics
+        get_geo_metrics, get_operations_calendar, update_message_sent
     )
 
 sync_data = None
@@ -587,6 +587,37 @@ def get_bookings_ledger(start_date: Optional[str] = None, end_date: Optional[str
         "bookings": bookings,
         "channel_summary": list(channels_dict.values())
     }
+
+@app.get("/api/operations/calendar")
+def get_operations_calendar_api(date: str):
+    """Returns check-ins, check-outs, in-house guests, and 7-day upcoming add-ons for the operations view."""
+    try:
+        from datetime import datetime
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Must be YYYY-MM-DD.")
+        
+    try:
+        data = get_operations_calendar(date)
+        return data
+    except Exception as e:
+        logger.error(f"Error fetching operations calendar: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class MarkSentPayload(BaseModel):
+    assigned_cabin: Optional[str] = None
+
+@app.post("/api/bookings/{booking_id}/mark-sent")
+def mark_sms_sent(booking_id: str, payload: Optional[MarkSentPayload] = None):
+    """Marks a booking as having received its SMS dispatch text."""
+    try:
+        sent_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        assigned_cabin = payload.assigned_cabin if payload else None
+        update_message_sent(booking_id, is_sent=True, sent_at=sent_at, assigned_cabin=assigned_cabin)
+        return {"status": "success", "booking_id": booking_id, "message_sent": "true", "sent_at": sent_at, "assigned_cabin": assigned_cabin}
+    except Exception as e:
+        logger.error(f"Error marking SMS sent for booking {booking_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- DATA INGEST & MUTATION ---
 
