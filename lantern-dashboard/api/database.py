@@ -38,6 +38,8 @@ if IS_POSTGRES:
     # Support postgresql:// prefix standard if postgres:// is passed
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    if "sslmode=" not in DATABASE_URL:
+        DATABASE_URL += "?sslmode=require" if "?" not in DATABASE_URL else "&sslmode=require"
 else:
     import sqlite3
 
