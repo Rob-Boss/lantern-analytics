@@ -215,7 +215,32 @@ def clear_bookings():
 def get_all_bookings():
     conn = get_db_connection()
     cursor = conn.cursor()
-    _exec(cursor, "SELECT * FROM bookings ORDER BY booking_date DESC")
+    _exec(cursor, """
+        SELECT b.id, b.channel, b.booking_date, b.nights, b.gross_revenue, b.ota_fee_percent, b.net_revenue, 
+               COALESCE(NULLIF(b.guest_email, ''), w.guest_email) AS guest_email,
+               COALESCE(NULLIF(b.guest_name, ''), w.guest_name) AS guest_name,
+               COALESCE(NULLIF(b.guest_phone, ''), w.guest_phone) AS guest_phone,
+               b.check_in_date, b.check_out_date,
+               COALESCE(s.assigned_cabin, b.cabin_name) AS cabin_name,
+               b.products, b.notes, b.status, b.origin,
+               CASE 
+                 WHEN w.id IS NOT NULL OR b.waiver_signed = 'true' THEN 'true' 
+                 ELSE COALESCE(b.waiver_signed, 'false') 
+               END AS waiver_signed,
+               COALESCE(w.signed_at, b.waiver_signed_at) AS waiver_signed_at,
+               COALESCE(s.message_sent, b.message_sent, 'false') AS message_sent,
+               COALESCE(s.sent_at, b.message_sent_at) AS message_sent_at
+        FROM bookings b
+        LEFT JOIN waiver_signatures w ON (
+            (b.id IS NOT NULL AND b.id != '' AND w.booking_id = b.id)
+            OR (b.notes IS NOT NULL AND b.notes != '' AND w.booking_id IS NOT NULL AND w.booking_id != '' AND b.notes LIKE '%%' || w.booking_id || '%%')
+            OR (w.guest_email IS NOT NULL AND w.guest_email != '' AND b.guest_email IS NOT NULL AND b.guest_email != '' AND LOWER(b.guest_email) = LOWER(w.guest_email))
+            OR (w.guest_phone IS NOT NULL AND b.guest_phone IS NOT NULL AND LOWER(w.guest_phone) = LOWER(b.guest_phone))
+            OR (w.guest_name IS NOT NULL AND w.guest_name != '' AND b.guest_name IS NOT NULL AND b.guest_name != '' AND LOWER(b.guest_name) = LOWER(w.guest_name))
+        )
+        LEFT JOIN sms_dispatches s ON b.id = s.booking_id
+        ORDER BY b.booking_date DESC
+    """)
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]
@@ -445,7 +470,7 @@ def get_operations_calendar(date_str):
         FROM bookings b
         LEFT JOIN waiver_signatures w ON (
             (b.id IS NOT NULL AND b.id != '' AND w.booking_id = b.id)
-            OR (b.notes IS NOT NULL AND b.notes != '' AND w.booking_id IS NOT NULL AND w.booking_id != '' AND b.notes LIKE '%' || w.booking_id || '%')
+            OR (b.notes IS NOT NULL AND b.notes != '' AND w.booking_id IS NOT NULL AND w.booking_id != '' AND b.notes LIKE '%%' || w.booking_id || '%%')
             OR (w.guest_email IS NOT NULL AND w.guest_email != '' AND b.guest_email IS NOT NULL AND b.guest_email != '' AND LOWER(b.guest_email) = LOWER(w.guest_email))
             OR (w.guest_phone IS NOT NULL AND b.guest_phone IS NOT NULL AND LOWER(w.guest_phone) = LOWER(b.guest_phone))
             OR (w.guest_name IS NOT NULL AND w.guest_name != '' AND b.guest_name IS NOT NULL AND b.guest_name != '' AND LOWER(b.guest_name) = LOWER(w.guest_name))
@@ -474,7 +499,7 @@ def get_operations_calendar(date_str):
           AND (b.products LIKE ? OR b.products LIKE ? OR b.products LIKE ?)
         ORDER BY b.check_in_date ASC
     """
-    _exec(cursor, query_addons, (date_str, dt_plus_7, "%Stargazing%", "%Walk%", "%Pet%"))
+    _exec(cursor, query_addons, (date_str, dt_plus_7, "%%Stargazing%%", "%%Walk%%", "%%Pet%%"))
     addons = [dict(r) for r in cursor.fetchall()]
     
     conn.close()
