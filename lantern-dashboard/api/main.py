@@ -686,7 +686,7 @@ Lantern Camp Operations System
         return False
 
 @app.api_route("/api/checkin/complete", methods=["GET", "POST", "OPTIONS"])
-def webhook_checkin_complete(payload: CheckinCompletion, x_checkin_secret: Optional[str] = Header(None)):
+def webhook_checkin_complete(payload: CheckinCompletion, x_checkin_secret: Optional[str] = Header(default=None)):
     secret = os.environ.get("CHECKIN_WEBHOOK_SECRET")
     if secret and x_checkin_secret != secret:
         raise HTTPException(status_code=401, detail="Invalid checkin secret token")
