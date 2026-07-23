@@ -685,6 +685,31 @@ Lantern Camp Operations System
         logger.error(f"Failed to send waiver notification email: {e}")
         return False
 
+@app.get("/api/debug/smtp")
+def debug_smtp():
+    host = os.environ.get("SMTP_HOST")
+    port = os.environ.get("SMTP_PORT")
+    user = os.environ.get("SMTP_USER")
+    has_pass = bool(os.environ.get("SMTP_PASSWORD"))
+    
+    email_sent_status = False
+    smtp_error = None
+    if host and port and user and has_pass:
+        try:
+            email_sent_status = send_notification_email("[TEST EMPIRICAL] Debug Check", "Cabin 01", "test@example.com", "1234567890", "DEBUG-1")
+        except Exception as err:
+            smtp_error = str(err)
+            
+    return {
+        "smtp_host": host,
+        "smtp_port": port,
+        "smtp_user": user,
+        "has_password": has_pass,
+        "is_fully_configured": bool(host and port and user and has_pass),
+        "email_sent_status": email_sent_status,
+        "smtp_error": smtp_error
+    }
+
 @app.api_route("/api/checkin/complete", methods=["GET", "POST", "OPTIONS"])
 def webhook_checkin_complete(payload: CheckinCompletion, x_checkin_secret: Optional[str] = Header(default=None)):
     secret = os.environ.get("CHECKIN_WEBHOOK_SECRET")
