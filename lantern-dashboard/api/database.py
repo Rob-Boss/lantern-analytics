@@ -510,6 +510,117 @@ def get_operations_calendar(date_str):
         "upcoming_addons": addons
     }
 
+def update_waiver_signed(booking_id=None, is_signed=True, signed_at=None, guest_phone=None, guest_name=None, guest_email=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    is_signed_str = str(is_signed).lower()
+    signed_at = signed_at or datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    bid = str(booking_id).strip() if booking_id else ""
+    
+    # 0. Write to permanent sidecar waiver_signatures table
+    sig_id = f"{bid}_{guest_email or ''}_{guest_name or ''}".lower()
+    _exec(cursor, """
+        INSERT INTO waiver_signatures (id, booking_id, guest_name, guest_email, guest_phone, signed_at, source)
+        VALUES (?, ?, ?, ?, ?, ?, 'checkin_form')
+        ON CONFLICT(id) DO UPDATE SET
+            booking_id = COALESCE(NULLIF(EXCLUDED.booking_id, ''), waiver_signatures.booking_id),
+            guest_name = COALESCE(NULLIF(EXCLUDED.guest_name, ''), waiver_signatures.guest_name),
+            guest_email = COALESCE(NULLIF(EXCLUDED.guest_email, ''), waiver_signatures.guest_email),
+            guest_phone = COALESCE(NULLIF(EXCLUDED.guest_phone, ''), waiver_signatures.guest_phone),
+            signed_at = EXCLUDED.signed_at
+    """, (sig_id, bid if (bid and bid.lower() != "waiver") else None, guest_name, guest_email, guest_phone, signed_at))
+
+    updated = False
+    
+    # 1. Try matching by booking_id or Airbnb confirmation code in notes/id
+    if booking_id and str(booking_id).strip():
+        bid = str(booking_id).strip()
+        _exec(cursor, """
+            UPDATE bookings 
+            SET waiver_signed = 'true', 
+                waiver_signed_at = ?,
+                guest_phone = COALESCE(?, guest_phone),
+                guest_name = COALESCE(?, guest_name),
+                guest_email = COALESCE(?, guest_email)
+            WHERE id = ? OR LOWER(notes) LIKE LOWER(?) OR LOWER(id) LIKE LOWER(?)
+        """, (signed_at, guest_phone, guest_name, guest_email, bid, f"%%{bid}%%", f"%%{bid}%%"))
+        if cursor.rowcount > 0:
+            updated = True
+
+    # 2. Try matching by email
+    if not updated and guest_email and str(guest_email).strip():
+        _exec(cursor, """
+            UPDATE bookings 
+            SET waiver_signed = 'true', 
+                waiver_signed_at = COALESCE(?, waiver_signed_at),
+                guest_phone = COALESCE(?, guest_phone),
+                guest_name = COALESCE(?, guest_name)
+            WHERE LOWER(guest_email) = LOWER(?)
+        """, (signed_at, guest_phone, guest_name, str(guest_email).strip()))
+        if cursor.rowcount > 0:
+            updated = True
+
+    # 3. Try matching by phone number
+    if not updated and guest_phone and str(guest_phone).strip():
+        clean_phone = str(guest_phone).strip().replace("+", "").replace("-", "").replace(" ", "").replace("(", "").replace(")", "")
+        if len(clean_phone) >= 7:
+            _exec(cursor, """
+                UPDATE bookings 
+                SET waiver_signed = 'true', 
+                    waiver_signed_at = COALESCE(?, waiver_signed_at),
+                    guest_name = COALESCE(?, guest_name),
+                    guest_email = COALESCE(?, guest_email)
+                WHERE guest_phone IS NOT NULL 
+                  AND (REPLACE(REPLACE(REPLACE(REPLACE(guest_phone, '+', ''), '-', ''), ' ', ''), '(', '') LIKE ? OR ? LIKE '%%' || REPLACE(REPLACE(REPLACE(REPLACE(guest_phone, '+', ''), '-', ''), ' ', ''), '(', '') || '%%')
+            """, (signed_at, guest_name, guest_email, f"%%{clean_phone}%%", clean_phone))
+            if cursor.rowcount > 0:
+                updated = True
+
+    # 4. Fallback: Match by Last Name if guest_name is provided
+    if guest_name and str(guest_name).strip():
+        code_note = f"Airbnb Code: {str(booking_id).strip()}" if (booking_id and str(booking_id).lower() != "waiver") else None
+        
+        # Extract last name (last word in the name string)
+        name_parts = str(guest_name).strip().replace(",", " ").split()
+        last_name = name_parts[-1] if len(name_parts) >= 2 else name_parts[0]
+        
+        if len(last_name) >= 3:
+            _exec(cursor, """
+                UPDATE bookings 
+                SET waiver_signed = 'true', 
+                    waiver_signed_at = COALESCE(?, waiver_signed_at),
+                    guest_phone = COALESCE(?, guest_phone),
+                    guest_email = COALESCE(?, guest_email),
+                    notes = CASE 
+                        WHEN ? IS NOT NULL AND (notes IS NULL OR LOWER(notes) NOT LIKE LOWER(?)) 
+                        THEN COALESCE(notes || ' | ', '') || ?
+                        ELSE notes 
+                    END
+                WHERE LOWER(guest_name) = LOWER(?) 
+                   OR LOWER(guest_name) LIKE LOWER(?) 
+                   OR LOWER(guest_name) LIKE ?
+            """, (signed_at, guest_phone, guest_email, code_note, f"%%{booking_id}%%" if (booking_id and str(booking_id).lower() != "waiver") else "", code_note or "", str(guest_name).strip(), f"%%{str(guest_name).strip()}%%", f"%%{last_name.lower()}%%"))
+            if cursor.rowcount > 0:
+                updated = True
+
+    if not updated:
+        try:
+            pid = f"{booking_id or ''}_{guest_email or ''}_{guest_name or ''}"
+            _exec(cursor, """
+                INSERT INTO pending_waivers (id, booking_id, guest_name, guest_email, guest_phone, signed_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    guest_phone=excluded.guest_phone,
+                    guest_email=excluded.guest_email,
+                    signed_at=excluded.signed_at
+            """, (pid, str(booking_id or ''), str(guest_name or ''), str(guest_email or ''), str(guest_phone or ''), str(signed_at or '')))
+        except Exception:
+            pass
+
+    conn.commit()
+    conn.close()
+
 # Initial run to ensure tables exist
 if __name__ == "__main__":
     init_db()
