@@ -678,9 +678,8 @@ def webhook_mews_report(payload: dict):
                 logger.error(f"Missing required header '{h}' in Mews report webhook payload")
                 raise HTTPException(status_code=400, detail=f"Missing required header '{h}'")
                 
-        # Clear all existing bookings for clean report replacement
-        logger.info("Clearing bookings database table for full report import")
-        clear_bookings()
+        # Use UPSERT save_booking to preserve waiver_signed and guest_phone values
+        logger.info("Upserting Mews report rows into bookings database table")
                 
         # Find column indices
         def get_col_idx_case_insensitive(headers_list, aliases):
@@ -823,6 +822,9 @@ def webhook_mews_report(payload: dict):
                 elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                     ota_fee = 17.0
                     
+            status_val = row[status_idx].strip() if (status_idx != -1 and len(row) > status_idx and row[status_idx]) else None
+            phone_val = row[phone_idx].strip() if (phone_idx != -1 and len(row) > phone_idx and row[phone_idx]) else None
+
             save_booking(
                 booking_id=booking_id,
                 channel=channel,
@@ -836,7 +838,10 @@ def webhook_mews_report(payload: dict):
                 check_out_date=check_out_date,
                 cabin_name=cabin_name,
                 products=products,
-                notes=notes
+                notes=notes,
+                status=status_val,
+                origin=raw_origin,
+                guest_phone=phone_val
             )
             imported_count += 1
             

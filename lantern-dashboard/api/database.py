@@ -159,16 +159,25 @@ def init_db():
     conn.close()
 
 # --- Bookings Helpers ---
-def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None, cabin_name=None, products=None, notes=None):
+def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None, cabin_name=None, products=None, notes=None, status=None, origin=None, guest_phone=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
     # Calculate net revenue
     net_revenue = gross_revenue * (1.0 - (ota_fee_percent / 100.0))
-    
+
+    # Auto-detect waiver signed status for Mews direct booking engine or checked-in stays
+    ch_lower = (channel or "").lower()
+    orig_lower = (origin or "").lower()
+    stat_lower = (status or "").lower()
+
+    is_booking_engine = "booking engine" in ch_lower or "booking engine" in orig_lower or ("mews" in ch_lower and "direct" in ch_lower)
+    is_checked_in = stat_lower in ("checked in", "checked out")
+    auto_waiver_signed = "true" if (is_booking_engine or is_checked_in) else None
+
     _exec(cursor, """
-        INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email, guest_name, check_in_date, check_out_date, cabin_name, products, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO bookings (id, channel, booking_date, nights, gross_revenue, ota_fee_percent, net_revenue, guest_email, guest_name, check_in_date, check_out_date, cabin_name, products, notes, status, origin, waiver_signed, guest_phone)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             channel=excluded.channel,
             booking_date=excluded.booking_date,
@@ -176,14 +185,22 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
             gross_revenue=excluded.gross_revenue,
             ota_fee_percent=excluded.ota_fee_percent,
             net_revenue=excluded.net_revenue,
-            guest_email=excluded.guest_email,
+            guest_email=COALESCE(NULLIF(excluded.guest_email, ''), bookings.guest_email),
             guest_name=excluded.guest_name,
+            guest_phone=COALESCE(NULLIF(excluded.guest_phone, ''), bookings.guest_phone),
             check_in_date=excluded.check_in_date,
             check_out_date=excluded.check_out_date,
             cabin_name=excluded.cabin_name,
-            products=excluded.products,
-            notes=excluded.notes
-    """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email, guest_name, check_in_date, check_out_date, cabin_name, products, notes))
+            products=COALESCE(excluded.products, bookings.products),
+            notes=CASE WHEN excluded.notes IS NOT NULL AND excluded.notes != '' THEN excluded.notes ELSE bookings.notes END,
+            status=COALESCE(excluded.status, bookings.status),
+            origin=COALESCE(excluded.origin, bookings.origin),
+            waiver_signed=CASE 
+                WHEN bookings.waiver_signed = 'true' THEN 'true'
+                WHEN excluded.waiver_signed = 'true' THEN 'true'
+                ELSE COALESCE(bookings.waiver_signed, excluded.waiver_signed)
+            END
+    """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email, guest_name, check_in_date, check_out_date, cabin_name, products, notes, status, origin, auto_waiver_signed, guest_phone))
     
     conn.commit()
     conn.close()
