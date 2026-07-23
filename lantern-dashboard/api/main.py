@@ -68,27 +68,10 @@ def normalize_channel(ch: str) -> str:
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
 if allowed_origins_env:
     allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
-else:
-    allowed_origins = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "https://operations.lanterncamp.com",
-        "https://lantern-analytics.vercel.app",
-        "*"
-    ]
-
-# If allow_origins contains wildcard "*", we must set allow_credentials to False
-# because browsers reject "*" with credentials allowed.
-allow_creds = True
-if "*" in allowed_origins:
-    allow_creds = False
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=allow_creds,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
