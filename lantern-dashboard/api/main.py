@@ -19,13 +19,13 @@ try:
     from .database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
         save_setting, get_setting, clear_bookings, get_first_booking_date,
-        get_geo_metrics, get_operations_calendar, update_message_sent
+        get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed
     )
 except ImportError:
     from database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
         save_setting, get_setting, clear_bookings, get_first_booking_date,
-        get_geo_metrics, get_operations_calendar, update_message_sent
+        get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed
     )
 
 sync_data = None
@@ -618,6 +618,104 @@ def mark_sms_sent(booking_id: str, payload: Optional[MarkSentPayload] = None):
     except Exception as e:
         logger.error(f"Error marking SMS sent for booking {booking_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+class CheckinCompletion(BaseModel):
+    booking_id: str
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    timestamp: Optional[str] = None
+    cabin_name: Optional[str] = None
+
+def send_notification_email(guest_name: str, cabin_name: str, guest_email: str, guest_phone: str = "", booking_id: str = ""):
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_port = os.environ.get("SMTP_PORT")
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    smtp_from = os.environ.get("SMTP_FROM", smtp_user)
+    
+    if not (smtp_host and smtp_port and smtp_user and smtp_password):
+        logger.warning("SMTP credentials are not fully configured in environment variables. Email notification skipped.")
+        return False
+        
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
+    recipients = ["addison@lanterncamp.com", "bswardlick@gmail.com"]
+    
+    msg = MIMEMultipart()
+    msg['From'] = smtp_from
+    msg['To'] = ", ".join(recipients)
+    msg['Subject'] = f"🔔 Waiver Signed: {guest_name or 'Unknown'} - {cabin_name or 'Unassigned'}"
+    
+    body = f"""Hello,
+    
+A guest has signed their check-in waiver:
+    
+- Guest Name: {guest_name or 'Unknown'}
+- Guest Email: {guest_email or 'Not provided'}
+- Guest Phone: {guest_phone or 'Not provided'}
+- Cabin Assigned: {cabin_name or 'Unassigned'}
+- Booking ID: {booking_id}
+- Signature Timestamp: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} UTC
+
+You can review this reservation and manage SMS cabin assignment here:
+https://operations.lanterncamp.com/sms-cabin-assigner
+    
+Best,
+Lantern Camp Operations System
+"""
+    msg.attach(MIMEText(body, 'plain'))
+    
+    try:
+        port = int(smtp_port)
+        if port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, port)
+        else:
+            server = smtplib.SMTP(smtp_host, port)
+            server.starttls()
+            
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_from, recipients, msg.as_string())
+        server.quit()
+        logger.info(f"Waiver notification email successfully sent to {recipients} for {guest_name}.")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send waiver notification email: {e}")
+        return False
+
+@app.post("/api/checkin/complete")
+def webhook_checkin_complete(payload: CheckinCompletion, x_checkin_secret: Optional[str] = Header(None)):
+    secret = os.environ.get("CHECKIN_WEBHOOK_SECRET")
+    if secret and x_checkin_secret != secret:
+        raise HTTPException(status_code=401, detail="Invalid checkin secret token")
+    
+    signed_at = payload.timestamp or datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    update_waiver_signed(
+        booking_id=payload.booking_id,
+        is_signed=True,
+        signed_at=signed_at,
+        guest_phone=payload.phone,
+        guest_name=payload.name,
+        guest_email=payload.email
+    )
+    
+    # Trigger background email notification
+    send_notification_email(
+        guest_name=payload.name,
+        cabin_name=payload.cabin_name,
+        guest_email=payload.email,
+        guest_phone=payload.phone or "",
+        booking_id=payload.booking_id
+    )
+    
+    return {
+        "status": "success",
+        "booking_id": payload.booking_id,
+        "waiver_signed": "true",
+        "email_sent": True
+    }
 
 # --- DATA INGEST & MUTATION ---
 
