@@ -225,7 +225,8 @@ export default function App() {
   const showDateFilter = false;
 
   if (window.location.pathname === "/airbnb-waiver-helper") {
-    return <AirbnbWaiverHelper apiBase={API_BASE} isMobile={isMobile} />;
+    window.location.replace("https://operations.lanterncamp.com");
+    return null;
   }
 
   return (

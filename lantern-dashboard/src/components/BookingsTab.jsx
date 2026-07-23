@@ -107,7 +107,9 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
           <div className="panel-title" style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
             <span>Mews Bookings Ledger</span>
             <a 
-              href="/airbnb-waiver-helper" 
+              href="https://operations.lanterncamp.com" 
+              target="_blank"
+              rel="noopener noreferrer"
               style={{ 
                 fontSize: "12px", 
                 fontWeight: "600", 
@@ -129,7 +131,7 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
                 e.target.style.backgroundColor = "#f0f4f1";
               }}
             >
-              🔑 Airbnb Waiver Helper Page
+              ⚙️ Lantern Operations Portal ↗
             </a>
           </div>
           
