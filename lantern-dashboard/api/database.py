@@ -208,6 +208,10 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
     conn.close()
     return net_revenue
 
+def clear_bookings():
+    """No-op alias to maintain import compatibility."""
+    pass
+
 def get_all_bookings():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -392,6 +396,94 @@ def save_geo_metrics_batch(rows):
         
     conn.commit()
     conn.close()
+
+def update_message_sent(booking_id, is_sent=True, sent_at=None, assigned_cabin=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sent_str = str(is_sent).lower()
+    
+    # 1. Permanent sidecar table update
+    _exec(cursor, """
+        INSERT INTO sms_dispatches (booking_id, message_sent, sent_at, assigned_cabin)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(booking_id) DO UPDATE SET
+            message_sent = EXCLUDED.message_sent,
+            sent_at = EXCLUDED.sent_at,
+            assigned_cabin = COALESCE(EXCLUDED.assigned_cabin, sms_dispatches.assigned_cabin)
+    """, (str(booking_id), sent_str, sent_at, assigned_cabin))
+    
+    # 2. Backwards compatible update on bookings table
+    _exec(cursor, """
+        UPDATE bookings 
+        SET message_sent = ?, message_sent_at = ?, cabin_name = COALESCE(?, cabin_name)
+        WHERE id = ?
+    """, (sent_str, sent_at, assigned_cabin, str(booking_id)))
+    conn.commit()
+    conn.close()
+
+def get_operations_calendar(date_str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Calculate date_plus_7
+    try:
+        from datetime import datetime, timedelta
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        dt_plus_7 = (dt + timedelta(days=7)).strftime("%Y-%m-%d")
+    except Exception:
+        dt_plus_7 = date_str  # fallback
+
+    base_select = """
+        SELECT b.id, b.channel, 
+               COALESCE(NULLIF(b.guest_name, ''), w.guest_name) AS guest_name,
+               COALESCE(NULLIF(b.guest_email, ''), w.guest_email) AS guest_email,
+               COALESCE(NULLIF(b.guest_phone, ''), w.guest_phone) AS guest_phone,
+               b.check_in_date, b.check_out_date,
+               COALESCE(s.assigned_cabin, b.cabin_name) AS cabin_name,
+               b.products, b.notes, b.status, b.origin,
+               CASE WHEN w.id IS NOT NULL OR b.waiver_signed = 'true' THEN 'true' ELSE COALESCE(b.waiver_signed, 'false') END AS waiver_signed
+        FROM bookings b
+        LEFT JOIN waiver_signatures w ON (
+            (b.id IS NOT NULL AND b.id != '' AND w.booking_id = b.id)
+            OR (b.notes IS NOT NULL AND b.notes != '' AND w.booking_id IS NOT NULL AND w.booking_id != '' AND b.notes LIKE '%' || w.booking_id || '%')
+            OR (w.guest_email IS NOT NULL AND w.guest_email != '' AND b.guest_email IS NOT NULL AND b.guest_email != '' AND LOWER(b.guest_email) = LOWER(w.guest_email))
+            OR (w.guest_phone IS NOT NULL AND b.guest_phone IS NOT NULL AND LOWER(w.guest_phone) = LOWER(b.guest_phone))
+            OR (w.guest_name IS NOT NULL AND w.guest_name != '' AND b.guest_name IS NOT NULL AND b.guest_name != '' AND LOWER(b.guest_name) = LOWER(w.guest_name))
+        )
+        LEFT JOIN sms_dispatches s ON b.id = s.booking_id
+    """
+        
+    # Arrivals query
+    query_arrivals = base_select + " WHERE b.check_in_date = ? ORDER BY cabin_name ASC"
+    _exec(cursor, query_arrivals, (date_str,))
+    arrivals = [dict(r) for r in cursor.fetchall()]
+    
+    # Departures query
+    query_departures = base_select + " WHERE b.check_out_date = ? ORDER BY cabin_name ASC"
+    _exec(cursor, query_departures, (date_str,))
+    departures = [dict(r) for r in cursor.fetchall()]
+    
+    # In-house query (guests checked in on or before date_str and checking out after date_str)
+    query_in_house = base_select + " WHERE b.check_in_date <= ? AND b.check_out_date > ? ORDER BY cabin_name ASC"
+    _exec(cursor, query_in_house, (date_str, date_str))
+    in_house = [dict(r) for r in cursor.fetchall()]
+    
+    # 7-day upcoming add-ons forecast query
+    query_addons = base_select + """ 
+        WHERE b.check_in_date > ? AND b.check_in_date <= ?
+          AND (b.products LIKE ? OR b.products LIKE ? OR b.products LIKE ?)
+        ORDER BY b.check_in_date ASC
+    """
+    _exec(cursor, query_addons, (date_str, dt_plus_7, "%Stargazing%", "%Walk%", "%Pet%"))
+    addons = [dict(r) for r in cursor.fetchall()]
+    
+    conn.close()
+    return {
+        "arrivals": arrivals,
+        "departures": departures,
+        "in_house": in_house,
+        "upcoming_addons": addons
+    }
 
 # Initial run to ensure tables exist
 if __name__ == "__main__":
