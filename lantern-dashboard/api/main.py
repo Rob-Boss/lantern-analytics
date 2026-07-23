@@ -66,12 +66,21 @@ def normalize_channel(ch: str) -> str:
 
 # Configurable CORS origins for production cross-domain fetching
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
-if allowed_origins_env:
+if allowed_origins_env and allowed_origins_env.strip() != "*":
     allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+    if "https://operations.lanterncamp.com" not in allowed_origins:
+        allowed_origins.append("https://operations.lanterncamp.com")
+else:
+    allowed_origins = ["*"]
+
+allow_creds = True
+if "*" in allowed_origins:
+    allow_creds = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=allowed_origins,
+    allow_credentials=allow_creds,
     allow_methods=["*"],
     allow_headers=["*"],
 )
