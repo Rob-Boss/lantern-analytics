@@ -327,6 +327,7 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     
     return {
         "kpis": {
+            "total_gross_revenue": round(total_gross_rev, 2),
             "total_net_revenue": round(total_net_rev, 2),
             "airbnb_net_revenue": round(airbnb_net_rev, 2),
             "mews_net_revenue": round(mews_net_rev, 2),
