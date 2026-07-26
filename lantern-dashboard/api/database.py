@@ -216,7 +216,8 @@ def get_all_bookings():
     conn = get_db_connection()
     cursor = conn.cursor()
     _exec(cursor, """
-        SELECT b.id, b.channel, b.booking_date, b.nights, b.gross_revenue, b.ota_fee_percent, b.net_revenue, 
+        SELECT DISTINCT ON (b.id)
+               b.id, b.channel, b.booking_date, b.nights, b.gross_revenue, b.ota_fee_percent, b.net_revenue, 
                COALESCE(NULLIF(b.guest_email, ''), w.guest_email) AS guest_email,
                COALESCE(NULLIF(b.guest_name, ''), w.guest_name) AS guest_name,
                COALESCE(NULLIF(b.guest_phone, ''), w.guest_phone) AS guest_phone,
@@ -239,10 +240,7 @@ def get_all_bookings():
             OR (w.guest_name IS NOT NULL AND w.guest_name != '' AND b.guest_name IS NOT NULL AND b.guest_name != '' AND LOWER(b.guest_name) = LOWER(w.guest_name))
         )
         LEFT JOIN sms_dispatches s ON b.id = s.booking_id
-        GROUP BY b.id, b.channel, b.booking_date, b.nights, b.gross_revenue, b.ota_fee_percent, b.net_revenue,
-                 b.guest_email, b.guest_name, b.guest_phone, b.check_in_date, b.check_out_date, b.cabin_name,
-                 b.products, b.notes, b.status, b.origin, b.waiver_signed, b.waiver_signed_at, b.message_sent, b.message_sent_at
-        ORDER BY b.booking_date DESC
+        ORDER BY b.id, b.booking_date DESC
     """)
     rows = cursor.fetchall()
     conn.close()
