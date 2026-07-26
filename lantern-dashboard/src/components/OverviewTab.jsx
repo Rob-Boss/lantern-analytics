@@ -37,6 +37,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
   };
 
   // KPI Calculations
+  const totalGrossRevenue = kpis.total_gross_revenue || 0;
   const totalRevenue = kpis.total_net_revenue || 0;
   const totalSpend = kpis.total_spend || 0;
   const roas = kpis.roas || 0.0;
@@ -335,6 +336,12 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
       {/* KPI Cards Grid */}
       <div className="kpi-grid">
         <div className="kpi-card">
+          <div className="kpi-label">Total Gross Revenue</div>
+          <div className="kpi-value">{formatCurrency(totalGrossRevenue)}</div>
+          <div className="kpi-subtext">Before OTA commissions</div>
+        </div>
+
+        <div className="kpi-card">
           <div className="kpi-label">Total Net Revenue</div>
           <div className="kpi-value">{formatCurrency(totalRevenue)}</div>
           <div className="kpi-subtext">Across all booking channels</div>
@@ -378,12 +385,6 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
               <div className="kpi-label">Total Ad Impressions</div>
               <div className="kpi-value">{formatNumber(totalImpressions)}</div>
               <div className="kpi-subtext">Google & Meta combined</div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-label">Web Sessions</div>
-              <div className="kpi-value">{formatNumber(webSessions)}</div>
-              <div className="kpi-subtext">Total visits from GA4</div>
             </div>
 
             <div className="kpi-card">

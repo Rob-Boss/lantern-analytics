@@ -251,6 +251,7 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
         bookings = filtered_bookings
         
     # Calculate revenue KPIs
+    total_gross_rev = sum(b['gross_revenue'] for b in bookings)
     total_net_rev = sum(b['net_revenue'] for b in bookings)
     airbnb_net_rev = sum(b['net_revenue'] for b in bookings if normalize_channel(b['channel']) == 'Airbnb')
     mews_net_rev = sum(b['net_revenue'] for b in bookings if normalize_channel(b['channel']) == 'Mews Booking Engine')
