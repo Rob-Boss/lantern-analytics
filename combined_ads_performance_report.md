@@ -1,40 +1,40 @@
 # 📊 Combined Advertising & Revenue Performance Report
-**Date Range:** July 12, 2026 – July 18, 2026 (This Week) vs. July 5, 2026 – July 11, 2026 (Previous Week)  
-**Report Generated:** July 20, 2026 (Monday morning)
+**Date Range:** July 19, 2026 – July 25, 2026 (This Week) vs. July 12, 2026 – July 18, 2026 (Previous Week)  
+**Report Generated:** July 26, 2026
 
 ---
 
 ## 📈 Executive Summary: Performance & Channel Shift
 
-This past week (July 12 – July 18) showed revenue increases across both booking channels.
+This past week (July 19 – July 25) recorded growth in overall revenue and total booking volume, driven by an increase in Airbnb reservations.
 
-### Airbnb Listing Optimization
-On July 13–14, optimizations were made to the Airbnb listings, including updating written descriptions, refreshing layout and site photos, and adjusting amenity filter settings (sauna access, hiking, and pet-friendliness). Following these updates, **Airbnb net revenue increased by +178.3%** week-over-week, rising from **$1,743.42** to **$4,851.40**.
+### Airbnb Performance
+Following listing updates on July 13–14 (including refreshed descriptions, updated photos, and adjusted amenity filters), Airbnb reservation volume increased during the week. **Airbnb net revenue increased by +142.1%** week-over-week, rising from **$4,851.40** to **$11,747.57** across 25 bookings.
 
 ### Channel Mix (Mews vs. Airbnb)
-Direct bookings via the Mews Booking Engine also increased, with net revenue up **+71.3%** week-over-week (from **$3,908.86** to **$6,697.19**). Direct bookings via Mews accounted for **58.0%** of the week's total net revenue ($6,697.19), while Airbnb accounted for **42.0%** ($4,851.40). The increase in Airbnb booking volume did not result in a decline in Mews direct revenue.
+Direct bookings via the Mews Booking Engine generated 6 bookings totaling **$1,508.44** in net revenue (compared to 7 bookings and **$6,697.19** in the preceding week). For the week, Airbnb accounted for **88.6%** ($11,747.57) of net revenue, while Mews direct bookings accounted for **11.4%** ($1,508.44).
 
 > [!NOTE]
 > **Automated Hourly Sync Active:** Booking reservation data, GA4 traffic analytics, and ad campaign performance (Google & Meta Ads) are automatically synced every hour. The dashboard at `https://lantern-analytics.vercel.app` is updated in the background.
 
 **Key Metrics & Outcomes:**
-*   **Total Revenue Growth:** Total weekly net revenue grew by **104.3%** week-over-week (from **$5,652.28** to **$11,548.59**).
-*   **Bookings Increase:** Completed bookings increased from 9 to 17 (**+88.9%**).
-*   **Traffic & Conversion Mix:** Total pageviews decreased by **-18.9%** and checkouts initiated decreased by **-12.1%** (associated with reduced display network spend in Google Ads). Completed bookings increased by **+88.9%**, indicating a higher conversion rate among the remaining search traffic.
+*   **Total Revenue Growth:** Total weekly net revenue grew by **14.8%** week-over-week (from **$11,548.59** to **$13,256.01**).
+*   **Bookings Increase:** Total bookings increased from 17 to 31 (**+82.4%**).
+*   **Traffic & Conversion Metrics:** Total pageviews increased by **+28.2%** (from 8,655 to 11,093) and checkouts initiated increased by **+47.5%** (from 756 to 1,115), reflecting full active delivery across Meta Ads campaigns and sustained search traffic.
 
 ---
 
 ## 📊 7-Day Performance Snapshot
 
-| Metric | This Week (July 12 - 18) | Previous Week (July 5 - 11) | % Change | Notes |
+| Metric | This Week (July 19 - 25) | Previous Week (July 12 - 18) | % Change | Notes |
 | :--- | :---: | :---: | :---: | :--- |
-| **Total Bookings** | 17 | 9 | **+88.9%** | Increase of 8 bookings. |
-| **Total Gross Revenue** | $12,404.72 | $5,959.94 | **+108.1%** | |
-| **Total Net Revenue** | **$11,548.59** | **$5,652.28** | **+104.3%** | Growth driven by both Mews and Airbnb channels. |
-| **Mews Net Revenue** | $6,697.19 | $3,908.86 | **+71.3%** | Mews remains the primary channel by volume. |
-| **Airbnb Net Revenue** | $4,851.40 | $1,743.42 | **+178.3%** | Increased following listing optimizations. |
-| **Total Pageviews** | 8,655 | 10,678 | **-18.9%** | Attributed to Google PMax display budget reduction and the Meta campaign delivery pause. |
-| **Initiated Checkouts** | **756** | **860** | **-12.1%** | Decrease of 104 checkouts, associated with Google PMax display budget reduction and the Meta campaign delivery pause. |
+| **Total Bookings** | 31 | 17 | **+82.4%** | Increase of 14 bookings. |
+| **Total Gross Revenue** | $15,329.11 | $12,404.72 | **+23.6%** | |
+| **Total Net Revenue** | **$13,256.01** | **$11,548.59** | **+14.8%** | Total weekly revenue across all channels. |
+| **Mews Net Revenue** | $1,508.44 | $6,697.19 | **-77.5%** | 6 direct Mews bookings. |
+| **Airbnb Net Revenue** | $11,747.57 | $4,851.40 | **+142.1%** | 25 bookings following listing updates. |
+| **Total Pageviews** | 11,093 | 8,655 | **+28.2%** | GA4 website pageviews. |
+| **Initiated Checkouts** | **1,115** | **756** | **+47.5%** | Increase of 359 checkouts. |
 
 ---
 
@@ -42,62 +42,62 @@ Direct bookings via the Mews Booking Engine also increased, with net revenue up 
 
 | Campaign Type | Spend (This Week) | Impressions | Clicks | CTR | Avg. CPC |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Google Search (BOF)** | $42.69 | 239 | 123 | 51.46% | $0.35 |
-| **Google Search (MOF)** | $286.47 | 3,084 | 351 | 11.38% | $0.82 |
-| **Performance Max (Visual)** | $34.29 | 6,255 | 137 | 2.19% | $0.25 |
-| **Combined Google Ads** | **$363.45** | **9,578** | **611** | **6.38%** | **$0.59** |
+| **Google Search (BOF)** | $49.10 | 305 | 115 | 37.70% | $0.43 |
+| **Google Search (MOF)** | $268.19 | 3,146 | 363 | 11.54% | $0.74 |
+| **Performance Max (Visual)** | $38.95 | 6,144 | 181 | 2.95% | $0.22 |
+| **Combined Google Ads** | **$356.24** | **9,595** | **659** | **6.87%** | **$0.54** |
 
 ### 🛠️ Google Ads Analysis:
-*   **Budget Allocation:** Performance Max display placement spend was reduced (from $70.03 to $34.29) while Search campaign spend increased (MOF spend rose from $257.92 to $286.47).
-*   **Competitor Exclusions:** Phrase-match exclusions for competing properties (e.g. `sandy pines`, `huttopia`) were maintained. Average Google Ads CPC was $0.59.
-*   **Brand Search CTR:** The Bottom of Funnel (Brand Protection) search campaign recorded a **51.46% CTR** on branded search terms.
+*   **Budget Allocation:** Search campaigns represented $317.29 of spend ($49.10 BOF, $268.19 MOF), while Performance Max display/visual spend totaled $38.95.
+*   **Cost & CTR:** Overall Google Ads CPC averaged $0.54 with a 6.87% CTR across 9,595 impressions.
+*   **Brand Search CTR:** The Bottom of Funnel search campaign recorded a **37.70% CTR** on branded terms.
 
 ---
 
 ## 📱 Meta Ads Campaign Performance
 
-*   **Meta Spend:** $266.47 (-23.8% vs. $349.60 last week)
-*   **Impressions:** 52,749 (-25.4%)
-*   **Clicks:** 4,627 (-18.3%)
-*   **Landing Page Views:** 2,320 (-27.6%)
-*   **Cost per View (CPV):** **$0.11** (stable)
-*   **Meta Avg. Daily Spend:** $38.07 (pacing below the $50.00/day target)
+*   **Meta Spend:** $349.48 (+31.1% vs. $266.47 last week)
+*   **Impressions:** 68,139 (+29.2%)
+*   **Clicks:** 5,890 (+27.3%)
+*   **Landing Page Views:** 3,022 (+30.3%)
+*   **Cost per View (CPV):** **$0.12**
+*   **Meta Avg. Daily Spend:** $49.93 (pacing at the $50.00/day target)
 
 ### Meta Campaign Summary
 | Campaign Name | Status | Spend | Impressions | Clicks | Landing Page Views | Cost per View |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **HOMEPAGE traffic - static single image - [Drive Market]** | `ACTIVE` | $253.30 | 50,512 | 4,499 | 2,241 | $0.11 |
-| **Warm Retargeting Stack - Website + Social** | `ACTIVE` | $13.17 | 2,237 | 128 | 79 | $0.17 |
-| **Combined Meta Ads** | **ACTIVE** | **$266.47** | **52,749** | **4,627** | **2,320** | **$0.11** |
+| **HOMEPAGE traffic - static single image - [Drive Market]** | `ACTIVE` | $279.85 | 60,488 | 5,204 | 2,604 | $0.11 |
+| **Warm Retargeting Stack - Website + Social** | `ACTIVE` | $69.63 | 7,651 | 686 | 418 | $0.17 |
+| **Combined Meta Ads** | **ACTIVE** | **$349.48** | **68,139** | **5,890** | **3,022** | **$0.12** |
 
 ### 👥 Drive Market Campaign Breakdown
 
 #### Age Demographics
 | Age Demographic | Impressions | Landing Page Views | Total Spend | Cost per View |
 | :--- | :---: | :---: | :---: | :---: |
-| **18-24** | 533 | 5 | $1.25 | $0.25 |
-| **25-34** | 4,046 | 72 | $11.21 | $0.16 |
-| **35-44** | 7,290 | 278 | $29.50 | $0.11 |
-| **45-54** | 8,532 | 337 | $40.39 | $0.12 |
-| **55-64** | 12,955 | 626 | $68.06 | $0.11 |
-| **65+** | 17,156 | 919 | $102.89 | $0.11 |
+| **18-24** | 1,411 | 21 | $2.49 | $0.12 |
+| **25-34** | 8,246 | 162 | $18.02 | $0.11 |
+| **35-44** | 9,082 | 367 | $38.15 | $0.10 |
+| **45-54** | 9,677 | 435 | $46.17 | $0.11 |
+| **55-64** | 13,482 | 692 | $69.36 | $0.10 |
+| **65+** | 18,589 | 917 | $105.65 | $0.12 |
 
 #### Geographic Distribution
 | State / Region | Impressions | Spend | % of Budget |
 | :--- | :---: | :---: | :---: |
-| **Massachusetts** | 9,318 | $54.61 | 21.6% |
-| **Maine** | 9,471 | $49.89 | 19.7% |
-| **New York** | 9,762 | $39.25 | 15.5% |
-| **Florida** | 6,937 | $29.96 | 11.8% |
-| **New Hampshire** | 3,328 | $19.11 | 7.5% |
-| **Pennsylvania** | 3,256 | $16.39 | 6.5% |
-| **Connecticut** | 3,101 | $16.28 | 6.4% |
-| **New Jersey** | 1,588 | $7.78 | 3.1% |
-| **Rhode Island** | 1,173 | $6.91 | 2.7% |
-| **Maryland** | 1,287 | $6.61 | 2.6% |
-| **Vermont** | 1,291 | $6.53 | 2.6% |
+| **Massachusetts** | 10,526 | $58.06 | 20.7% |
+| **Maine** | 10,497 | $57.73 | 20.6% |
+| **New York** | 12,504 | $43.17 | 15.4% |
+| **Florida** | 8,829 | $29.19 | 10.4% |
+| **New Hampshire** | 3,856 | $20.95 | 7.5% |
+| **Connecticut** | 3,572 | $18.70 | 6.7% |
+| **Pennsylvania** | 4,024 | $17.06 | 6.1% |
+| **New Jersey** | 2,020 | $9.57 | 3.4% |
+| **Maryland** | 1,660 | $8.81 | 3.1% |
+| **Vermont** | 1,543 | $8.75 | 3.1% |
+| **Rhode Island** | 1,457 | $7.85 | 2.8% |
 
 ### 🛠️ Meta Ads Analysis:
-*   **Warm Retargeting Campaign:** The `Warm Retargeting Stack` campaign was launched, spending $13.17 and generating 79 landing page views.
-*   **Geographic Focus:** Massachusetts (21.6%), Maine (19.7%), and New York (15.5%) accounted for 56.8% of the total Drive Market campaign spend.
-*   **Delivery Interruption (Monthly Spend Limit):** The declines in weekly spend (-23.8%) and impressions (-25.4%) are due to the ad account hitting a monthly spend limit guardrail on Thursday, July 16. The limit was increased on Friday, July 17, accounting for a partial spend on both days.
+*   **Warm Retargeting Campaign:** The `Warm Retargeting Stack` campaign spent $69.63 and generated 418 landing page views at $0.17 CPV.
+*   **Geographic Focus:** Massachusetts (20.7%), Maine (20.6%), and New York (15.4%) combined for 56.7% of total Drive Market spend.
+*   **Pacing & Delivery:** Daily spend averaged $49.93, delivering steady volume across all drive market segments.
