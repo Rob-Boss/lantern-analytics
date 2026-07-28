@@ -6,23 +6,26 @@
 
 ## 📈 Revenue & Channel Yield (Key Weekly Insights)
 
-Weekly booking volume increased by **+82.4%** (31 bookings vs. 17), while total net revenue grew by **+14.8%** ($13,256.01 vs. $11,548.59).
+Weekly booking volume increased by **+82.4%** (31 bookings vs. 17), and total net revenue grew by **+23.6%** ($15,329.11 vs. $12,404.72).
+
+> [!NOTE]
+> **Data Accuracy Note (Airbnb Payout Audit):** Mews exports report Airbnb revenue net of Airbnb's 15.5% host fee. The backend database has been audited to set `ota_fee_percent = 0.0%` for Airbnb bookings, eliminating previous duplicate 15% backend deductions and reflecting true net host payouts ($13,820.67 net for Airbnb last week).
 
 ### 🔍 Core Revenue Insights:
-* **Yield & Booking Value Disconnect:** Average net revenue per booking dropped **-37.1%** (from **$679.33** down to **$427.61** per stay).
-* **Stay Duration:** Average length of stay declined **-17.7%** (from **2.24 nights** to **1.84 nights**), driven by 10 single-night stays (vs. 5 prior). Effective net daily rate (ADR) dropped **-23.5%** (from **$303.91** to **$232.56/night**).
-* **Channel Mix Shift:** Mews direct revenue fell to $1,508.44 (6 stays, 11.4% of total net), while Airbnb surged to 25 stays ($11,747.57 net, 88.6% of total net) at lower single-night price points ($164–$250 net).
-* **Comped Stays:** Three $0.00 Mews stays were logged on July 22 (Segil, Cryan, Pell). Average net payout across the 28 paid stays was **$473.43**.
+* **Yield & Booking Value Dynamics:** Average net revenue per booking shifted from **$729.69** down to **$494.49** per stay (-32.2%).
+* **Stay Duration:** Average length of stay declined from **2.24 nights** to **1.84 nights** (-17.7%), driven by 10 single-night stays (vs. 5 prior). Effective net daily rate (ADR) moved from **$326.44** to **$268.93/night** (-17.6%).
+* **Channel Mix Shift:** Mews direct revenue was $1,508.44 (6 stays, 9.8% of total net), while Airbnb generated 25 stays ($13,820.67 net, 90.2% of total net) at lower single-night price points.
+* **Comped Stays:** Three $0.00 Mews stays were logged on July 22 (Segil, Cryan, Pell). Average net payout across the 28 paid stays was **$547.47**.
 
 | Metric | This Week (July 19 - 25) | Previous Week (July 12 - 18) | % Change |
 | :--- | :---: | :---: | :---: |
 | **Total Bookings** | **31** | 17 | **+82.4%** |
-| **Total Net Revenue** | **$13,256.01** | $11,548.59 | **+14.8%** |
-| **Avg. Net Revenue / Booking** | **$427.61** | $679.33 | **-37.1%** |
+| **Total Net Revenue** | **$15,329.11** | $12,404.72 | **+23.6%** |
+| **Avg. Net Revenue / Booking** | **$494.49** | $729.69 | **-32.2%** |
 | **Avg. Length of Stay** | **1.84 nights** | 2.24 nights | **-17.7%** |
-| **Net Daily Rate (ADR)** | **$232.56/night** | $303.91/night | **-23.5%** |
+| **Net Daily Rate (ADR)** | **$268.93/night** | $326.44/night | **-17.6%** |
 | **Mews Net Revenue** | **$1,508.44** (6 stays) | $6,697.19 (7 stays) | **-77.5%** |
-| **Airbnb Net Revenue** | **$11,747.57** (25 stays) | $4,851.40 (10 stays) | **+142.1%** |
+| **Airbnb Net Revenue** | **$13,820.67** (25 stays) | $5,707.53 (10 stays) | **+142.1%** |
 
 > [!NOTE]
 > **Real-Time Data Sync:** Live metrics automatically sync hourly to the cloud database at [lantern-analytics.vercel.app](https://lantern-analytics.vercel.app).

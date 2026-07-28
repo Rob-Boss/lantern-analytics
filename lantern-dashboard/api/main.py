@@ -752,7 +752,7 @@ def webhook_booking(booking: BookingWebhook):
         if ota_fee == 0.0 and booking.channel:
             ch_lower = booking.channel.lower()
             if "airbnb" in ch_lower or "abb" in ch_lower:
-                ota_fee = 15.0
+                ota_fee = 0.0  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
             elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                 ota_fee = 17.0
                 
@@ -947,7 +947,7 @@ def webhook_mews_report(payload: dict):
             if channel:
                 ch_lower = channel.lower()
                 if "airbnb" in ch_lower or "abb" in ch_lower:
-                    ota_fee = 15.0
+                    ota_fee = 0.0  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
                 elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                     ota_fee = 17.0
                     
@@ -1082,7 +1082,7 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
             if ota_fee == 0.0:
                 ch_lower = channel.lower()
                 if "airbnb" in ch_lower or "abb" in ch_lower:
-                    ota_fee = 15.0
+                    ota_fee = 0.0  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
                 elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                     ota_fee = 17.0
                 
