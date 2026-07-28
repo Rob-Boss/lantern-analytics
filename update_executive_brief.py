@@ -1,4 +1,7 @@
-# 📊 Weekly Executive Brief (Marketing & Operations Update)
+import os
+import shutil
+
+report_content = """# 📊 Weekly Executive Brief (Marketing & Operations Update)
 **Date Range:** July 19, 2026 – July 25, 2026 (This Week) vs. July 12, 2026 – July 18, 2026 (Previous Week)  
 **Published:** July 26, 2026
 
@@ -58,3 +61,15 @@ Feedback collected from guest stays is logged and tracked to drive immediate pro
 Interactive web tools have been prototyped to streamline cabin turn timelines and daily site operations, intended to replace legacy workflows.
 * **Beta Web App:** [Lantern Operations Beta Tools](https://lantern-operations.vercel.app/audition/timeline)
 * **Addison Review Needed:** These tools are currently in beta. **Feedback and input from Addison** are required to refine the turn timeline interface and tailor features to exact on-site operational needs.
+"""
+
+# 1. Update local file in Lantern Advertising
+local_file = "combined_ads_performance_report.md"
+with open(local_file, "w", encoding="utf-8") as f:
+    f.write(report_content)
+print(f"Updated local report file {local_file}")
+
+# 2. Copy to lantern-living-documents
+living_docs_target = "/Users/swardy/Documents/Antigravity Projects/lantern-living-documents/docs/marketing-summary-july-2026.md"
+shutil.copyfile(local_file, living_docs_target)
+print(f"Copied updated report to {living_docs_target}")
