@@ -1,4 +1,8 @@
-# 📊 Combined Advertising & Revenue Performance Report
+import os
+import shutil
+import subprocess
+
+report_content = """# 📊 Combined Advertising & Revenue Performance Report
 **Date Range:** July 19, 2026 – July 25, 2026 (This Week) vs. July 12, 2026 – July 18, 2026 (Previous Week)  
 **Report Generated:** July 26, 2026
 
@@ -105,3 +109,15 @@ While overall booking volume nearly doubled, revenue growth was moderated by a *
 *   **Warm Retargeting Campaign:** The `Warm Retargeting Stack` campaign spent $69.63 and generated 418 landing page views at $0.17 CPV.
 *   **Geographic Focus:** Massachusetts (20.7%), Maine (20.6%), and New York (15.4%) combined for 56.7% of total Drive Market spend.
 *   **Pacing & Delivery:** Daily spend averaged $49.93, delivering steady volume across drive market segments.
+"""
+
+# 1. Save to local file in Lantern Advertising
+local_file = "combined_ads_performance_report.md"
+with open(local_file, "w", encoding="utf-8") as f:
+    f.write(report_content)
+print(f"Updated local file {local_file}")
+
+# 2. Copy to lantern-living-documents
+living_docs_target = "/Users/swardy/Documents/Antigravity Projects/lantern-living-documents/docs/marketing-summary-july-2026.md"
+shutil.copyfile(local_file, living_docs_target)
+print(f"Copied updated report to {living_docs_target}")
