@@ -165,13 +165,18 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Calculate net revenue
-    net_revenue = gross_revenue * (1.0 - (ota_fee_percent / 100.0))
-
-    # Auto-detect waiver signed status for Mews direct booking engine or checked-in stays
     ch_lower = (channel or "").lower()
     orig_lower = (origin or "").lower()
     stat_lower = (status or "").lower()
+
+    # If channel is Airbnb, Mews amount (passed in gross_revenue) is the Net Host Payout ($530.83).
+    # Reconstruct True Gross Guest Charge ($628.20) using Airbnb's 15.5% host fee.
+    if "airbnb" in ch_lower or "abb" in ch_lower:
+        ota_fee_percent = 15.5
+        net_revenue = float(gross_revenue)
+        gross_revenue = net_revenue / (1.0 - (ota_fee_percent / 100.0))
+    else:
+        net_revenue = float(gross_revenue) * (1.0 - (ota_fee_percent / 100.0))
 
     is_booking_engine = "booking engine" in ch_lower or "booking engine" in orig_lower or ("mews" in ch_lower and "direct" in ch_lower)
     is_checked_in = stat_lower in ("checked in", "checked out")
