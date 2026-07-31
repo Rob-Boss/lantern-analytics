@@ -24,6 +24,13 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
     return new Intl.NumberFormat("en-US").format(val || 0);
   };
 
+  const formatCabinName = (name) => {
+    if (!name) return "-";
+    const cleaned = name.trim();
+    if (cleaned === "Sauna Sauna") return "Sauna";
+    return cleaned.replace(/^(?:.*?\s+)?(\w+)\s+Cabin\s+\1\s+(.*)$/i, "$1 Cabin $2");
+  };
+
   const bookings = bookingsData.bookings || [];
 
   // Filter bookings by search and channel
@@ -209,7 +216,7 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
                     <div className="booking-card-details">
                       <div className="booking-detail-item">
                         <span className="booking-detail-label">Cabin</span>
-                        <span className="booking-detail-value" style={{ fontWeight: "600", color: "#2d4a3e" }}>{b.cabin_name || "-"}</span>
+                        <span className="booking-detail-value" style={{ fontWeight: "600", color: "#2d4a3e" }}>{formatCabinName(b.cabin_name)}</span>
                       </div>
                       <div className="booking-detail-item">
                         <span className="booking-detail-label">Email</span>
@@ -303,7 +310,7 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
                           <div style={{ fontSize: "11px", color: "#606862" }}>{b.guest_email || "-"}</div>
                         </td>
                         <td style={{ padding: "10px 8px", color: "#2d4a3e", fontWeight: "600" }}>
-                          {b.cabin_name || "-"}
+                          {formatCabinName(b.cabin_name)}
                         </td>
                         <td style={{ padding: "10px 8px", textAlign: "center", fontWeight: "500" }}>
                           {b.nights}

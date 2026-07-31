@@ -33,3 +33,9 @@ If the user asks to **"refresh lantern dashboard"**, **"update data"**, **"sync 
 *   **Factual and Dry Tone:** Since weekly and performance reports are for internal review by stakeholders who are already familiar with operational details, avoid marketing, promotional, or persuasive language. 
 *   **Keep it Objective:** Stick strictly to facts, dates, and statistics. Avoid hyperbolic descriptors (such as "extraordinary", "dramatic surge", "phenomenal") and replace them with direct terms (like "increase", "growth", or "change"). Do not try to "sell" outcomes; report the raw data and outcomes objectively.
 
+## 6. Workspace Boundary Verification Protocol
+*   **Workspace Sanity Check:** If the user requests a task or file modification that falls outside the primary scope/domain of the current active workspace (for example, requesting a digital press kit route while operating inside the `Lantern Advertising` workspace rather than `Lantern Digital Press Kit`), **pause before taking action**.
+*   **Prompt for Clarification:** Flag the scope mismatch to the user first, e.g.:  
+    *"I'd be happy to do that! Just to double-check before proceeding: is it possible you meant to make this request in the **[Target Workspace]** workspace?"*
+
+

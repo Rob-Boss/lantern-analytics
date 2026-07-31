@@ -64,6 +64,30 @@ def normalize_channel(ch: str) -> str:
         return "Booking.com"
     return "Mews Booking Engine"
 
+def format_cabin_name(space_cat: str, space_num: str) -> str:
+    space_cat = (space_cat or '').strip()
+    space_num = (space_num or '').strip()
+
+    if not space_cat and not space_num:
+        return None
+    if not space_cat:
+        return space_num
+    if not space_num:
+        return space_cat
+
+    if space_cat.lower() == space_num.lower():
+        return space_cat
+
+    cat_words = space_cat.split()
+    for word in cat_words:
+        if len(word) > 2 and space_num.lower().startswith(word.lower()):
+            if 'cabin' not in space_num.lower() and 'cabin' in space_cat.lower():
+                return space_num.replace(word, f'{word} Cabin', 1).strip()
+            return space_num
+
+    return f"{space_cat} {space_num}".strip()
+
+
 # Configurable CORS origins for production cross-domain fetching
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
 if allowed_origins_env and allowed_origins_env.strip() != "*":
@@ -930,13 +954,7 @@ def webhook_mews_report(payload: dict):
             space_num = row[space_number_idx].strip() if (space_number_idx != -1 and len(row) > space_number_idx and row[space_number_idx]) else ''
             space_cat = row[space_category_idx].strip() if (space_category_idx != -1 and len(row) > space_category_idx and row[space_category_idx]) else ''
             
-            cabin_name = None
-            if space_cat and space_num:
-                cabin_name = f"{space_cat} {space_num}".strip()
-            elif space_cat:
-                cabin_name = space_cat
-            elif space_num:
-                cabin_name = space_num
+            cabin_name = format_cabin_name(space_cat, space_num)
 
             # Products & Notes
             products = row[products_idx].strip() if (products_idx != -1 and len(row) > products_idx and row[products_idx]) else None
