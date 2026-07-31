@@ -198,7 +198,12 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
             check_in_date=excluded.check_in_date,
             check_out_date=excluded.check_out_date,
             cabin_name=excluded.cabin_name,
-            products=COALESCE(excluded.products, bookings.products),
+            products=CASE
+                WHEN bookings.products LIKE '%Pet Fee%' OR bookings.products LIKE '%pet%' THEN bookings.products
+                WHEN (LOWER(excluded.notes) LIKE '%dog%' OR LOWER(excluded.notes) LIKE '%pet%') AND LOWER(excluded.notes) NOT LIKE '%allergic%' THEN COALESCE(NULLIF(excluded.products, ''), '1 x Pet Fee - 1 Pet')
+                WHEN (LOWER(bookings.notes) LIKE '%dog%' OR LOWER(bookings.notes) LIKE '%pet%') AND LOWER(bookings.notes) NOT LIKE '%allergic%' THEN COALESCE(NULLIF(excluded.products, ''), '1 x Pet Fee - 1 Pet')
+                ELSE COALESCE(excluded.products, bookings.products)
+            END,
             notes=CASE WHEN excluded.notes IS NOT NULL AND excluded.notes != '' THEN excluded.notes ELSE bookings.notes END,
             status=COALESCE(excluded.status, bookings.status),
             origin=COALESCE(excluded.origin, bookings.origin),
