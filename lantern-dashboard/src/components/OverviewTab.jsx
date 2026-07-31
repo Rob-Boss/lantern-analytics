@@ -100,19 +100,19 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
     };
 
     // Helper to calculate spectrum color based on daily gross revenue
-    const getRevenueSegmentColor = (dailyRev) => {
+    const getRevenueColor = (dailyRev) => {
       const rev = Number(dailyRev) || 0;
-      if (rev <= 0) return "#ef4444";     // Vivid Red ($0 day)
-      if (rev < 500) return "#f59e0b";    // Amber / Yellow ($1 - $500)
-      if (rev < 1500) return "#10b981";   // Emerald Green ($500 - $1,500)
-      if (rev < 3000) return "#3b82f6";   // Ocean Blue ($1,500 - $3,000)
-      return "#8b5cf6";                   // Royal Violet / Purple ($3,000 - $6,000+)
+      if (rev <= 0) return "#ef4444";       // Vivid Red ($0 day)
+      if (rev <= 1000) return "#f59e0b";    // Yellow ($1 - $1,000)
+      if (rev <= 3000) return "#10b981";    // Green ($1,000 - $3,000)
+      if (rev <= 5000) return "#3b82f6";    // Blue ($3,000 - $5,000)
+      return "#8b5cf6";                    // Purple (> $5,000)
     };
 
-    // Build SVG paths & line segments
+    // Build SVG paths & multi-stop spectrum gradient stops
     let revenuePathPoints = [];
     let spendPathPoints = [];
-    let revenueSegments = [];
+    let gradientStops = [];
 
     cumulativeTrend.forEach((d, index) => {
       const x = getX(index);
@@ -122,21 +122,15 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
       revenuePathPoints.push(`${x},${yRev}`);
       spendPathPoints.push(`${x},${ySpend}`);
 
-      if (index > 0) {
-        const prevX = getX(index - 1);
-        const prevYRev = getY(cumulativeTrend[index - 1].revenue);
-        const dailyRev = trendChartClean[index] ? (trendChartClean[index].revenue || 0) : 0;
-        const color = getRevenueSegmentColor(dailyRev);
+      // Calculate percentage offset across chart width for smooth gradient blending
+      const chartWidth = width - padding.left - padding.right;
+      const pct = chartWidth > 0 ? Math.max(0, Math.min(100, ((x - padding.left) / chartWidth) * 100)) : 0;
+      const dailyRev = trendChartClean[index] ? (trendChartClean[index].revenue || 0) : 0;
+      const color = getRevenueColor(dailyRev);
 
-        revenueSegments.push({
-          x1: prevX,
-          y1: prevYRev,
-          x2: x,
-          y2: yRev,
-          color,
-          dailyRev
-        });
-      }
+      gradientStops.push(
+        <stop key={`stop-${index}`} offset={`${pct.toFixed(2)}%`} stopColor={color} />
+      );
     });
 
     const revenuePath = pointsCount > 0 ? `M ${revenuePathPoints.join(" L ")}` : "";
@@ -217,6 +211,11 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
       <div style={{ position: "relative" }}>
         <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="auto">
           <defs>
+            {/* Multi-stop linear gradient blending smoothly along the revenue path */}
+            <linearGradient id="revenueSpectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              {gradientStops}
+            </linearGradient>
+
             <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#2d4a3e" stopOpacity="0.1" />
               <stop offset="100%" stopColor="#2d4a3e" stopOpacity="0.0" />
@@ -252,38 +251,17 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
             />
           )}
 
-          {/* Spectrum-Colored Line Segments for Revenue */}
-          {revenueSegments.map((seg, idx) => (
-            <line
-              key={`rev-seg-${idx}`}
-              x1={seg.x1}
-              y1={seg.y1}
-              x2={seg.x2}
-              y2={seg.y2}
-              stroke={seg.color}
+          {/* Silky-Smooth Spectrum Gradient Revenue Line */}
+          {pointsCount > 0 && (
+            <path
+              d={revenuePath}
+              fill="none"
+              stroke="url(#revenueSpectrumGrad)"
               strokeWidth="3.5"
               strokeLinecap="round"
+              strokeLinejoin="round"
             />
-          ))}
-
-          {/* Spectrum Dots at each data point */}
-          {cumulativeTrend.map((d, index) => {
-            const x = getX(index);
-            const yRev = getY(d.revenue);
-            const dailyRev = trendChartClean[index] ? (trendChartClean[index].revenue || 0) : 0;
-            const dotColor = getRevenueSegmentColor(dailyRev);
-            return (
-              <circle
-                key={`dot-${index}`}
-                cx={x}
-                cy={yRev}
-                r="3"
-                fill={dotColor}
-                stroke="#ffffff"
-                strokeWidth="1.5"
-              />
-            );
-          })}
+          )}
 
           {/* X Labels */}
           {xLabels}
