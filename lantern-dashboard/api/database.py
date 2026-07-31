@@ -59,7 +59,9 @@ def get_db_connection():
         return conn
 
 def _exec(cursor, query, params=None):
-    if IS_POSTGRES:
+    if IS_POSTGRES and params is not None:
+        query = query.replace("%", "%%").replace("?", "%s")
+    elif IS_POSTGRES:
         query = query.replace("?", "%s")
     if params is not None:
         cursor.execute(query, params)

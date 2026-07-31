@@ -713,6 +713,34 @@ Lantern Camp Operations System
 
 
 
+ZAPIER_WEBHOOK_URL = os.environ.get("ZAPIER_WEBHOOK_URL", "https://hooks.zapier.com/hooks/catch/27952447/46yc2fq/")
+
+def forward_to_zapier(booking_id: str, name: str, email: str, phone: str, cabin_name: str):
+    """Forwards check-in waiver completion payload to Zapier Webhook with explicit Content-Type: application/json header."""
+    try:
+        url = os.environ.get("ZAPIER_WEBHOOK_URL", ZAPIER_WEBHOOK_URL)
+        if not url:
+            return
+            
+        payload = {
+            "booking_id": booking_id or "",
+            "name": name or "",
+            "email": email or "",
+            "phone": phone or "",
+            "cabin_name": cabin_name or ""
+        }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "LanternCamp-Checkin/1.0"
+        }
+        
+        resp = requests.post(url, json=payload, headers=headers, timeout=10)
+        logger.info(f"Successfully forwarded payload for {booking_id} to Zapier. Status: {resp.status_code}")
+    except Exception as e:
+        logger.error(f"Failed to forward payload to Zapier for {booking_id}: {e}")
+
 @app.api_route("/api/checkin/complete", methods=["GET", "POST", "OPTIONS"])
 def webhook_checkin_complete(payload: CheckinCompletion, x_checkin_secret: Optional[str] = Header(default=None)):
     secret = os.environ.get("CHECKIN_WEBHOOK_SECRET")
@@ -729,20 +757,22 @@ def webhook_checkin_complete(payload: CheckinCompletion, x_checkin_secret: Optio
         guest_email=payload.email
     )
     
-    # Trigger background email notification
-    send_notification_email(
-        guest_name=payload.name,
-        cabin_name=payload.cabin_name,
-        guest_email=payload.email,
-        guest_phone=payload.phone or "",
-        booking_id=payload.booking_id
+    # Direct SMTP email notification is DEPRECATED in favor of Zapier success/failure email notifications.
+    # Zapier receives the payload below and updates Mews profile + emails on success/failure.
+
+    # Trigger Zapier webhook forwarding
+    forward_to_zapier(
+        booking_id=payload.booking_id,
+        name=payload.name or "",
+        email=payload.email or "",
+        phone=payload.phone or "",
+        cabin_name=payload.cabin_name or ""
     )
     
     return {
         "status": "success",
         "booking_id": payload.booking_id,
-        "waiver_signed": "true",
-        "email_sent": True
+        "waiver_signed": "true"
     }
 
 # --- DATA INGEST & MUTATION ---
@@ -776,7 +806,7 @@ def webhook_booking(booking: BookingWebhook):
         if ota_fee == 0.0 and booking.channel:
             ch_lower = booking.channel.lower()
             if "airbnb" in ch_lower or "abb" in ch_lower:
-                ota_fee = 0.0  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
+                ota_fee = 15.5  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
             elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                 ota_fee = 17.0
                 
@@ -965,7 +995,7 @@ def webhook_mews_report(payload: dict):
             if channel:
                 ch_lower = channel.lower()
                 if "airbnb" in ch_lower or "abb" in ch_lower:
-                    ota_fee = 0.0  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
+                    ota_fee = 15.5  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
                 elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                     ota_fee = 17.0
                     
@@ -1100,7 +1130,7 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
             if ota_fee == 0.0:
                 ch_lower = channel.lower()
                 if "airbnb" in ch_lower or "abb" in ch_lower:
-                    ota_fee = 0.0  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
+                    ota_fee = 15.5  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
                 elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                     ota_fee = 17.0
                 

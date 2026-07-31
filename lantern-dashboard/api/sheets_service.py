@@ -129,7 +129,7 @@ def sync_bookings_from_sheet(spreadsheet_id: str, range_name: str = "Sheet1!A1:Z
             if ota_fee == 0.0:
                 ch_lower = channel.lower()
                 if "airbnb" in ch_lower or "abb" in ch_lower:
-                    ota_fee = 0.0  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
+                    ota_fee = 15.5  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
                 elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
                     ota_fee = 17.0
                 
