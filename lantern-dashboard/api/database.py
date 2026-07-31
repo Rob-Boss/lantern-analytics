@@ -163,8 +163,11 @@ def init_db():
     conn.close()
 
 # --- Bookings Helpers ---
-def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None, cabin_name=None, products=None, notes=None, status=None, origin=None, guest_phone=None):
-    conn = get_db_connection()
+def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_fee_percent=0.0, guest_email=None, guest_name=None, check_in_date=None, check_out_date=None, cabin_name=None, products=None, notes=None, status=None, origin=None, guest_phone=None, conn=None):
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        close_conn = True
     cursor = conn.cursor()
     
     ch_lower = (channel or "").lower()
@@ -216,8 +219,9 @@ def save_booking(booking_id, channel, booking_date, nights, gross_revenue, ota_f
             END
     """, (booking_id, channel, booking_date, int(nights), float(gross_revenue), float(ota_fee_percent), float(net_revenue), guest_email, guest_name, check_in_date, check_out_date, cabin_name, products, notes, status, origin, auto_waiver_signed, guest_phone))
     
-    conn.commit()
-    conn.close()
+    if close_conn:
+        conn.commit()
+        conn.close()
     return net_revenue
 
 def clear_bookings():

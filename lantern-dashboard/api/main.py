@@ -19,13 +19,15 @@ try:
     from .database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
         save_setting, get_setting, clear_bookings, get_first_booking_date,
-        get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed
+        get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed,
+        get_db_connection
     )
 except ImportError:
     from database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
         save_setting, get_setting, clear_bookings, get_first_booking_date,
-        get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed
+        get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed,
+        get_db_connection
     )
 
 sync_data = None
@@ -829,25 +831,24 @@ def webhook_booking(booking: BookingWebhook):
         logger.error(f"Webhook error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/webhooks/mews-report")
-def webhook_mews_report(payload: dict):
-    """Webhook endpoint for Mews scheduled Reservations Report exports."""
+def process_mews_report_background(payload: dict):
+    """Processes Mews report payload asynchronously in the background reusing 1 DB connection."""
     try:
         documents = payload.get("Documents", [])
         reservations_doc = None
         for doc in documents:
-            if doc.get("Name") == "Reservations":
+            if isinstance(doc, dict) and doc.get("Name") == "Reservations":
                 reservations_doc = doc
                 break
                 
         if not reservations_doc:
-            logger.warning("No Reservations document found in Mews report webhook payload")
-            return {"status": "skipped", "message": "No Reservations document found"}
+            logger.warning("No Reservations document found in Mews report background task")
+            return
             
         data = reservations_doc.get("Data", [])
         if len(data) < 2:
-            logger.info("Empty Reservations document in Mews report")
-            return {"status": "skipped", "message": "Reservations document is empty"}
+            logger.info("Empty Reservations document in Mews report background task")
+            return
             
         headers = data[0]
         rows = data[1:]
@@ -856,11 +857,10 @@ def webhook_mews_report(payload: dict):
         required_headers = ['Number', 'Origin', 'Created', 'Count (hours)', 'Count (nights)', 'Total amount', 'Email']
         for h in required_headers:
             if h not in headers:
-                logger.error(f"Missing required header '{h}' in Mews report webhook payload")
-                raise HTTPException(status_code=400, detail=f"Missing required header '{h}'")
+                logger.error(f"Missing required header '{h}' in Mews report background task")
+                return
                 
-        # Use UPSERT save_booking to preserve waiver_signed and guest_phone values
-        logger.info("Upserting Mews report rows into bookings database table")
+        logger.info("Background task: Upserting Mews report rows into bookings database table")
                 
         # Find column indices
         def get_col_idx_case_insensitive(headers_list, aliases):
@@ -884,7 +884,7 @@ def webhook_mews_report(payload: dict):
         requested_category_idx = headers.index('Requested category') if 'Requested category' in headers else -1
         space_number_idx = headers.index('Space number') if 'Space number' in headers else -1
         
-        # New optional indices
+        # Optional indices
         first_name_idx = get_col_idx_case_insensitive(headers, ['First name', 'FirstName', 'First_Name'])
         last_name_idx = get_col_idx_case_insensitive(headers, ['Last name', 'LastName', 'Last_Name'])
         customer_idx = get_col_idx_case_insensitive(headers, ['Customer', 'Guest', 'Name', 'Customer Name', 'Guest Name'])
@@ -910,125 +910,140 @@ def webhook_mews_report(payload: dict):
             return raw_date
 
         imported_count = 0
-        
-        for row in rows:
-            if not row or len(row) <= number_idx:
-                continue
-            booking_id = row[number_idx]
-            if not booking_id or booking_id == 'Total':
-                continue
+        conn = get_db_connection()
+        try:
+            for row in rows:
+                if not row or len(row) <= number_idx:
+                    continue
+                booking_id = row[number_idx]
+                if not booking_id or booking_id == 'Total':
+                    continue
+                    
+                raw_origin = row[origin_idx]
+                if not raw_origin and travel_agency_idx != -1 and len(row) > travel_agency_idx:
+                    raw_origin = row[travel_agency_idx]
+                if not raw_origin and source_idx != -1 and len(row) > source_idx:
+                    raw_origin = row[source_idx]
+                raw_origin = raw_origin or ''
                 
-            raw_origin = row[origin_idx]
-            if not raw_origin and travel_agency_idx != -1 and len(row) > travel_agency_idx:
-                raw_origin = row[travel_agency_idx]
-            if not raw_origin and source_idx != -1 and len(row) > source_idx:
-                raw_origin = row[source_idx]
-            raw_origin = raw_origin or ''
-            
-            channel = normalize_channel(raw_origin)
-            
-            # Date format parsing
-            raw_date = row[created_idx] or ''
-            booking_date = raw_date.split('T')[0] if 'T' in raw_date else raw_date
-            
-            # Check if this is a Sauna booking to prevent stay metrics inflation
-            space_cat = row[space_category_idx] if (space_category_idx != -1 and len(row) > space_category_idx) else ''
-            req_cat = row[requested_category_idx] if (requested_category_idx != -1 and len(row) > requested_category_idx) else ''
-            is_sauna = 'sauna' in (space_cat or '').lower() or 'sauna' in (req_cat or '').lower()
-            
-            # Nights calculation (Stays use 'Count (hours)', Sauna uses 0 nights)
-            nights = 0
-            if not is_sauna:
-                c_hours = row[hours_idx] if len(row) > hours_idx else None
-                c_nights = row[nights_idx] if len(row) > nights_idx else None
-                if c_hours is not None:
+                channel = normalize_channel(raw_origin)
+                
+                # Date format parsing
+                raw_date = row[created_idx] or ''
+                booking_date = raw_date.split('T')[0] if 'T' in raw_date else raw_date
+                
+                # Check if this is a Sauna booking to prevent stay metrics inflation
+                space_cat = row[space_category_idx] if (space_category_idx != -1 and len(row) > space_category_idx) else ''
+                req_cat = row[requested_category_idx] if (requested_category_idx != -1 and len(row) > requested_category_idx) else ''
+                is_sauna = 'sauna' in (space_cat or '').lower() or 'sauna' in (req_cat or '').lower()
+                
+                # Nights calculation (Stays use 'Count (hours)', Sauna uses 0 nights)
+                nights = 0
+                if not is_sauna:
+                    c_hours = row[hours_idx] if len(row) > hours_idx else None
+                    c_nights = row[nights_idx] if len(row) > nights_idx else None
+                    if c_hours is not None:
+                        try:
+                            nights = int(c_hours)
+                        except (ValueError, TypeError):
+                            pass
+                    elif c_nights is not None:
+                        try:
+                            nights = int(c_nights)
+                        except (ValueError, TypeError):
+                            pass
+                        
+                # Gross revenue
+                raw_amount = row[amount_idx] if len(row) > amount_idx else None
+                gross_revenue = 0.0
+                if raw_amount is not None:
                     try:
-                        nights = int(c_hours)
+                        gross_revenue = float(raw_amount)
                     except (ValueError, TypeError):
                         pass
-                elif c_nights is not None:
-                    try:
-                        nights = int(c_nights)
-                    except (ValueError, TypeError):
-                        pass
-                    
-            # Gross revenue
-            raw_amount = row[amount_idx] if len(row) > amount_idx else None
-            gross_revenue = 0.0
-            if raw_amount is not None:
-                try:
-                    gross_revenue = float(raw_amount)
-                except (ValueError, TypeError):
-                    pass
-                    
-            # Guest Email
-            guest_email = row[email_idx] if (email_idx != -1 and len(row) > email_idx) else None
-            
-            # Guest Name
-            guest_name = None
-            if customer_idx != -1 and len(row) > customer_idx:
-                guest_name = row[customer_idx].strip() if row[customer_idx] else None
-            else:
-                first_name = row[first_name_idx] if (first_name_idx != -1 and len(row) > first_name_idx) else None
-                last_name = row[last_name_idx] if (last_name_idx != -1 and len(row) > last_name_idx) else None
-                if first_name or last_name:
-                    guest_name = f"{first_name or ''} {last_name or ''}".strip()
+                        
+                # Guest Email
+                guest_email = row[email_idx] if (email_idx != -1 and len(row) > email_idx) else None
                 
-            # Stay Dates
-            raw_arrival = row[arrival_idx] if (arrival_idx != -1 and len(row) > arrival_idx) else None
-            raw_departure = row[departure_idx] if (departure_idx != -1 and len(row) > departure_idx) else None
-            check_in_date = clean_and_format_date(raw_arrival)
-            check_out_date = clean_and_format_date(raw_departure)
-
-            # Cabin/Space Name
-            space_num = row[space_number_idx].strip() if (space_number_idx != -1 and len(row) > space_number_idx and row[space_number_idx]) else ''
-            space_cat = row[space_category_idx].strip() if (space_category_idx != -1 and len(row) > space_category_idx and row[space_category_idx]) else ''
-            
-            cabin_name = format_cabin_name(space_cat, space_num)
-
-            # Products & Notes
-            products = row[products_idx].strip() if (products_idx != -1 and len(row) > products_idx and row[products_idx]) else None
-            notes = row[notes_idx].strip() if (notes_idx != -1 and len(row) > notes_idx and row[notes_idx]) else None
-
-            # Calculate OTA fee
-            ota_fee = 0.0
-            if channel:
-                ch_lower = channel.lower()
-                if "airbnb" in ch_lower or "abb" in ch_lower:
-                    ota_fee = 15.5  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
-                elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
-                    ota_fee = 17.0
+                # Guest Name
+                guest_name = None
+                if customer_idx != -1 and len(row) > customer_idx:
+                    guest_name = row[customer_idx].strip() if row[customer_idx] else None
+                else:
+                    first_name = row[first_name_idx] if (first_name_idx != -1 and len(row) > first_name_idx) else None
+                    last_name = row[last_name_idx] if (last_name_idx != -1 and len(row) > last_name_idx) else None
+                    if first_name or last_name:
+                        guest_name = f"{first_name or ''} {last_name or ''}".strip()
                     
-            status_val = row[status_idx].strip() if (status_idx != -1 and len(row) > status_idx and row[status_idx]) else None
-            phone_val = row[phone_idx].strip() if (phone_idx != -1 and len(row) > phone_idx and row[phone_idx]) else None
+                # Stay Dates
+                raw_arrival = row[arrival_idx] if (arrival_idx != -1 and len(row) > arrival_idx) else None
+                raw_departure = row[departure_idx] if (departure_idx != -1 and len(row) > departure_idx) else None
+                check_in_date = clean_and_format_date(raw_arrival)
+                check_out_date = clean_and_format_date(raw_departure)
 
-            save_booking(
-                booking_id=booking_id,
-                channel=channel,
-                booking_date=booking_date,
-                nights=nights,
-                gross_revenue=gross_revenue,
-                ota_fee_percent=ota_fee,
-                guest_email=guest_email,
-                guest_name=guest_name,
-                check_in_date=check_in_date,
-                check_out_date=check_out_date,
-                cabin_name=cabin_name,
-                products=products,
-                notes=notes,
-                status=status_val,
-                origin=raw_origin,
-                guest_phone=phone_val
-            )
-            imported_count += 1
-            
-        logger.info(f"Mews report webhook processed: imported {imported_count} reservations")
-        return {"status": "success", "imported": imported_count}
-        
-    except HTTPException:
-        raise
+                # Cabin/Space Name
+                space_num = row[space_number_idx].strip() if (space_number_idx != -1 and len(row) > space_number_idx and row[space_number_idx]) else ''
+                space_cat = row[space_category_idx].strip() if (space_category_idx != -1 and len(row) > space_category_idx and row[space_category_idx]) else ''
+                
+                cabin_name = format_cabin_name(space_cat, space_num)
+
+                # Products & Notes
+                products = row[products_idx].strip() if (products_idx != -1 and len(row) > products_idx and row[products_idx]) else None
+                notes = row[notes_idx].strip() if (notes_idx != -1 and len(row) > notes_idx and row[notes_idx]) else None
+
+                # Calculate OTA fee
+                ota_fee = 0.0
+                if channel:
+                    ch_lower = channel.lower()
+                    if "airbnb" in ch_lower or "abb" in ch_lower:
+                        ota_fee = 15.5  # Airbnb payouts from Mews already account for Airbnb's 15.5% host fee
+                    elif ("booking" in ch_lower and "booking engine" not in ch_lower) or "bcom" in ch_lower or "bdc" in ch_lower:
+                        ota_fee = 17.0
+                        
+                status_val = row[status_idx].strip() if (status_idx != -1 and len(row) > status_idx and row[status_idx]) else None
+                phone_val = row[phone_idx].strip() if (phone_idx != -1 and len(row) > phone_idx and row[phone_idx]) else None
+
+                save_booking(
+                    booking_id=booking_id,
+                    channel=channel,
+                    booking_date=booking_date,
+                    nights=nights,
+                    gross_revenue=gross_revenue,
+                    ota_fee_percent=ota_fee,
+                    guest_email=guest_email,
+                    guest_name=guest_name,
+                    check_in_date=check_in_date,
+                    check_out_date=check_out_date,
+                    cabin_name=cabin_name,
+                    products=products,
+                    notes=notes,
+                    status=status_val,
+                    origin=raw_origin,
+                    guest_phone=phone_val,
+                    conn=conn
+                )
+                imported_count += 1
+            conn.commit()
+            logger.info(f"Background task complete: imported {imported_count} reservations")
+        finally:
+            conn.close()
     except Exception as e:
-        logger.error(f"Error in Mews report webhook: {e}")
+        logger.error(f"Error in background Mews report task: {e}")
+
+@app.post("/api/webhooks/mews-report")
+def webhook_mews_report(payload: dict, background_tasks: BackgroundTasks):
+    """Webhook endpoint for Mews scheduled Reservations Report exports. Responds immediately in <10ms."""
+    try:
+        documents = payload.get("Documents", [])
+        has_res_doc = any(isinstance(d, dict) and d.get("Name") == "Reservations" for d in documents) if documents else False
+        if not has_res_doc:
+            logger.warning("No Reservations document found in Mews report webhook payload")
+            return {"status": "skipped", "message": "No Reservations document found"}
+
+        background_tasks.add_task(process_mews_report_background, payload)
+        return {"status": "success", "message": "Mews report received and queued for background processing"}
+    except Exception as e:
+        logger.error(f"Error queuing Mews report webhook: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/data/upload-csv")
