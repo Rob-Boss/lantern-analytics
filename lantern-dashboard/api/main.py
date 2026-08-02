@@ -18,17 +18,18 @@ logger = logging.getLogger(__name__)
 try:
     from .database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
-        save_setting, get_setting, clear_bookings, get_first_booking_date, get_bookings_count,
+        save_setting, get_setting, clear_bookings, get_first_booking_date, get_bookings_count, get_latest_booking_date,
         get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed,
         get_db_connection
     )
 except ImportError:
     from database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
-        save_setting, get_setting, clear_bookings, get_first_booking_date, get_bookings_count,
+        save_setting, get_setting, clear_bookings, get_first_booking_date, get_bookings_count, get_latest_booking_date,
         get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed,
         get_db_connection
     )
+
 
 sync_data = None
 
@@ -1011,10 +1012,17 @@ def process_mews_report_background(payload: dict):
                 )
                 imported_count += 1
             conn.commit()
-            save_setting("last_mews_webhook_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            doc_name = reservations_doc.get("Name", "Reservations") if reservations_doc else "Reservations"
+            save_setting("last_mews_webhook_at", now_str)
+            save_setting("last_mews_report_source", "Automated Hourly Webhook Export")
+            save_setting("last_mews_report_name", f"{doc_name} Export")
+            save_setting("last_mews_report_time", now_str)
+            save_setting("last_mews_report_rows", str(imported_count))
             logger.info(f"Background task complete: imported {imported_count} reservations")
         finally:
             conn.close()
+
 
     except Exception as e:
         logger.error(f"Error in background Mews report task: {e}")
@@ -1213,9 +1221,13 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
             errors.append(f"Row {row_idx + 2}: {err}")
             
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    filename = file.filename if (hasattr(file, "filename") and file.filename) else "Mews_Reservations.csv"
     save_setting("last_mews_csv_upload_at", now_str)
-    if hasattr(file, "filename") and file.filename:
-        save_setting("last_mews_csv_filename", file.filename)
+    save_setting("last_mews_csv_filename", filename)
+    save_setting("last_mews_report_source", "Manual CSV Upload")
+    save_setting("last_mews_report_name", filename)
+    save_setting("last_mews_report_time", now_str)
+    save_setting("last_mews_report_rows", str(count))
 
     return {"status": "success", "imported_rows": count, "errors": errors}
 
@@ -1251,7 +1263,16 @@ def get_settings():
     last_mews_webhook = get_setting("last_mews_webhook_at", "Pending next hourly run")
     last_mews_csv_upload = get_setting("last_mews_csv_upload_at", "None uploaded")
     last_mews_csv_filename = get_setting("last_mews_csv_filename", "")
+    
+    last_report_source = get_setting("last_mews_report_source", "Automated Hourly Webhook Export")
+    last_report_name = get_setting("last_mews_report_name", "Mews Reservations Report")
+    last_report_time = get_setting("last_mews_report_time", last_mews_webhook if last_mews_webhook != "Pending next hourly run" else (last_mews_csv_upload if last_mews_csv_upload != "None uploaded" else "Pending initial export"))
+    last_report_rows = get_setting("last_mews_report_rows", "")
+    
+    latest_booking = get_latest_booking_date()
+    first_booking = get_first_booking_date()
     bookings_count = get_bookings_count()
+    
     return {
         "newsletter_subscribers": newsletter,
         "newsletter_updated_at": newsletter_updated,
@@ -1259,8 +1280,15 @@ def get_settings():
         "last_mews_webhook_at": last_mews_webhook,
         "last_mews_csv_upload_at": last_mews_csv_upload,
         "last_mews_csv_filename": last_mews_csv_filename,
+        "last_mews_report_source": last_report_source,
+        "last_mews_report_name": last_report_name,
+        "last_mews_report_time": last_report_time,
+        "last_mews_report_rows": last_report_rows or str(bookings_count),
+        "latest_booking_date": latest_booking,
+        "first_booking_date": first_booking,
         "total_bookings_count": bookings_count
     }
+
 
 
 @app.get("/api/data/first-booking-date")

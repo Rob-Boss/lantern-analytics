@@ -371,6 +371,15 @@ def get_bookings_count():
     conn.close()
     return row['count'] if row and row['count'] is not None else 0
 
+def get_latest_booking_date():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    _exec(cursor, "SELECT MAX(booking_date) AS max_date FROM bookings")
+    row = cursor.fetchone()
+    conn.close()
+    return row['max_date'] if row and row['max_date'] else None
+
+
 
 def save_geo_metric(date_str, metric_type, name, users):
     conn = get_db_connection()

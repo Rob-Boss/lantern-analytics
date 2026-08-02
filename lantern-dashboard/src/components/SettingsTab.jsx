@@ -87,12 +87,12 @@ export default function SettingsTab({
   };
 
   const statusLabelStyle = {
-    fontSize: "11.5px",
+    fontSize: "12px",
     color: "var(--text-secondary, #606862)",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "6px 0",
+    padding: "7px 0",
     borderBottom: "1px dashed #e2e8e4"
   };
 
@@ -104,70 +104,115 @@ export default function SettingsTab({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       
-      {/* 1. DATA PIPELINE STATUS SUMMARY */}
-      <div className="panel" style={{ background: "#fcfdfe", border: "1px solid #e2e8e4", borderRadius: "12px", padding: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+      {/* 1. CURRENTLY INGESTED MEWS REPORT BANNER */}
+      <div className="panel" style={{ background: "linear-gradient(135deg, #f4f8f5 0%, #ffffff 100%)", border: "1px solid #c8e6c9", borderRadius: "12px", padding: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
           <div>
-            <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#2d312e", margin: 0 }}>
-              📡 Active Data Pipelines & Sources
-            </h2>
-            <p style={{ fontSize: "12px", color: "#606862", margin: "4px 0 0 0" }}>
-              Source-of-truth status tracking for Mews reservations, marketing APIs, and manual reports.
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "20px" }}>📦</span>
+              <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#1b382b", margin: 0 }}>
+                Currently Ingested Mews Report
+              </h2>
+              <span style={badgeStyle}>
+                <span style={{ width: "7px", height: "7px", borderRadius: "50%", backgroundColor: "#4caf50", display: "inline-block" }}></span>
+                Live Feed Ingested
+              </span>
+            </div>
+            <p style={{ fontSize: "12px", color: "#4a5d52", margin: 0, maxWidth: "700px" }}>
+              Cross-reference the timestamp below with your scheduled exports list in Mews (<em>Mews Operations → Reports → Scheduled Exports</em>) to verify which report is active in analytics.
             </p>
           </div>
+
           <button 
             onClick={() => onRefreshData && onRefreshData()} 
             className="btn btn-secondary"
-            style={{ fontSize: "12px", padding: "6px 12px" }}
+            style={{ fontSize: "12px", padding: "6px 14px", backgroundColor: "#ffffff", borderColor: "#a5d6a7", color: "#1b382b", fontWeight: "600" }}
           >
             🔄 Refresh Status
           </button>
         </div>
+
+        {/* Detailed Report Metadata Grid */}
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)", 
+          gap: "14px",
+          marginTop: "16px",
+          paddingTop: "16px",
+          borderTop: "1px solid #dcedc8"
+        }}>
+          <div style={{ background: "#ffffff", padding: "12px 14px", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+            <div style={{ fontSize: "11px", color: "#606862", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.5px" }}>Report / Export Name</div>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "#2d312e", marginTop: "4px", wordBreak: "break-all" }}>
+              {settings.last_mews_report_name || "Mews Reservations Export"}
+            </div>
+          </div>
+
+          <div style={{ background: "#ffffff", padding: "12px 14px", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+            <div style={{ fontSize: "11px", color: "#606862", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.5px" }}>Ingested Timestamp</div>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "#2d4a3e", marginTop: "4px" }}>
+              {settings.last_mews_report_time || settings.last_mews_webhook_at || "Hourly Sync Active"}
+            </div>
+          </div>
+
+          <div style={{ background: "#ffffff", padding: "12px 14px", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+            <div style={{ fontSize: "11px", color: "#606862", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.5px" }}>Delivery Channel</div>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "#2d312e", marginTop: "4px" }}>
+              {settings.last_mews_report_source || "Automated Hourly Webhook"}
+            </div>
+          </div>
+
+          <div style={{ background: "#ffffff", padding: "12px 14px", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+            <div style={{ fontSize: "11px", color: "#606862", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.5px" }}>Latest Booking Date</div>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "#2d4a3e", marginTop: "4px" }}>
+              {settings.latest_booking_date ? `${settings.latest_booking_date} (${settings.total_bookings_count || 0} total)` : "N/A"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. SYSTEM DATA PIPELINES SUMMARY */}
+      <div className="panel" style={{ background: "#fcfdfe", border: "1px solid #e2e8e4", borderRadius: "12px", padding: "20px" }}>
+        <h2 style={{ fontSize: "15px", fontWeight: "700", color: "#2d312e", margin: "0 0 14px 0" }}>
+          📡 Data Pipeline & Synchronization Schedule
+        </h2>
 
         <div style={{ 
           display: "grid", 
           gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", 
           gap: "16px" 
         }}>
-          {/* Card 1: Mews Reservations */}
+          {/* Pipeline 1: Mews Reservations */}
           <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e8ede9" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
               <span style={{ fontWeight: "700", fontSize: "13.5px", color: "#1b382b" }}>🛏 Mews Reservations</span>
               <span style={badgeStyle}>
                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#4caf50", display: "inline-block" }}></span>
-                Hourly Export Active
+                Hourly Export
               </span>
             </div>
             
             <div style={statusLabelStyle}>
-              <span>Source:</span>
-              <span style={valueHighlightStyle}>Mews PMS Export</span>
+              <span>Method:</span>
+              <span style={valueHighlightStyle}>Webhook (:18–:22 past hour)</span>
             </div>
             <div style={statusLabelStyle}>
-              <span>Automated Webhook:</span>
+              <span>Last Webhook Run:</span>
               <span style={valueHighlightStyle}>{settings.last_mews_webhook_at || "Hourly (:18 past)"}</span>
             </div>
             <div style={statusLabelStyle}>
               <span>Last Manual CSV:</span>
               <span style={valueHighlightStyle}>{settings.last_mews_csv_upload_at || "None uploaded"}</span>
             </div>
-            {settings.last_mews_csv_filename && (
-              <div style={statusLabelStyle}>
-                <span>CSV File:</span>
-                <span style={{ fontSize: "11px", color: "#388e3c", fontWeight: "500", wordBreak: "break-all" }}>
-                  {settings.last_mews_csv_filename}
-                </span>
-              </div>
-            )}
             <div style={{ ...statusLabelStyle, borderBottom: "none", paddingTop: "8px" }}>
-              <span>Total Bookings Ledger:</span>
+              <span>Total Ledger Reservations:</span>
               <span style={{ fontSize: "13px", fontWeight: "700", color: "#2d4a3e" }}>
-                {settings.total_bookings_count ?? 0} Reservations
+                {settings.total_bookings_count ?? 0} Bookings
               </span>
             </div>
           </div>
 
-          {/* Card 2: Marketing & Ad Networks */}
+          {/* Pipeline 2: Marketing & Ad Networks */}
           <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e8ede9" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
               <span style={{ fontWeight: "700", fontSize: "13.5px", color: "#1b382b" }}>📈 Ad Networks & Traffic</span>
@@ -195,12 +240,12 @@ export default function SettingsTab({
             </div>
           </div>
 
-          {/* Card 3: Manual Inputs */}
+          {/* Pipeline 3: Manual Inputs */}
           <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e8ede9" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
               <span style={{ fontWeight: "700", fontSize: "13.5px", color: "#1b382b" }}>📰 Newsletter & Manual Data</span>
               <span style={{ ...badgeStyle, backgroundColor: "#f5f5f5", color: "#616161", border: "1px solid #e0e0e0" }}>
-                Manual Field
+                Manual Input
               </span>
             </div>
 
@@ -223,13 +268,13 @@ export default function SettingsTab({
         </div>
       </div>
 
-      {/* 2. GRID OF OPERATIONS & UPLOADS */}
+      {/* 3. GRID OF OPERATIONS & UPLOADS */}
       <div className="panel-grid" style={{ gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr", gap: "24px" }}>
         
         {/* Left Column: Mews CSV Upload */}
         <div className="panel">
           <div className="panel-header">
-            <div className="panel-title">Import Mews Reservations CSV</div>
+            <div className="panel-title">Import Mews Reservations CSV (Manual Override)</div>
           </div>
           
           <form onSubmit={handleUploadSubmit}>
