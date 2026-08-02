@@ -4,15 +4,11 @@ export default function SettingsTab({
   settings, 
   onUpdateSettings, 
   onTriggerSync, 
-  onUploadCSV, 
   onClearBookings, 
   onRefreshData, 
   isMobile 
 }) {
   const [newsletterInput, setNewsletterInput] = useState(settings.newsletter_subscribers || 0);
-  const [csvFile, setCsvFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [savingSubs, setSavingSubs] = useState(false);
 
@@ -27,36 +23,6 @@ export default function SettingsTab({
       await onUpdateSettings(newsletterInput);
     } finally {
       setSavingSubs(false);
-    }
-  };
-
-  const handleFileChange = (e) => {
-    setCsvFile(e.target.files[0]);
-    setUploadResult(null);
-  };
-
-  const handleUploadSubmit = async (e) => {
-    e.preventDefault();
-    if (!csvFile) return;
-
-    setUploading(true);
-    setUploadResult(null);
-    try {
-      const result = await onUploadCSV(csvFile);
-      setUploadResult({
-        success: true,
-        rows: result.imported_rows,
-        errors: result.errors || []
-      });
-      setCsvFile(null);
-      if (onRefreshData) onRefreshData();
-    } catch (err) {
-      setUploadResult({
-        success: false,
-        message: err.message || "Failed to parse CSV file."
-      });
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -112,7 +78,7 @@ export default function SettingsTab({
               📡 Active Data Pipelines & Report Timestamps
             </h2>
             <p style={{ fontSize: "12px", color: "#606862", margin: "4px 0 0 0" }}>
-              Source-of-truth status and latest ingestion timestamps for Mews bookings, marketing APIs, and manual reports.
+              Source-of-truth status tracking for Mews reservations, marketing APIs, and manual reports.
             </p>
           </div>
           <button 
@@ -135,13 +101,13 @@ export default function SettingsTab({
               <span style={{ fontWeight: "700", fontSize: "13.5px", color: "#1b382b" }}>🛏 Mews Reservations</span>
               <span style={badgeStyle}>
                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#4caf50", display: "inline-block" }}></span>
-                {settings.last_mews_report_source || "Hourly Webhook"}
+                Automated Hourly
               </span>
             </div>
             
             <div style={statusLabelStyle}>
-              <span>Report Type:</span>
-              <span style={valueHighlightStyle}>{settings.last_mews_report_source || "Scheduled Hourly Export"}</span>
+              <span>Report Pipeline:</span>
+              <span style={valueHighlightStyle}>Scheduled Hourly Webhook</span>
             </div>
             <div style={statusLabelStyle}>
               <span>Last Ingested Report:</span>
@@ -150,7 +116,7 @@ export default function SettingsTab({
               </span>
             </div>
             <div style={statusLabelStyle}>
-              <span>Export Name / File:</span>
+              <span>Export Name:</span>
               <span style={{ fontSize: "11.5px", fontWeight: "600", color: "#2d312e", wordBreak: "break-all" }}>
                 {settings.last_mews_report_name || "Mews Reservations Export"}
               </span>
@@ -223,106 +189,46 @@ export default function SettingsTab({
         </div>
       </div>
 
-      {/* 2. GRID OF OPERATIONS & UPLOADS */}
-      <div className="panel-grid" style={{ gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr", gap: "24px" }}>
+      {/* 2. ACTIONS & SETTINGS GRID */}
+      <div className="panel-grid" style={{ gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "24px" }}>
         
-        {/* Left Column: Mews CSV Upload */}
+        {/* Left Panel: Ad Networks Sync */}
         <div className="panel">
           <div className="panel-header">
-            <div className="panel-title">Import Mews Reservations CSV (Manual Override)</div>
+            <div className="panel-title">Ad Networks Sync & System Reconciliation</div>
           </div>
           
-          <form onSubmit={handleUploadSubmit}>
-            <label className="upload-zone" htmlFor="csv-input" style={{ cursor: "pointer" }}>
-              <input 
-                id="csv-input"
-                type="file" 
-                accept=".csv" 
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-              />
-              <div className="upload-icon">📥</div>
-              <div className="upload-text" style={{ fontWeight: "600" }}>
-                {csvFile ? csvFile.name : "Select or drag Mews Reservations CSV"}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "#2d312e" }}>
+                Sync Ad Networks & Traffic APIs
               </div>
-              <div className="upload-subtext">
-                Parses headers dynamically: ID/Number, Booking Date, Nights, Gross Revenue, Fee, Email, Cabin Name
+              <div style={{ fontSize: "11.5px", color: "#606862", margin: "4px 0 14px 0", lineHeight: "1.4" }}>
+                Queries GA4, Google Ads, and Meta Ads for the last 60 days and updates daily metrics in Neon PostgreSQL database.
+                <br/>
+                Last Synced: <strong style={{ color: "#2d4a3e" }}>{settings.last_synced_at || "Never"}</strong>
               </div>
-            </label>
-
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              disabled={!csvFile || uploading}
-              style={{ width: "100%", marginTop: "12px" }}
-            >
-              {uploading ? "Parsing and importing CSV..." : "Upload and Import CSV"}
-            </button>
-          </form>
-
-          {/* Upload results feedback */}
-          {uploadResult && (
-            <div style={{ marginTop: "20px" }}>
-              {uploadResult.success ? (
-                <div className="alert-banner alert-success" style={{ flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
-                  <div style={{ fontWeight: 600 }}>Success! Imported {uploadResult.rows} bookings into database.</div>
-                  {uploadResult.errors.length > 0 && (
-                    <div style={{ fontSize: "11.5px", marginTop: "8px", width: "100%" }}>
-                      <div style={{ fontWeight: 600 }}>Ignored Row Warnings ({uploadResult.errors.length}):</div>
-                      <ul style={{ paddingLeft: "16px", maxHeight: "100px", overflowY: "auto", margin: "4px 0" }}>
-                        {uploadResult.errors.map((err, idx) => (
-                          <li key={idx}>{err}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="alert-banner alert-error">
-                  <span>Error: {uploadResult.message}</span>
-                </div>
-              )}
+              <button 
+                onClick={handleSyncClick} 
+                className="btn btn-secondary" 
+                disabled={syncing}
+                style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
+              >
+                {syncing ? (
+                  <>
+                    <span className="spinner" style={{ border: "2px solid #ccc", borderTop: "2px solid #2d4a3e", borderRadius: "50%", width: "14px", height: "14px", animation: "spin 1s linear infinite" }}></span>
+                    Syncing Ad Networks & Analytics...
+                  </>
+                ) : "Sync Marketing APIs Now"}
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Right Column: Actions & Manual Forms */}
+        {/* Right Panel: Newsletter & Danger Zone */}
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           
-          {/* Ad Networks Sync Action */}
-          <div className="panel">
-            <div className="panel-header">
-              <div className="panel-title">Ad Networks Sync & System Reconciliation</div>
-            </div>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "600", color: "#2d312e" }}>
-                  Sync Ad Networks & Traffic APIs
-                </div>
-                <div style={{ fontSize: "11.5px", color: "#606862", margin: "4px 0 10px 0", lineHeight: "1.4" }}>
-                  Queries GA4, Google Ads, and Meta Ads for the last 60 days and updates daily metrics in Neon PostgreSQL database.
-                  <br/>
-                  Last Synced: <strong style={{ color: "#2d4a3e" }}>{settings.last_synced_at || "Never"}</strong>
-                </div>
-                <button 
-                  onClick={handleSyncClick} 
-                  className="btn btn-secondary" 
-                  disabled={syncing}
-                  style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
-                >
-                  {syncing ? (
-                    <>
-                      <span className="spinner" style={{ border: "2px solid #ccc", borderTop: "2px solid #2d4a3e", borderRadius: "50%", width: "14px", height: "14px", animation: "spin 1s linear infinite" }}></span>
-                      Syncing Ad Networks & Analytics...
-                    </>
-                  ) : "Sync Marketing APIs Now"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Newsletter Subscribers Form */}
+          {/* Newsletter Form */}
           <div className="panel">
             <div className="panel-header">
               <div className="panel-title">Squarespace Newsletter Subscribers</div>
@@ -352,7 +258,7 @@ export default function SettingsTab({
             </div>
             
             <div style={{ fontSize: "11.5px", color: "#606862", marginBottom: "12px" }}>
-              Deletes all reservation records stored in the database ledger. Use if re-uploading a clean Mews export CSV.
+              Deletes all reservation records stored in the database ledger.
             </div>
             
             <button 
