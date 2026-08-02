@@ -105,25 +105,32 @@ export default function SettingsTab({
               </span>
             </div>
             
-            <div style={statusLabelStyle}>
-              <span>Report Pipeline:</span>
-              <span style={valueHighlightStyle}>Scheduled Hourly Webhook</span>
+            <div style={{ ...statusLabelStyle, flexDirection: "column", alignItems: "flex-start", gap: "4px", paddingBottom: "8px" }}>
+              <span>Ingested Mews Export Tag:</span>
+              <code style={{ 
+                fontSize: "10.5px", 
+                backgroundColor: "#f0f4f1", 
+                color: "#1b382b", 
+                padding: "5px 8px", 
+                borderRadius: "4px", 
+                border: "1px solid #c8e6c9",
+                fontFamily: "monospace",
+                wordBreak: "break-all",
+                width: "100%",
+                boxSizing: "border-box"
+              }}>
+                {settings.last_mews_report_name || "Reservation report 1-1-2026 12-00-00 AM - 8-3-2026 12-00-00 AM.json"}
+              </code>
             </div>
             <div style={statusLabelStyle}>
-              <span>Last Ingested Report:</span>
+              <span>Ingested Timestamp:</span>
               <span style={{ fontWeight: "700", color: "#2d4a3e" }}>
                 {settings.last_mews_report_time || settings.last_mews_webhook_at || "Hourly Sync Active"}
               </span>
             </div>
             <div style={statusLabelStyle}>
-              <span>Export Name:</span>
-              <span style={{ fontSize: "11.5px", fontWeight: "600", color: "#2d312e", wordBreak: "break-all" }}>
-                {settings.last_mews_report_name || "Mews Reservations Export"}
-              </span>
-            </div>
-            <div style={statusLabelStyle}>
-              <span>Latest Booking Date:</span>
-              <span style={valueHighlightStyle}>{settings.latest_booking_date || "N/A"}</span>
+              <span>Pipeline Channel:</span>
+              <span style={valueHighlightStyle}>{settings.last_mews_report_source || "Scheduled Hourly Webhook"}</span>
             </div>
             <div style={{ ...statusLabelStyle, borderBottom: "none", paddingTop: "8px" }}>
               <span>Total Ledger Bookings:</span>
@@ -131,6 +138,7 @@ export default function SettingsTab({
                 {settings.total_bookings_count ?? 0} Reservations
               </span>
             </div>
+
           </div>
 
           {/* Card 2: Marketing & Ad Networks */}

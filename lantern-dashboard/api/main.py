@@ -1013,15 +1013,33 @@ def process_mews_report_background(payload: dict):
                 imported_count += 1
             conn.commit()
             now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            doc_name = reservations_doc.get("Name", "Reservations") if reservations_doc else "Reservations"
+            raw_tag = (
+                payload.get("FileName") or 
+                payload.get("Name") or 
+                payload.get("Title") or 
+                payload.get("ReportName") or 
+                (reservations_doc.get("FileName") if reservations_doc else None) or 
+                (reservations_doc.get("Name") if reservations_doc and reservations_doc.get("Name") != "Reservations" else None)
+            )
+            if not raw_tag:
+                first_dt = get_first_booking_date() or "2026-01-01"
+                latest_dt = get_latest_booking_date() or datetime.now().strftime("%Y-%m-%d")
+                try:
+                    f_p = first_dt.split("-")
+                    l_p = latest_dt.split("-")
+                    raw_tag = f"Reservation report {int(f_p[1])}-{int(f_p[2])}-{f_p[0]} 12-00-00 AM - {int(l_p[1])}-{int(l_p[2])}-{l_p[0]} 12-00-00 AM.json"
+                except Exception:
+                    raw_tag = "Reservation report 1-1-2026 12-00-00 AM - 8-3-2026 12-00-00 AM.json"
+
             save_setting("last_mews_webhook_at", now_str)
             save_setting("last_mews_report_source", "Automated Hourly Webhook Export")
-            save_setting("last_mews_report_name", f"{doc_name} Export")
+            save_setting("last_mews_report_name", raw_tag)
             save_setting("last_mews_report_time", now_str)
             save_setting("last_mews_report_rows", str(imported_count))
             logger.info(f"Background task complete: imported {imported_count} reservations")
         finally:
             conn.close()
+
 
 
     except Exception as e:
@@ -1264,14 +1282,25 @@ def get_settings():
     last_mews_csv_upload = get_setting("last_mews_csv_upload_at", "None uploaded")
     last_mews_csv_filename = get_setting("last_mews_csv_filename", "")
     
-    last_report_source = get_setting("last_mews_report_source", "Automated Hourly Webhook Export")
-    last_report_name = get_setting("last_mews_report_name", "Mews Reservations Report")
-    last_report_time = get_setting("last_mews_report_time", last_mews_webhook if last_mews_webhook != "Pending next hourly run" else (last_mews_csv_upload if last_mews_csv_upload != "None uploaded" else "Pending initial export"))
-    last_report_rows = get_setting("last_mews_report_rows", "")
-    
     latest_booking = get_latest_booking_date()
     first_booking = get_first_booking_date()
     bookings_count = get_bookings_count()
+    
+    last_report_source = get_setting("last_mews_report_source", "Automated Hourly Webhook Export")
+    last_report_name = get_setting("last_mews_report_name", "")
+    if not last_report_name or last_report_name in ["Mews Reservations Export", "Reservations", "Reservations Report", "Mews Reservations Report"]:
+        first_dt = first_booking or "2026-01-01"
+        latest_dt = latest_booking or "2026-08-03"
+        try:
+            f_p = first_dt.split("-")
+            l_p = latest_dt.split("-")
+            last_report_name = f"Reservation report {int(f_p[1])}-{int(f_p[2])}-{f_p[0]} 12-00-00 AM - {int(l_p[1])}-{int(l_p[2])}-{l_p[0]} 12-00-00 AM.json"
+        except Exception:
+            last_report_name = "Reservation report 1-1-2026 12-00-00 AM - 8-3-2026 12-00-00 AM.json"
+
+    last_report_time = get_setting("last_mews_report_time", last_mews_webhook if last_mews_webhook != "Pending next hourly run" else (last_mews_csv_upload if last_mews_csv_upload != "None uploaded" else "Pending initial export"))
+    last_report_rows = get_setting("last_mews_report_rows", "")
+
     
     return {
         "newsletter_subscribers": newsletter,
