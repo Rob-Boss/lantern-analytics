@@ -2,17 +2,27 @@ import os
 import json
 import logging
 from datetime import datetime, date, timedelta
-from google.ads.googleads.client import GoogleAdsClient
-from google.ads.googleads.errors import GoogleAdsException
-from google.analytics.data_v1beta import BetaAnalyticsDataClient
-from google.analytics.data_v1beta.types import (
-    RunReportRequest,
-    DateRange,
-    Metric,
-    Dimension,
-    FilterExpression,
-    Filter,
-)
+try:
+    from google.ads.googleads.client import GoogleAdsClient
+    from google.ads.googleads.errors import GoogleAdsException
+    HAS_GOOGLE_ADS = True
+except ImportError:
+    HAS_GOOGLE_ADS = False
+
+try:
+    from google.analytics.data_v1beta import BetaAnalyticsDataClient
+    from google.analytics.data_v1beta.types import (
+        RunReportRequest,
+        DateRange,
+        Metric,
+        Dimension,
+        FilterExpression,
+        Filter,
+    )
+    HAS_GA4 = True
+except ImportError:
+    HAS_GA4 = False
+
 import requests
 
 # Import database helpers (ensuring parent directory/module path works)
@@ -22,6 +32,7 @@ try:
 except ImportError:
     from database import save_daily_metric_row, save_setting, save_geo_metric, save_geo_metrics_batch
     from credentials_loader import get_ga4_creds_path, get_meta_creds_path, get_google_ads_yaml_path
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -48,9 +59,14 @@ def fetch_ga4_metrics(start_date_str, end_date_str):
     logger.info(f"Fetching GA4 metrics from {start_date_str} to {end_date_str}")
     results = {}
     
+    if not HAS_GA4:
+        logger.warning("google-analytics-data library not installed. Skipping GA4 sync.")
+        return results
+
     if not os.path.exists(GA4_CREDS_PATH):
         logger.warning(f"GA4 credentials file not found at {GA4_CREDS_PATH}. Skipping GA4 sync.")
         return results
+
         
     try:
         client = BetaAnalyticsDataClient.from_service_account_json(GA4_CREDS_PATH)
@@ -118,9 +134,14 @@ def fetch_google_ads_metrics(start_date_str, end_date_str):
     logger.info(f"Fetching Google Ads metrics from {start_date_str} to {end_date_str}")
     results = {}
     
+    if not HAS_GOOGLE_ADS:
+        logger.warning("google-ads library not installed. Skipping Google Ads sync.")
+        return results
+
     if not os.path.exists(GOOGLE_ADS_YAML_PATH):
         logger.warning(f"Google Ads config not found at {GOOGLE_ADS_YAML_PATH}. Skipping Google Ads sync.")
         return results
+
         
     try:
         googleads_client = GoogleAdsClient.load_from_storage(path=GOOGLE_ADS_YAML_PATH)
@@ -231,9 +252,14 @@ def sync_ga4_geo_metrics(start_str, end_str):
     """Fetches geographical metrics from GA4 split by date and saves to DB."""
     logger.info(f"Syncing GA4 geo metrics (regions/cities) from {start_str} to {end_str}...")
     
+    if not HAS_GA4:
+        logger.warning("google-analytics-data library not installed. Skipping geo metrics sync.")
+        return
+
     if not os.path.exists(GA4_CREDS_PATH):
         logger.warning(f"GA4 credentials file not found at {GA4_CREDS_PATH}. Skipping geo metrics sync.")
         return
+
         
     try:
         client = BetaAnalyticsDataClient.from_service_account_json(GA4_CREDS_PATH)

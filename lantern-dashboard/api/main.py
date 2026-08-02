@@ -18,22 +18,21 @@ logger = logging.getLogger(__name__)
 try:
     from .database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
-        save_setting, get_setting, clear_bookings, get_first_booking_date,
+        save_setting, get_setting, clear_bookings, get_first_booking_date, get_bookings_count,
         get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed,
         get_db_connection
     )
 except ImportError:
     from database import (
         init_db, save_booking, get_all_bookings, get_daily_metrics_range,
-        save_setting, get_setting, clear_bookings, get_first_booking_date,
+        save_setting, get_setting, clear_bookings, get_first_booking_date, get_bookings_count,
         get_geo_metrics, get_operations_calendar, update_message_sent, update_waiver_signed,
         get_db_connection
     )
 
 sync_data = None
-sync_bookings_from_sheet = None
 
-# Attempt to load marketing sync dependencies (which will fail in serverless environment)
+# Attempt to load marketing sync dependencies
 try:
     try:
         from .sync_service import sync_data
@@ -42,14 +41,6 @@ try:
 except Exception as e:
     logger.warning(f"Sync service dependencies could not be loaded: {e}. API sync endpoints will be disabled.")
 
-# Attempt to load Google Sheets sync dependencies (which will fail in serverless environment)
-try:
-    try:
-        from .sheets_service import sync_bookings_from_sheet
-    except ImportError:
-        from sheets_service import sync_bookings_from_sheet
-except Exception as e:
-    logger.warning(f"Sheets service dependencies could not be loaded: {e}. Sheets sync endpoints will be disabled.")
 
 app = FastAPI(title="Lantern Camp Analytics Dashboard API")
 
@@ -133,11 +124,7 @@ class BookingWebhook(BaseModel):
 
 class SettingsUpdate(BaseModel):
     newsletter_subscribers: int
-    mews_sheet_id: Optional[str] = ""
 
-class SheetsSyncPayload(BaseModel):
-    spreadsheet_id: str
-    range_name: Optional[str] = "Sheet1!A1:Z5000"
 
 # --- MEWS API REAL-TIME SYNC HELPER ---
 
@@ -1024,9 +1011,11 @@ def process_mews_report_background(payload: dict):
                 )
                 imported_count += 1
             conn.commit()
+            save_setting("last_mews_webhook_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             logger.info(f"Background task complete: imported {imported_count} reservations")
         finally:
             conn.close()
+
     except Exception as e:
         logger.error(f"Error in background Mews report task: {e}")
 
@@ -1223,15 +1212,20 @@ async def upload_bookings_csv(file: UploadFile = File(...)):
         except Exception as err:
             errors.append(f"Row {row_idx + 2}: {err}")
             
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    save_setting("last_mews_csv_upload_at", now_str)
+    if hasattr(file, "filename") and file.filename:
+        save_setting("last_mews_csv_filename", file.filename)
+
     return {"status": "success", "imported_rows": count, "errors": errors}
 
 @app.post("/api/data/sync")
-def trigger_sync(background_tasks: BackgroundTasks, days: int = 30):
+def trigger_sync(background_tasks: BackgroundTasks, days: int = 60):
     """Triggers dynamic marketing API sync in a background thread."""
     if sync_data is None:
         raise HTTPException(
             status_code=501,
-            detail="Marketing API sync is not supported in the serverless environment. Please run the sync script locally."
+            detail="Marketing API sync service could not be loaded."
         )
     background_tasks.add_task(sync_data, days=days)
     return {"status": "sync_started", "message": f"Sync task scheduled in background for the last {days} days."}
@@ -1239,40 +1233,35 @@ def trigger_sync(background_tasks: BackgroundTasks, days: int = 30):
 @app.post("/api/settings")
 def update_settings(payload: SettingsUpdate):
     """Updates newsletter subscribers and manual metrics."""
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     save_setting("newsletter_subscribers", str(payload.newsletter_subscribers))
-    save_setting("mews_sheet_id", payload.mews_sheet_id or "")
+    save_setting("newsletter_updated_at", now_str)
     return {
         "status": "success", 
         "newsletter_subscribers": payload.newsletter_subscribers,
-        "mews_sheet_id": payload.mews_sheet_id
+        "newsletter_updated_at": now_str
     }
 
 @app.get("/api/settings")
 def get_settings():
-    """Retrieves all backend settings."""
+    """Retrieves all backend data operations settings & source timestamps."""
     newsletter = int(get_setting("newsletter_subscribers", "0"))
+    newsletter_updated = get_setting("newsletter_updated_at", "Not updated yet")
     last_synced = get_setting("last_synced_at", "Never")
-    sheet_id = get_setting("mews_sheet_id", "")
+    last_mews_webhook = get_setting("last_mews_webhook_at", "Pending next hourly run")
+    last_mews_csv_upload = get_setting("last_mews_csv_upload_at", "None uploaded")
+    last_mews_csv_filename = get_setting("last_mews_csv_filename", "")
+    bookings_count = get_bookings_count()
     return {
         "newsletter_subscribers": newsletter,
+        "newsletter_updated_at": newsletter_updated,
         "last_synced_at": last_synced,
-        "mews_sheet_id": sheet_id
+        "last_mews_webhook_at": last_mews_webhook,
+        "last_mews_csv_upload_at": last_mews_csv_upload,
+        "last_mews_csv_filename": last_mews_csv_filename,
+        "total_bookings_count": bookings_count
     }
 
-@app.post("/api/data/sync-sheets")
-def trigger_sheets_sync(payload: SheetsSyncPayload):
-    """Triggers synchronizing bookings from the specified Google Sheet."""
-    if sync_bookings_from_sheet is None:
-        raise HTTPException(
-            status_code=501,
-            detail="Google Sheets sync is not supported in the serverless environment. Please run the sync script locally."
-        )
-    try:
-        count, errors = sync_bookings_from_sheet(payload.spreadsheet_id, payload.range_name)
-        return {"status": "success", "imported_rows": count, "errors": errors}
-    except Exception as e:
-        logger.error(f"Error syncing from Google Sheets: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/data/first-booking-date")
 def api_get_first_booking_date():

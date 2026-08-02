@@ -121,18 +121,17 @@ export default function App() {
   }, []);
 
   // Operations handlers
-  const handleUpdateSettings = async (newsletterCount, mewsSheetId) => {
+  const handleUpdateSettings = async (newsletterCount) => {
     try {
       const res = await fetch(`${API_BASE}/settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          newsletter_subscribers: newsletterCount,
-          mews_sheet_id: mewsSheetId 
+          newsletter_subscribers: newsletterCount
         })
       });
       if (res.ok) {
-        setAlert({ type: "success", message: "Settings updated successfully!" });
+        setAlert({ type: "success", message: "Newsletter subscribers updated successfully!" });
         fetchData();
       } else {
         throw new Error("Failed to save settings");
@@ -140,19 +139,6 @@ export default function App() {
     } catch (err) {
       setAlert({ type: "error", message: err.message });
     }
-  };
-
-  const handleSyncSheets = async (spreadsheetId) => {
-    const res = await fetch(`${API_BASE}/data/sync-sheets`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ spreadsheet_id: spreadsheetId })
-    });
-    if (!res.ok) {
-      const errDetail = await res.json();
-      throw new Error(errDetail.detail || "Error syncing Google Sheets");
-    }
-    return await res.json();
   };
 
   const handleTriggerSync = async () => {
@@ -212,8 +198,7 @@ export default function App() {
             onTriggerSync={handleTriggerSync}
             onUploadCSV={handleUploadCSV}
             onClearBookings={handleClearBookings}
-            lastSynced={overview.last_synced || settings.last_synced_at}
-            onSyncSheets={handleSyncSheets}
+            onRefreshData={fetchData}
             isMobile={isMobile}
           />
         );
@@ -221,6 +206,7 @@ export default function App() {
         return null;
     }
   };
+
 
   const showDateFilter = false;
 

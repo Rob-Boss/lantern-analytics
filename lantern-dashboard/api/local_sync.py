@@ -7,12 +7,11 @@ logger = logging.getLogger("local_sync")
 
 try:
     from sync_service import sync_data
-    from sheets_service import sync_bookings_from_sheet
     from database import get_setting
 except ImportError:
     from api.sync_service import sync_data
-    from api.sheets_service import sync_bookings_from_sheet
     from api.database import get_setting
+
 
 def main():
     logger.info("================ STARTING MASTER LOCAL SYNC ================")

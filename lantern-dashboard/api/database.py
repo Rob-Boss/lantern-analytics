@@ -363,6 +363,15 @@ def get_first_booking_date():
     conn.close()
     return row['min_date'] if row and row['min_date'] else None
 
+def get_bookings_count():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    _exec(cursor, "SELECT COUNT(DISTINCT id) AS count FROM bookings")
+    row = cursor.fetchone()
+    conn.close()
+    return row['count'] if row and row['count'] is not None else 0
+
+
 def save_geo_metric(date_str, metric_type, name, users):
     conn = get_db_connection()
     cursor = conn.cursor()
