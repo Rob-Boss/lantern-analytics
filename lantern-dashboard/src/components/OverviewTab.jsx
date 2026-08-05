@@ -614,65 +614,6 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
             })}
           </div>
         </div>
-
-        {/* Bottom Summary Breakdown Cards (Always Static) */}
-        <div className="mobile-two-col" style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "16px",
-          marginTop: "16px"
-        }}>
-          <div style={{
-            padding: "14px 16px",
-            backgroundColor: "#fafbfa",
-            border: "1px solid #e2e8e4",
-            borderRadius: "8px"
-          }}>
-            <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
-              🏆 Highest Revenue Day
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: 700, color: "#2d4a3e" }}>
-              {peakDayObj ? peakDayObj.day : "N/A"}
-            </div>
-            <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
-              {peakDayObj ? `${formatCurrency(peakDayObj.revenue)} (${peakDayObj.share}% share)` : "$0"}
-            </div>
-          </div>
-
-          <div style={{
-            padding: "14px 16px",
-            backgroundColor: "#fafbfa",
-            border: "1px solid #e2e8e4",
-            borderRadius: "8px"
-          }}>
-            <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
-              📅 Weekdays vs. Weekends
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: 700, color: "#2d312e" }}>
-              {weekdayShare}% / {weekendShare}%
-            </div>
-            <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
-              Mon–Fri ({formatCurrency(weekdayRev)}) vs. Sat–Sun ({formatCurrency(weekendRev)})
-            </div>
-          </div>
-
-          <div style={{
-            padding: "14px 16px",
-            backgroundColor: "#fafbfa",
-            border: "1px solid #e2e8e4",
-            borderRadius: "8px"
-          }}>
-            <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
-              💳 Avg. Net Revenue / Booking
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: 700, color: "#d67a47" }}>
-              {totalDowBookings > 0 ? formatCurrency(totalDowRevenue / totalDowBookings) : "$0"}
-            </div>
-            <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
-              Average net host payout across all {formatNumber(totalDowBookings)} reservations
-            </div>
-          </div>
-        </div>
       </div>
     );
   };
