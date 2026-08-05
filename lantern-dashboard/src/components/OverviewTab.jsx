@@ -406,42 +406,93 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
     const totalDowBookings = dowData.reduce((acc, curr) => acc + curr.bookings, 0);
     const peakDayObj = dowData.reduce((prev, curr) => (curr.revenue > prev.revenue ? curr : prev), dowData[0]);
 
-    // Calculate Weekdays (Mon-Fri) vs Weekends (Sat-Sun) share
-    const weekdayRev = dowData.slice(0, 5).reduce((acc, curr) => acc + curr.revenue, 0);
-    const weekendRev = dowData.slice(5).reduce((acc, curr) => acc + curr.revenue, 0);
-    const weekdayShare = totalDowRevenue > 0 ? ((weekdayRev / totalDowRevenue) * 100).toFixed(1) : 0;
-    const weekendShare = totalDowRevenue > 0 ? ((weekendRev / totalDowRevenue) * 100).toFixed(1) : 0;
+    // Calculate performance tiers & rank-based gradient colors
+    const sortedRevenues = [...new Set(dowData.map(d => d.revenue))].sort((a, b) => b - a);
+
+    const getBarColorInfo = (dayObj) => {
+      const rev = dayObj.revenue;
+      if (rev <= 0) {
+        return {
+          gradient: "#d8dfda",
+          labelColor: "#606862",
+          badgeBg: "transparent",
+          badgeText: "#2d312e",
+          tier: "Zero"
+        };
+      }
+      const rank = sortedRevenues.indexOf(rev) + 1;
+      if (rank === 1) {
+        // Peak Day #1 -> Forest Green
+        return {
+          gradient: "linear-gradient(180deg, #2d4a3e 0%, #3e6052 100%)",
+          labelColor: "#2d4a3e",
+          badgeBg: "#2d4a3e",
+          badgeText: "#ffffff",
+          tier: "Peak"
+        };
+      } else if (rank === 2 || rank === 3) {
+        // High Volume (Rank 2 & 3) -> Vibrant Emerald Green
+        return {
+          gradient: "linear-gradient(180deg, #059669 0%, #10b981 100%)",
+          labelColor: "#047857",
+          badgeBg: "#ecfdf5",
+          badgeText: "#047857",
+          tier: "High"
+        };
+      } else if (rank === 4 || rank === 5) {
+        // Mid Volume (Rank 4 & 5) -> Muted Sage Green
+        return {
+          gradient: "linear-gradient(180deg, #5f7a61 0%, #8eb29d 100%)",
+          labelColor: "#5f7a61",
+          badgeBg: "#f0f4f1",
+          badgeText: "#2d4a3e",
+          tier: "Mid"
+        };
+      } else {
+        // Slower Volume (Rank 6 & 7) -> Campfire Amber / Rust
+        return {
+          gradient: "linear-gradient(180deg, #d67a47 0%, #ea580c 100%)",
+          labelColor: "#c2410c",
+          badgeBg: "#fcf1eb",
+          badgeText: "#c2410c",
+          tier: "Slower"
+        };
+      }
+    };
 
     return (
       <div className="panel panel-single" style={{ marginTop: "24px" }}>
-        <div className="panel-header" style={{ flexWrap: "wrap", gap: "12px" }}>
+        <div className="panel-header" style={{ flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
           <div>
             <div className="panel-title">Revenue Created by Day of the Week</div>
             <div style={{ fontSize: "12.5px", color: "#606862", marginTop: "2px" }}>
               Total net booking revenue generated across all 7 days of the week to date
             </div>
           </div>
-          {peakDayObj && peakDayObj.revenue > 0 && (
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              backgroundColor: "#f0f4f1",
-              border: "1px solid #d0ded5",
-              color: "#2d4a3e",
-              padding: "6px 12px",
-              borderRadius: "20px",
-              fontSize: "12px",
-              fontWeight: 600
-            }}>
-              <span>🏆 Peak Booking Day:</span>
-              <strong style={{ color: "#2d4a3e" }}>{peakDayObj.day} ({formatCurrency(peakDayObj.revenue)} • {peakDayObj.share}%)</strong>
+          
+          {/* Color Code Legend */}
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", fontSize: "11.5px", fontWeight: 500, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <span style={{ width: "10px", height: "10px", borderRadius: "3px", backgroundColor: "#2d4a3e" }}></span>
+              <span>Peak (#1)</span>
             </div>
-          )}
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <span style={{ width: "10px", height: "10px", borderRadius: "3px", backgroundColor: "#059669" }}></span>
+              <span>High (Top 3)</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <span style={{ width: "10px", height: "10px", borderRadius: "3px", backgroundColor: "#5f7a61" }}></span>
+              <span>Mid Tier</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <span style={{ width: "10px", height: "10px", borderRadius: "3px", backgroundColor: "#d67a47" }}></span>
+              <span>Slower Volume</span>
+            </div>
+          </div>
         </div>
 
         {/* 7-Day Visual Bar Chart */}
-        <div style={{ marginTop: "24px", marginBottom: "16px" }}>
+        <div style={{ marginTop: "20px", marginBottom: "16px" }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(7, 1fr)",
@@ -457,6 +508,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
               const heightPct = maxRev > 0 ? Math.max(8, (d.revenue / maxRev) * 100) : 8;
               const isPeak = d.day === peakDayObj.day && d.revenue > 0;
               const isHovered = hoveredDow?.day === d.day;
+              const colorInfo = getBarColorInfo(d);
 
               return (
                 <div
@@ -477,7 +529,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
                   <div style={{
                     fontSize: isMobile ? "10px" : "11px",
                     fontWeight: 700,
-                    color: isPeak ? "#2d4a3e" : "#606862",
+                    color: colorInfo.labelColor,
                     marginBottom: "6px",
                     textAlign: "center",
                     lineHeight: 1.2
@@ -506,9 +558,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
                     <div style={{
                       width: "100%",
                       height: `${heightPct}%`,
-                      background: isPeak
-                        ? "linear-gradient(180deg, #2d4a3e 0%, #436b5b 100%)"
-                        : (d.revenue > 0 ? "linear-gradient(180deg, #5f7a61 0%, #8eb29d 100%)" : "#d8dfda"),
+                      background: colorInfo.gradient,
                       borderRadius: "6px 6px 0 0",
                       transition: "height 0.4s ease, background 0.2s ease"
                     }} />
@@ -521,8 +571,9 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
                     borderRadius: "6px",
                     fontSize: isMobile ? "11px" : "12px",
                     fontWeight: isPeak || isHovered ? 700 : 600,
-                    backgroundColor: isPeak ? "#2d4a3e" : (isHovered ? "#e2e8e4" : "transparent"),
-                    color: isPeak ? "#ffffff" : "#2d312e",
+                    backgroundColor: colorInfo.badgeBg,
+                    color: colorInfo.badgeText,
+                    border: isPeak ? "none" : `1px solid ${colorInfo.labelColor}33`,
                     transition: "all 0.2s ease"
                   }}>
                     {isMobile ? d.short_day : d.day}
