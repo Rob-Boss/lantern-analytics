@@ -612,13 +612,13 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
             borderRadius: "8px"
           }}>
             <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
-              📊 Daily Average Revenue
+              💳 Avg. Net Revenue / Booking
             </div>
             <div style={{ fontSize: "18px", fontWeight: 700, color: "#d67a47" }}>
-              {formatCurrency(totalDowRevenue / 7)}
+              {totalDowBookings > 0 ? formatCurrency(totalDowRevenue / totalDowBookings) : "$0"}
             </div>
             <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
-              Across 7 day-of-week buckets ({formatNumber(totalDowBookings)} bookings)
+              Average net host payout across all {formatNumber(totalDowBookings)} reservations
             </div>
           </div>
         </div>
