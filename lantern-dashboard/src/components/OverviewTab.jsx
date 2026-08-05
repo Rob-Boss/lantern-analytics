@@ -527,99 +527,101 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
                   }}>
                     {isMobile ? d.short_day : d.day}
                   </div>
+
+                  {/* Absolute Floating Tooltip (No Layout Reflow) */}
+                  {isHovered && (
+                    <div style={{
+                      position: "absolute",
+                      bottom: "100%",
+                      left: "50%",
+                      transform: "translate(-50%, -10px)",
+                      backgroundColor: "#2d312e",
+                      color: "#ffffff",
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      fontSize: "11.5px",
+                      whiteSpace: "nowrap",
+                      pointerEvents: "none",
+                      zIndex: 30,
+                      boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
+                      border: "1px solid #4a504c",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "3px"
+                    }}>
+                      <div style={{ fontWeight: "700", color: "#a4cbb9", fontSize: "11px", borderBottom: "1px solid #4a504c", paddingBottom: "3px" }}>
+                        {d.day}
+                      </div>
+                      <div>Net Revenue: <strong style={{ color: "#ffffff" }}>{formatCurrency(d.revenue)}</strong></div>
+                      {d.gross_revenue > 0 && <div>Gross: <strong style={{ color: "#d2e4db" }}>{formatCurrency(d.gross_revenue)}</strong></div>}
+                      <div>Bookings: <strong style={{ color: "#ffffff" }}>{formatNumber(d.bookings)}</strong></div>
+                      <div>Share of Total: <strong style={{ color: "#f7b28d" }}>{d.share}%</strong></div>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Hover / Highlight Detail Banner */}
-        {hoveredDow ? (
+        {/* Bottom Summary Breakdown Cards (Always Static) */}
+        <div className="mobile-two-col" style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "16px",
+          marginTop: "16px"
+        }}>
           <div style={{
-            padding: "12px 16px",
-            backgroundColor: "#2d4a3e",
-            color: "#ffffff",
-            borderRadius: "8px",
-            marginTop: "12px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "12px",
-            fontSize: "12.5px"
+            padding: "14px 16px",
+            backgroundColor: "#fafbfa",
+            border: "1px solid #e2e8e4",
+            borderRadius: "8px"
           }}>
-            <div>
-              <strong style={{ fontSize: "14px", color: "#a4cbb9" }}>{hoveredDow.day} Performance:</strong>
+            <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
+              🏆 Highest Revenue Day
             </div>
-            <div style={{ display: "flex", gap: "20px" }}>
-              <span>Net Revenue: <strong style={{ color: "#ffffff" }}>{formatCurrency(hoveredDow.revenue)}</strong></span>
-              {hoveredDow.gross_revenue > 0 && (
-                <span>Gross: <strong style={{ color: "#d2e4db" }}>{formatCurrency(hoveredDow.gross_revenue)}</strong></span>
-              )}
-              <span>Bookings: <strong style={{ color: "#ffffff" }}>{formatNumber(hoveredDow.bookings)}</strong></span>
-              <span>Share of Revenue: <strong style={{ color: "#f7b28d" }}>{hoveredDow.share}%</strong></span>
+            <div style={{ fontSize: "18px", fontWeight: 700, color: "#2d4a3e" }}>
+              {peakDayObj ? peakDayObj.day : "N/A"}
+            </div>
+            <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
+              {peakDayObj ? `${formatCurrency(peakDayObj.revenue)} (${peakDayObj.share}% share)` : "$0"}
             </div>
           </div>
-        ) : (
-          /* Bottom Summary Breakdown Cards */
-          <div className="mobile-two-col" style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "16px",
-            marginTop: "16px"
+
+          <div style={{
+            padding: "14px 16px",
+            backgroundColor: "#fafbfa",
+            border: "1px solid #e2e8e4",
+            borderRadius: "8px"
           }}>
-            <div style={{
-              padding: "14px 16px",
-              backgroundColor: "#fafbfa",
-              border: "1px solid #e2e8e4",
-              borderRadius: "8px"
-            }}>
-              <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
-                🏆 Highest Revenue Day
-              </div>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: "#2d4a3e" }}>
-                {peakDayObj ? peakDayObj.day : "N/A"}
-              </div>
-              <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
-                {peakDayObj ? `${formatCurrency(peakDayObj.revenue)} (${peakDayObj.share}% share)` : "$0"}
-              </div>
+            <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
+              📅 Weekdays vs. Weekends
             </div>
-
-            <div style={{
-              padding: "14px 16px",
-              backgroundColor: "#fafbfa",
-              border: "1px solid #e2e8e4",
-              borderRadius: "8px"
-            }}>
-              <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
-                📅 Weekdays vs. Weekends
-              </div>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: "#2d312e" }}>
-                {weekdayShare}% / {weekendShare}%
-              </div>
-              <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
-                Mon–Fri ({formatCurrency(weekdayRev)}) vs. Sat–Sun ({formatCurrency(weekendRev)})
-              </div>
+            <div style={{ fontSize: "18px", fontWeight: 700, color: "#2d312e" }}>
+              {weekdayShare}% / {weekendShare}%
             </div>
-
-            <div style={{
-              padding: "14px 16px",
-              backgroundColor: "#fafbfa",
-              border: "1px solid #e2e8e4",
-              borderRadius: "8px"
-            }}>
-              <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
-                📊 Daily Average Revenue
-              </div>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: "#d67a47" }}>
-                {formatCurrency(totalDowRevenue / 7)}
-              </div>
-              <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
-                Across 7 day-of-week buckets ({formatNumber(totalDowBookings)} bookings)
-              </div>
+            <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
+              Mon–Fri ({formatCurrency(weekdayRev)}) vs. Sat–Sun ({formatCurrency(weekendRev)})
             </div>
           </div>
-        )}
+
+          <div style={{
+            padding: "14px 16px",
+            backgroundColor: "#fafbfa",
+            border: "1px solid #e2e8e4",
+            borderRadius: "8px"
+          }}>
+            <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
+              📊 Daily Average Revenue
+            </div>
+            <div style={{ fontSize: "18px", fontWeight: 700, color: "#d67a47" }}>
+              {formatCurrency(totalDowRevenue / 7)}
+            </div>
+            <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
+              Across 7 day-of-week buckets ({formatNumber(totalDowBookings)} bookings)
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
