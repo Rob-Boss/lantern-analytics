@@ -607,7 +607,7 @@ def get_traffic_data(start_date: Optional[str] = None, end_date: Optional[str] =
 @app.get("/api/dashboard/bookings")
 def get_bookings_ledger(start_date: Optional[str] = None, end_date: Optional[str] = None):
     """Returns booking records and channels aggregate statistics."""
-    bookings = get_all_bookings()
+    bookings = get_all_bookings(include_canceled=True)
     
     # Filter bookings by date range if provided
     if start_date or end_date:

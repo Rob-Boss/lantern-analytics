@@ -228,10 +228,13 @@ def clear_bookings():
     """No-op alias to maintain import compatibility."""
     pass
 
-def get_all_bookings():
+def get_all_bookings(include_canceled=False):
     conn = get_db_connection()
     cursor = conn.cursor()
-    _exec(cursor, """
+    
+    where_clause = "" if include_canceled else "WHERE (b.status IS NULL OR LOWER(b.status) NOT IN ('canceled', 'cancelled'))"
+    
+    _exec(cursor, f"""
         SELECT * FROM (
             SELECT DISTINCT ON (b.id)
                    b.id, b.channel, b.booking_date, b.nights, b.gross_revenue, b.ota_fee_percent, b.net_revenue, 
@@ -257,6 +260,7 @@ def get_all_bookings():
                 OR (w.guest_name IS NOT NULL AND w.guest_name != '' AND b.guest_name IS NOT NULL AND b.guest_name != '' AND LOWER(b.guest_name) = LOWER(w.guest_name))
             )
             LEFT JOIN sms_dispatches s ON b.id = s.booking_id
+            {where_clause}
             ORDER BY b.id
         ) sub
         ORDER BY sub.booking_date DESC, sub.id DESC
