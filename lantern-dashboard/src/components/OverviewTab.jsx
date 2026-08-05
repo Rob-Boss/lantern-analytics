@@ -637,7 +637,7 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], rev
         <div className="kpi-card">
           <div className="kpi-label">Bookings Count</div>
           <div className="kpi-value">{formatNumber(bookingsCount)}</div>
-          <div className="kpi-subtext">Total reservations loaded</div>
+          <div className="kpi-subtext">Active reservations</div>
         </div>
 
         {!isMobile && (
