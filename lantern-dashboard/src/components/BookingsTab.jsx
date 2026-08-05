@@ -50,9 +50,14 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
       guestEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
       guestName.toLowerCase().includes(searchQuery.toLowerCase());
       
-    const matchesChannel = 
-      channelFilter === "all" || 
-      normChannel.toLowerCase() === channelFilter.toLowerCase();
+    let matchesChannel = false;
+    if (channelFilter === "all") {
+      matchesChannel = true;
+    } else if (channelFilter === "canceled") {
+      matchesChannel = isCanceled(b);
+    } else {
+      matchesChannel = normChannel.toLowerCase() === channelFilter.toLowerCase();
+    }
 
     const matchesCanceled = !hideCanceled || !isCanceled(b);
       
@@ -182,7 +187,7 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
               <option value="all">All Channels</option>
               <option value="mews booking engine">Mews Booking Engine</option>
               <option value="airbnb">Airbnb</option>
-              <option value="booking.com">Booking.com</option>
+              <option value="canceled">Canceled Reservations</option>
               <option value="other">Other</option>
             </select>
 
