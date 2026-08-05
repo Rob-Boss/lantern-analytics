@@ -3,10 +3,15 @@ import React, { useState } from "react";
 export default function BookingsTab({ bookingsData, loading, isMobile }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState("all");
+  const [hideCanceled, setHideCanceled] = useState(false);
   const [expandedIds, setExpandedIds] = useState({});
 
   const toggleExpand = (id) => {
     setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const isCanceled = (b) => {
+    return (b.status || "").toLowerCase().includes("cancel");
   };
 
   if (loading) {
@@ -33,7 +38,7 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
 
   const bookings = bookingsData.bookings || [];
 
-  // Filter bookings by search and channel
+  // Filter bookings by search, channel, and canceled toggle
   const filteredBookings = bookings.filter((b) => {
     const guestEmail = b.guest_email || "";
     const guestName = b.guest_name || "";
@@ -48,15 +53,18 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
     const matchesChannel = 
       channelFilter === "all" || 
       normChannel.toLowerCase() === channelFilter.toLowerCase();
+
+    const matchesCanceled = !hideCanceled || !isCanceled(b);
       
-    return matchesSearch && matchesChannel;
+    return matchesSearch && matchesChannel && matchesCanceled;
   });
 
-  // Calculate filtered totals for operational booking cards
-  const totalNights = filteredBookings.reduce((acc, b) => acc + (b.nights || 0), 0);
-  const totalGross = filteredBookings.reduce((acc, b) => acc + (b.gross_revenue || 0), 0);
-  const avgBookingValue = filteredBookings.length > 0 ? (totalGross / filteredBookings.length) : 0;
-  const avgStay = filteredBookings.length > 0 ? (totalNights / filteredBookings.length) : 0;
+  // Calculate active totals (excluding canceled stays) for metrics cards
+  const activeBookings = filteredBookings.filter((b) => !isCanceled(b));
+  const totalNights = activeBookings.reduce((acc, b) => acc + (b.nights || 0), 0);
+  const totalGross = activeBookings.reduce((acc, b) => acc + (b.gross_revenue || 0), 0);
+  const avgBookingValue = activeBookings.length > 0 ? (totalGross / activeBookings.length) : 0;
+  const avgStay = activeBookings.length > 0 ? (totalNights / activeBookings.length) : 0;
 
   // No pagination: render all filtered rows directly
 
@@ -177,6 +185,28 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
               <option value="booking.com">Booking.com</option>
               <option value="other">Other</option>
             </select>
+
+            <label style={{ 
+              display: "inline-flex", 
+              alignItems: "center", 
+              gap: "6px", 
+              fontSize: "12.5px", 
+              color: "#4b5563", 
+              cursor: "pointer",
+              userSelect: "none",
+              padding: "6px 10px",
+              backgroundColor: "#f9fafb",
+              border: "1px solid #e5e7eb",
+              borderRadius: "6px"
+            }}>
+              <input 
+                type="checkbox" 
+                checked={hideCanceled} 
+                onChange={(e) => setHideCanceled(e.target.checked)} 
+                style={{ cursor: "pointer" }}
+              />
+              Hide Cancelled
+            </label>
           </div>
         </div>
 
@@ -188,23 +218,34 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
           <div className="booking-mobile-list">
             {filteredBookings.map((b) => {
               const isExpanded = !!expandedIds[b.id];
+              const canceled = isCanceled(b);
               return (
                 <div 
                   key={b.id} 
                   className={`booking-mobile-card ${isExpanded ? "expanded" : ""}`}
+                  style={canceled ? { backgroundColor: "#faf8f8", opacity: 0.75 } : {}}
                 >
                   <div className="booking-card-header" onClick={() => toggleExpand(b.id)}>
                     <div className="booking-card-main-info">
-                      <div className="booking-card-guest">{b.guest_name || "Guest"}</div>
-                      <div className="booking-card-meta">
+                      <div className="booking-card-guest" style={canceled ? { textDecoration: "line-through", color: "#6b7280" } : {}}>
+                        {b.guest_name || "Guest"}
+                      </div>
+                      <div className="booking-card-meta" style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                         <span className={getChannelBadgeClass(b.normalized_channel)}>
                           {b.normalized_channel}
                         </span>
+                        {canceled && (
+                          <span className="badge" style={{ backgroundColor: "#ffebe9", color: "#d9381e", border: "1px solid #ffc1bc", fontWeight: "700" }}>
+                            CANCELLED
+                          </span>
+                        )}
                         <span>• {b.nights} nights</span>
                       </div>
                     </div>
                     <div className="booking-card-revenue-section">
-                      <div className="booking-card-net">{formatCurrency(b.net_revenue)}</div>
+                      <div className="booking-card-net" style={canceled ? { textDecoration: "line-through", color: "#9ca3af" } : {}}>
+                        {formatCurrency(b.net_revenue)}
+                      </div>
                       <div style={{ fontSize: "10px", color: "#606862", marginTop: "2px" }}>Net Revenue</div>
                     </div>
                     <div className="booking-card-chevron">
@@ -282,14 +323,23 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
                 </thead>
                 <tbody>
                   {filteredBookings.map((b) => {
+                    const canceled = isCanceled(b);
+                    const rowStyle = canceled ? {
+                      borderBottom: "1px solid #f0f3f1",
+                      height: "48px",
+                      backgroundColor: "#faf8f8",
+                      opacity: 0.7,
+                      textDecoration: "line-through"
+                    } : {
+                      borderBottom: "1px solid #f0f3f1", 
+                      height: "48px",
+                      backgroundColor: "#ffffff"
+                    };
+
                     return (
                       <tr 
                         key={b.id} 
-                        style={{ 
-                          borderBottom: "1px solid #f0f3f1", 
-                          height: "48px",
-                          backgroundColor: "#ffffff"
-                        }}
+                        style={rowStyle}
                         className="ledger-row"
                       >
                         <td style={{ padding: "10px 8px", whiteSpace: "nowrap", fontWeight: "500", color: "#2d312e" }}>
@@ -316,10 +366,15 @@ export default function BookingsTab({ bookingsData, loading, isMobile }) {
                           {b.nights}
                         </td>
                         <td style={{ padding: "10px 8px" }}>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                            <span className={getChannelBadgeClass(b.normalized_channel)} style={{ alignSelf: "flex-start" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                            <span className={getChannelBadgeClass(b.normalized_channel)}>
                               {b.normalized_channel}
                             </span>
+                            {canceled && (
+                              <span className="badge" style={{ backgroundColor: "#ffebe9", color: "#d9381e", border: "1px solid #ffc1bc", fontWeight: "700" }}>
+                                CANCELLED
+                              </span>
+                            )}
                             {b.channel && b.channel.toLowerCase() !== b.normalized_channel.toLowerCase() && (
                               <span style={{ fontSize: "10px", color: "#8a928c", wordBreak: "break-all" }}>
                                 {b.channel}
