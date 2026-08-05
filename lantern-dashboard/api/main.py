@@ -339,6 +339,39 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
     # channel_summary
     channel_summary = list(channels_dict.values())
     
+    # Calculate revenue by day of the week (Monday through Sunday)
+    days_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    day_metrics = {day: {"day": day, "revenue": 0.0, "gross_revenue": 0.0, "bookings": 0} for day in days_order}
+    
+    for b in bookings:
+        b_date_str = b['booking_date']
+        try:
+            dt = datetime.strptime(b_date_str, "%Y-%m-%d")
+            day_name = dt.strftime("%A")
+            if day_name in day_metrics:
+                day_metrics[day_name]["revenue"] += b.get('net_revenue', 0.0)
+                day_metrics[day_name]["gross_revenue"] += b.get('gross_revenue', 0.0)
+                day_metrics[day_name]["bookings"] += 1
+        except Exception:
+            pass
+
+    total_dow_net = sum(d["revenue"] for d in day_metrics.values())
+    revenue_by_day_of_week = []
+    for day in days_order:
+        dm = day_metrics[day]
+        net_val = round(dm["revenue"], 2)
+        gross_val = round(dm["gross_revenue"], 2)
+        count_val = dm["bookings"]
+        share = round((net_val / total_dow_net * 100.0), 1) if total_dow_net > 0 else 0.0
+        revenue_by_day_of_week.append({
+            "day": day,
+            "short_day": day[:3],
+            "revenue": net_val,
+            "gross_revenue": gross_val,
+            "bookings": count_val,
+            "share": share
+        })
+
     return {
         "kpis": {
             "total_gross_revenue": round(total_gross_rev, 2),
@@ -360,6 +393,7 @@ def get_overview_data(start_date: Optional[str] = None, end_date: Optional[str] 
         },
         "trend_chart": trend_data,
         "channel_summary": channel_summary,
+        "revenue_by_day_of_week": revenue_by_day_of_week,
         "last_synced": get_setting("last_synced_at", "Never")
     }
 

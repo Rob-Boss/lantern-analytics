@@ -183,7 +183,7 @@ export default function App() {
   const renderActiveTab = () => {
     switch (activeTab) {
       case "overview":
-        return <OverviewTab kpis={overview.kpis} trendChart={overview.trend_chart} channelSummary={overview.channel_summary || []} loading={loading} isMobile={isMobile} />;
+        return <OverviewTab kpis={overview.kpis} trendChart={overview.trend_chart} channelSummary={overview.channel_summary || []} revenueByDayOfWeek={overview.revenue_by_day_of_week || []} loading={loading} isMobile={isMobile} />;
       case "ads":
         return <AdsTab adsData={ads} loading={loading} isMobile={isMobile} />;
       case "traffic":

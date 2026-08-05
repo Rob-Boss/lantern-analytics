@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 
-export default function OverviewTab({ kpis, trendChart, channelSummary = [], loading, isMobile }) {
+export default function OverviewTab({ kpis, trendChart, channelSummary = [], revenueByDayOfWeek = [], loading, isMobile }) {
   const [hoveredData, setHoveredData] = useState(null);
+  const [hoveredDow, setHoveredDow] = useState(null);
 
   if (loading) {
     return <div style={{ padding: "40px", textAlign: "center" }}>Loading metrics...</div>;
@@ -358,6 +359,271 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
     );
   };
 
+  // Render Day of Week Revenue Chart
+  const renderDayOfWeekChart = () => {
+    const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    let dowData = Array.isArray(revenueByDayOfWeek) && revenueByDayOfWeek.length === 7 ? revenueByDayOfWeek : null;
+
+    // Fallback: Compute DOW metrics dynamically if backend payload wasn't passed or cached
+    if (!dowData && trendChartClean && trendChartClean.length > 0) {
+      const dayMap = {};
+      daysOrder.forEach(d => {
+        dayMap[d] = { day: d, short_day: d.slice(0, 3), revenue: 0, gross_revenue: 0, bookings: 0 };
+      });
+
+      trendChartClean.forEach(item => {
+        if (item.date) {
+          try {
+            const dt = new Date(item.date + "T00:00:00Z");
+            const dayName = dt.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+            if (dayMap[dayName]) {
+              dayMap[dayName].revenue += item.revenue || 0;
+              dayMap[dayName].bookings += (item.revenue > 0 ? 1 : 0);
+            }
+          } catch (e) {
+            // ignore date parse issues
+          }
+        }
+      });
+
+      const totalRev = Object.values(dayMap).reduce((acc, curr) => acc + curr.revenue, 0);
+      dowData = daysOrder.map(d => ({
+        ...dayMap[d],
+        share: totalRev > 0 ? Number(((dayMap[d].revenue / totalRev) * 100).toFixed(1)) : 0
+      }));
+    }
+
+    if (!dowData || dowData.length === 0) {
+      return (
+        <div style={{ padding: "30px", textAlign: "center", color: "#606862" }}>
+          No day-of-week revenue data available for this range.
+        </div>
+      );
+    }
+
+    const maxRev = Math.max(...dowData.map(d => d.revenue), 1);
+    const totalDowRevenue = dowData.reduce((acc, curr) => acc + curr.revenue, 0);
+    const totalDowBookings = dowData.reduce((acc, curr) => acc + curr.bookings, 0);
+    const peakDayObj = dowData.reduce((prev, curr) => (curr.revenue > prev.revenue ? curr : prev), dowData[0]);
+
+    // Calculate Weekdays (Mon-Fri) vs Weekends (Sat-Sun) share
+    const weekdayRev = dowData.slice(0, 5).reduce((acc, curr) => acc + curr.revenue, 0);
+    const weekendRev = dowData.slice(5).reduce((acc, curr) => acc + curr.revenue, 0);
+    const weekdayShare = totalDowRevenue > 0 ? ((weekdayRev / totalDowRevenue) * 100).toFixed(1) : 0;
+    const weekendShare = totalDowRevenue > 0 ? ((weekendRev / totalDowRevenue) * 100).toFixed(1) : 0;
+
+    return (
+      <div className="panel panel-single" style={{ marginTop: "24px" }}>
+        <div className="panel-header" style={{ flexWrap: "wrap", gap: "12px" }}>
+          <div>
+            <div className="panel-title">Revenue Created by Day of the Week</div>
+            <div style={{ fontSize: "12.5px", color: "#606862", marginTop: "2px" }}>
+              Total net booking revenue generated across all 7 days of the week to date
+            </div>
+          </div>
+          {peakDayObj && peakDayObj.revenue > 0 && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              backgroundColor: "#f0f4f1",
+              border: "1px solid #d0ded5",
+              color: "#2d4a3e",
+              padding: "6px 12px",
+              borderRadius: "20px",
+              fontSize: "12px",
+              fontWeight: 600
+            }}>
+              <span>🏆 Peak Booking Day:</span>
+              <strong style={{ color: "#2d4a3e" }}>{peakDayObj.day} ({formatCurrency(peakDayObj.revenue)} • {peakDayObj.share}%)</strong>
+            </div>
+          )}
+        </div>
+
+        {/* 7-Day Visual Bar Chart */}
+        <div style={{ marginTop: "24px", marginBottom: "16px" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: isMobile ? "6px" : "16px",
+            alignItems: "flex-end",
+            height: "220px",
+            padding: "16px 12px 8px 12px",
+            backgroundColor: "#fafbfa",
+            borderRadius: "12px",
+            border: "1px solid #e2e8e4"
+          }}>
+            {dowData.map((d) => {
+              const heightPct = maxRev > 0 ? Math.max(8, (d.revenue / maxRev) * 100) : 8;
+              const isPeak = d.day === peakDayObj.day && d.revenue > 0;
+              const isHovered = hoveredDow?.day === d.day;
+
+              return (
+                <div
+                  key={d.day}
+                  onMouseEnter={() => setHoveredDow(d)}
+                  onMouseLeave={() => setHoveredDow(null)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    height: "100%",
+                    justifyContent: "flex-end",
+                    cursor: "pointer",
+                    position: "relative"
+                  }}
+                >
+                  {/* Top Revenue & Share Labels */}
+                  <div style={{
+                    fontSize: isMobile ? "10px" : "11px",
+                    fontWeight: 700,
+                    color: isPeak ? "#2d4a3e" : "#606862",
+                    marginBottom: "6px",
+                    textAlign: "center",
+                    lineHeight: 1.2
+                  }}>
+                    <div>{d.revenue > 0 ? formatCurrency(d.revenue) : "$0"}</div>
+                    <div style={{ fontSize: "10px", fontWeight: 500, color: "#8a948c", marginTop: "1px" }}>
+                      {d.share}%
+                    </div>
+                  </div>
+
+                  {/* Vertical Bar track */}
+                  <div style={{
+                    width: "100%",
+                    maxWidth: isMobile ? "28px" : "48px",
+                    height: "130px",
+                    backgroundColor: "#eef2ef",
+                    borderRadius: "8px",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    overflow: "hidden",
+                    border: isHovered ? "2px solid #2d4a3e" : (isPeak ? "1px solid #a8c4b4" : "1px solid transparent"),
+                    boxShadow: isHovered ? "0 4px 12px rgba(45, 74, 62, 0.15)" : "none",
+                    transition: "all 0.2s ease"
+                  }}>
+                    {/* Inner Colored Bar Fill */}
+                    <div style={{
+                      width: "100%",
+                      height: `${heightPct}%`,
+                      background: isPeak
+                        ? "linear-gradient(180deg, #2d4a3e 0%, #436b5b 100%)"
+                        : (d.revenue > 0 ? "linear-gradient(180deg, #5f7a61 0%, #8eb29d 100%)" : "#d8dfda"),
+                      borderRadius: "6px 6px 0 0",
+                      transition: "height 0.4s ease, background 0.2s ease"
+                    }} />
+                  </div>
+
+                  {/* Day Label Pill */}
+                  <div style={{
+                    marginTop: "10px",
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    fontSize: isMobile ? "11px" : "12px",
+                    fontWeight: isPeak || isHovered ? 700 : 600,
+                    backgroundColor: isPeak ? "#2d4a3e" : (isHovered ? "#e2e8e4" : "transparent"),
+                    color: isPeak ? "#ffffff" : "#2d312e",
+                    transition: "all 0.2s ease"
+                  }}>
+                    {isMobile ? d.short_day : d.day}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Hover / Highlight Detail Banner */}
+        {hoveredDow ? (
+          <div style={{
+            padding: "12px 16px",
+            backgroundColor: "#2d4a3e",
+            color: "#ffffff",
+            borderRadius: "8px",
+            marginTop: "12px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+            fontSize: "12.5px"
+          }}>
+            <div>
+              <strong style={{ fontSize: "14px", color: "#a4cbb9" }}>{hoveredDow.day} Performance:</strong>
+            </div>
+            <div style={{ display: "flex", gap: "20px" }}>
+              <span>Net Revenue: <strong style={{ color: "#ffffff" }}>{formatCurrency(hoveredDow.revenue)}</strong></span>
+              {hoveredDow.gross_revenue > 0 && (
+                <span>Gross: <strong style={{ color: "#d2e4db" }}>{formatCurrency(hoveredDow.gross_revenue)}</strong></span>
+              )}
+              <span>Bookings: <strong style={{ color: "#ffffff" }}>{formatNumber(hoveredDow.bookings)}</strong></span>
+              <span>Share of Revenue: <strong style={{ color: "#f7b28d" }}>{hoveredDow.share}%</strong></span>
+            </div>
+          </div>
+        ) : (
+          /* Bottom Summary Breakdown Cards */
+          <div className="mobile-two-col" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "16px",
+            marginTop: "16px"
+          }}>
+            <div style={{
+              padding: "14px 16px",
+              backgroundColor: "#fafbfa",
+              border: "1px solid #e2e8e4",
+              borderRadius: "8px"
+            }}>
+              <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
+                🏆 Highest Revenue Day
+              </div>
+              <div style={{ fontSize: "18px", fontWeight: 700, color: "#2d4a3e" }}>
+                {peakDayObj ? peakDayObj.day : "N/A"}
+              </div>
+              <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
+                {peakDayObj ? `${formatCurrency(peakDayObj.revenue)} (${peakDayObj.share}% share)` : "$0"}
+              </div>
+            </div>
+
+            <div style={{
+              padding: "14px 16px",
+              backgroundColor: "#fafbfa",
+              border: "1px solid #e2e8e4",
+              borderRadius: "8px"
+            }}>
+              <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
+                📅 Weekdays vs. Weekends
+              </div>
+              <div style={{ fontSize: "18px", fontWeight: 700, color: "#2d312e" }}>
+                {weekdayShare}% / {weekendShare}%
+              </div>
+              <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
+                Mon–Fri ({formatCurrency(weekdayRev)}) vs. Sat–Sun ({formatCurrency(weekendRev)})
+              </div>
+            </div>
+
+            <div style={{
+              padding: "14px 16px",
+              backgroundColor: "#fafbfa",
+              border: "1px solid #e2e8e4",
+              borderRadius: "8px"
+            }}>
+              <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#606862", marginBottom: "4px" }}>
+                📊 Daily Average Revenue
+              </div>
+              <div style={{ fontSize: "18px", fontWeight: 700, color: "#d67a47" }}>
+                {formatCurrency(totalDowRevenue / 7)}
+              </div>
+              <div style={{ fontSize: "12px", color: "#606862", marginTop: "2px" }}>
+                Across 7 day-of-week buckets ({formatNumber(totalDowBookings)} bookings)
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       {/* KPI Cards Grid */}
@@ -531,6 +797,9 @@ export default function OverviewTab({ kpis, trendChart, channelSummary = [], loa
         </div>
         {renderSvgChart()}
       </div>
+
+      {/* Revenue Created by Day of the Week Chart */}
+      {renderDayOfWeekChart()}
     </div>
   );
 }
